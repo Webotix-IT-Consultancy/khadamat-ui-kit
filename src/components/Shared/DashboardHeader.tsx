@@ -3,7 +3,7 @@ import LogoutConfirmation from '../popups/LogoutConfirmation';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../../lib/utils';
 import userProfileImage from '../../assets/images/avatar/user-demo.png';
-import { usePageStore } from '@/store/usePageStore';
+import { usePageStore } from '../../store/usePageStore';
 import { ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 

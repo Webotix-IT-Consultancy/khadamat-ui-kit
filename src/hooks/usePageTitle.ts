@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { usePageStore } from '@/store/usePageStore';
+import { usePageStore } from '../store/usePageStore';
 
 interface Breadcrumb {
     label: string;

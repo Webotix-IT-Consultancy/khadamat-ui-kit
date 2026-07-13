@@ -5,12 +5,12 @@ import {
     CountryIso2
 } from "react-international-phone";
 
-import { cn } from "@/lib/utils";
+import { cn } from "../../../lib/utils";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from "@/components/ui/popover";
+} from "../popover";
 
 type PhoneInputProps = Omit<
     React.InputHTMLAttributes<HTMLInputElement>,

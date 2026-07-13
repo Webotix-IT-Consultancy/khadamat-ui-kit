@@ -1,7 +1,7 @@
 import React from 'react';
 import './AuthSidebar.css';
-import khadamatLogo from '@/assets/images/khadamat-logo.png';
-import webotixLogo from '@/assets/images/webotix-logo.png';
+import khadamatLogo from '../../assets/images/khadamat-logo.png';
+import webotixLogo from '../../assets/images/webotix-logo.png';
 import { useTranslation } from 'react-i18next';
 
 interface AuthSidebarProps {
