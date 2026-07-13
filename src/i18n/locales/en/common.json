@@ -1,0 +1,96 @@
+{
+    "buttons": {
+        "login": "Login",
+        "submit": "Submit",
+        "cancel": "Cancel",
+        "save": "Save",
+        "export": "Export",
+        "print": "Print",
+        "back": "Back",
+        "next": "Next",
+        "saveChanges": "Save Changes",
+        "downloadReceipt": "Download Receipt",
+        "viewMore": "View More",
+        "viewAll": "View All",
+        "recharge": "Recharge",
+        "rechargeNow": "Recharge Now",
+        "filter": "Filter",
+        "clear": "Clear",
+        "apply": "Apply"
+    },
+    "tabs": {
+        "all": "All",
+        "unread": "Unread",
+        "read": "Read"
+    },
+    "status": {
+        "success": "Success",
+        "pending": "Pending",
+        "failed": "Failed",
+        "paid": "Paid",
+        "unpaid": "Unpaid",
+        "completed": "Completed",
+        "processing": "Processing"
+    },
+    "table": {
+        "slNo": "SL.No",
+        "date": "Date",
+        "dateTime": "Date & Time",
+        "amount": "Amount",
+        "status": "Status",
+        "action": "Action",
+        "description": "Description",
+        "transactionId": "Transaction ID",
+        "invoiceNo": "Invoice No.",
+        "requestId": "Request ID",
+        "serviceName": "Service Name",
+        "type": "Type",
+        "balance": "Balance",
+        "paymentMode": "Payment Mode",
+        "rechargeAmount": "Recharge",
+        "paid": "Paid",
+        "paginationInfo": "Total Records: {{count}} | Showing {{from}}-{{to}}",
+        "searchPlaceholder": "Search...",
+        "rowsPerPage": "Size: {{count}}",
+        "rowCount": "{{count}} rows",
+        "view": "View"
+    },
+    "emptyStates": {
+        "noData": "No data available",
+        "noRecentRequests": "No recent requests",
+        "noTransactions": "No recent transactions",
+        "noInvoices": "No recent invoices"
+    },
+    "messages": {
+        "loading": "Loading...",
+        "errorGeneric": "Something went wrong. Please try again.",
+        "successGeneric": "Login completed successfully"
+    },
+    "validation": {
+        "required": "This field is required",
+        "invalidEmail": "Invalid email address",
+        "minLength": "Minimum {{count}} characters required"
+    },
+    "sidebar": {
+        "dashboard": "Dashboard",
+        "wallet": "Wallet",
+        "transaction": "Transaction",
+        "invoice": "Invoice",
+        "enquiries": "Enquiries",
+        "onCallService": "On Call Service",
+        "profile": "Profile",
+        "notifications": "Notifications",
+        "feedback": "Feedback",
+        "tollFree": "Toll Free +971 293 4734 34",
+        "logout": "Logout",
+        "language": "Language",
+        "enquiry": "Any enquiry ?",
+        "enquiryDesc": "Chat with us",
+        "developedBy": "Design and Developed by"
+    },
+    "header": {
+        "welcomeBack": "Welcome back",
+        "id": "ID"
+    },
+    "currency": "AED"
+}

@@ -1,0 +1,84 @@
+/* TextArea.css */
+.textarea-field {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.textarea-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1A1A1A;
+}
+
+.label-error {
+    color: #FF3232;
+}
+
+.required-mark {
+    color: #FF3232;
+    margin-left: 4px;
+}
+
+.textarea-wrapper {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    border: 1px solid #DEDEDE;
+    border-radius: 8px;
+    background-color: #FFFFFF;
+    transition: all 0.2s ease-in-out;
+    padding: 12px;
+}
+
+.textarea-wrapper:focus-within {
+    border-color: #016937;
+    box-shadow: 0 0 0 2px rgba(1, 105, 55, 0.1);
+}
+
+.textarea-wrapper-error {
+    border-color: #FF3232;
+    background-color: #FFF5F5;
+}
+
+.textarea-wrapper-error:focus-within {
+    border-color: #FF3232;
+    box-shadow: 0 0 0 2px rgba(255, 50, 50, 0.1);
+}
+
+.textarea-element {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #1A1A1A;
+    outline: none;
+    width: 100%;
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+}
+
+.textarea-element::placeholder {
+    color: #A0A0A0;
+}
+
+.textarea-element:disabled,
+.textarea-element[readonly] {
+    cursor: default;
+    /* Or not-allowed if strictly disabled */
+    color: #555555;
+}
+
+/* Specific style for readonly to match the Profile usage if needed, 
+   but generic enough to reuse */
+.textarea-wrapper:has(.textarea-element[readonly]) {
+    background-color: #EEEEEE;
+    border-color: transparent;
+}

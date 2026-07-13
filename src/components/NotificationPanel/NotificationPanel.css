@@ -1,0 +1,238 @@
+.notification-panel-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+
+.notification-panel {
+  width: 404px;
+  height: 100vh;
+  background: #fff;
+  box-shadow: 0 4px 24.4px 0 rgba(0, 0, 0, 0.11);
+  display: flex;
+  flex-direction: column;
+  padding: 1.125rem 0.8125rem 5.125rem;
+}
+
+.notification-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: 1rem;
+}
+
+.close-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: #016937;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.close-button:hover {
+  background: #004321;
+}
+
+.notification-panel-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.notification-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.notification-title {
+  color: #000;
+  font-family: Poppins, -apple-system, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.clear-button {
+  color: #000;
+  font-family: Poppins, -apple-system, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.clear-button:hover {
+  color: #016937;
+}
+
+.notification-section {
+  margin-bottom: 1.5rem;
+}
+
+.section-label {
+  align-self: stretch;
+  color: #000;
+  font-family: Poppins, -apple-system, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  margin: 0 0 0.75rem 0;
+}
+
+.notification-item {
+  display: flex;
+  padding: 0.375rem;
+  align-items: center;
+  gap: 0.5rem;
+  align-self: stretch;
+  border-radius: 6px;
+  border-bottom: 1px solid #eee;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+
+.notification-item:hover {
+  background: #f9f9f9;
+}
+
+.notification-item-badge {
+  display: flex;
+  width: 48px;
+  height: 48px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+  color: #000;
+  text-align: center;
+  font-family: Poppins, -apple-system, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: pre-line;
+  flex-shrink: 0;
+}
+
+.badge-green {
+  background: #06e880;
+}
+
+.notification-item-icon {
+  display: flex;
+  width: 48px;
+  height: 48px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.icon-success {
+  background: #c1ffd4;
+}
+
+.icon-warning {
+  background: #fff1c2;
+}
+
+.notification-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.625rem;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.notification-item-title {
+  color: #000;
+  font-family: Poppins, -apple-system, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.notification-meta {
+  color: #000;
+  font-family: Poppins, -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.notification-time {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  align-self: stretch;
+  color: #000;
+  font-family: Poppins, -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .notification-panel {
+    width: 100%;
+    max-width: 404px;
+  }
+}
+
+/* View More Button */
+.view-more-container {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0;
+  margin-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.view-more-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: hsl(var(--primary));
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: Poppins, -apple-system, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.view-more-button:hover {
+  background: hsl(var(--primary-700));
+  transform: translateY(-1px);
+}
+
+.view-more-button svg {
+  transition: transform 0.2s;
+}
+
+.view-more-button:hover svg {
+  transform: translateX(4px);
+}
+
+.admin-theme .view-more-button {
+  background: hsl(var(--primary));
+}
+
+.admin-theme .view-more-button:hover {
+  background: hsl(var(--primary-700));
+}

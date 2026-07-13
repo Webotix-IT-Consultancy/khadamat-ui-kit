@@ -1,0 +1,7 @@
+.validation-message{
+    font-size: 12px;
+    margin-top: 4px;
+}
+.validation-message.error-message{
+    color: hsl(var(--destructive))
+}

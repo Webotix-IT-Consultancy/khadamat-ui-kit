@@ -1,0 +1,193 @@
+.filter-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 404px;
+  padding: 1.25rem;
+  gap: 0.625rem;
+  background: #FFF;
+  box-shadow: 0 4px 24.4px 0 rgba(0, 0, 0, 0.11);
+  min-height: 100vh;
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 999;
+}
+
+.filter-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.close-button {
+  display: flex;
+  width: 48px;
+  height: 48px;
+  justify-content: center;
+  align-items: center;
+  gap: 0.625rem;
+  border-radius: 10px;
+  background: #016937;
+  color: #FFF;
+  transition: background-color 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.close-button:hover {
+  background: #014d29;
+}
+
+.filter-panel-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.filter-panel-title h3 {
+  font-family: 'Poppins', -apple-system, Roboto, Helvetica, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #000;
+}
+
+.clear-all-button {
+  font-family: 'Poppins', -apple-system, Roboto, Helvetica, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: #000;
+  text-decoration: underline;
+  transition: opacity 0.2s ease;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.clear-all-button:hover {
+  opacity: 0.8;
+}
+
+.filter-panel-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6875rem;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+.filter-group label {
+  font-family: 'Poppins', -apple-system, Roboto, Helvetica, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: #000;
+  text-transform: capitalize;
+}
+
+/* Removed legacy input styles as MUI handles them now */
+
+.filter-panel-actions {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.clear-button,
+.apply-button {
+  display: flex;
+  height: 57px;
+  padding: 1.3125rem 2.4375rem;
+  justify-content: center;
+  align-items: center;
+  gap: 0.9375rem;
+  flex: 1;
+  border-radius: 10px;
+  font-family: 'Poppins', -apple-system, Roboto, Helvetica, sans-serif;
+  font-size: 19px;
+  font-weight: 400;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.clear-button {
+  border: 2px solid #016937;
+  color: #016937;
+  background: #FFF;
+}
+
+.clear-button:hover {
+  background: #f0f9f4;
+}
+
+.apply-button {
+  background: #016937;
+  color: #FFF;
+  border: none;
+}
+
+.apply-button:hover {
+  background: #014d29;
+}
+
+.apply-button svg {
+  flex-shrink: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .filter-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 50;
+    max-width: 100%;
+    width: 100%;
+    animation: slide-in-right 0.3s ease-out;
+  }
+}
+
+@media (max-width: 640px) {
+  .filter-panel {
+    padding: 1rem;
+  }
+
+  .filter-input,
+  .filter-select {
+    height: 48px;
+    font-size: 14px;
+  }
+
+  .clear-button,
+  .apply-button {
+    height: 48px;
+    padding: 0.75rem 1.5rem;
+    font-size: 16px;
+  }
+
+  .filter-panel-title h3 {
+    font-size: 14px;
+  }
+
+  .clear-all-button {
+    font-size: 14px;
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}

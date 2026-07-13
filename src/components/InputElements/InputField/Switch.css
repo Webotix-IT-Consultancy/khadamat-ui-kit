@@ -1,0 +1,167 @@
+.switch-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: fit-content;
+}
+
+.switch-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.switch-container {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.switch-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.switch-track {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 9999px;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Size variants */
+.switch-track-sm {
+    width: 36px;
+    height: 20px;
+}
+
+.switch-track-md {
+    width: 44px;
+    height: 24px;
+}
+
+.switch-track-lg {
+    width: 52px;
+    height: 28px;
+}
+
+/* Unchecked state */
+.switch-track-unchecked {
+    background-color: hsl(var(--grey-200));
+}
+
+/* Checked state */
+.switch-track-checked {
+    background-color: hsl(var(--primary));
+}
+
+/* Focus styles */
+.switch-input:focus-visible+.switch-track {
+    box-shadow: 0 0 0 3px hsl(var(--primary-light));
+}
+
+/* Disabled styles */
+.switch-input:disabled+.switch-track {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Switch thumb (the circle) */
+.switch-thumb {
+    position: absolute;
+    background-color: white;
+    border-radius: 9999px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+/* Thumb sizes */
+.switch-thumb-sm {
+    width: 16px;
+    height: 16px;
+    top: 2px;
+}
+
+.switch-thumb-md {
+    width: 20px;
+    height: 20px;
+    top: 2px;
+}
+
+.switch-thumb-lg {
+    width: 24px;
+    height: 24px;
+    top: 2px;
+}
+
+/* Thumb position - unchecked */
+.switch-thumb-unchecked.switch-thumb-sm {
+    left: 2px;
+}
+
+.switch-thumb-unchecked.switch-thumb-md {
+    left: 2px;
+}
+
+.switch-thumb-unchecked.switch-thumb-lg {
+    left: 2px;
+}
+
+/* Thumb position - checked */
+.switch-thumb-checked.switch-thumb-sm {
+    transform: translateX(16px);
+    left: 2px;
+}
+
+.switch-thumb-checked.switch-thumb-md {
+    transform: translateX(20px);
+    left: 2px;
+}
+
+.switch-thumb-checked.switch-thumb-lg {
+    transform: translateX(24px);
+    left: 2px;
+}
+
+/* Label styles */
+.switch-label {
+    color: hsl(var(--foreground));
+    font-size: var(--small);
+    font-weight: 500;
+    cursor: pointer;
+    line-height: 1.4;
+    user-select: none;
+}
+
+.switch-label-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Error message */
+.switch-error-message {
+    color: hsl(var(--destructive));
+    font-size: var(--extra-small);
+    font-weight: 400;
+    margin: 0;
+    padding-top: 2px;
+}
+
+.switch-label-error {
+    color: hsl(var(--destructive)) !important;
+}
+
+.switch-required-mark {
+    color: hsl(var(--destructive));
+    font-size: var(--extra-small);
+    font-weight: 400;
+    margin-left: 2px;
+}

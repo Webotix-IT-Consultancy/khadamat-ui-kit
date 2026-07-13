@@ -1,0 +1,74 @@
+.request-card {
+  display: flex;
+  padding: 0.4375rem 0.5rem;
+  align-items: center;
+  gap: 0.875rem;
+  align-self: stretch;
+  border-radius: 8px;
+  background: #fff;
+  transition: all 0.2s;
+}
+
+.request-card:hover {
+  background: #f9f9f9;
+}
+
+.request-card-active {
+  background: #dbf8e3;
+}
+
+.request-card-active:hover {
+  background: #c9f3d8;
+}
+
+.request-badge {
+  display: flex;
+  width: 66px;
+  height: 58px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.3125rem;
+  border-radius: 10px;
+  color: #000;
+  text-align: center;
+  font-family: Poppins, -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: pre-line;
+}
+
+.request-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: -0.0625rem;
+  flex: 1;
+}
+
+.request-title {
+  align-self: stretch;
+  color: #000;
+  font-family: Poppins, -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.request-timestamp {
+  color: #00572c;
+  font-family: Poppins, -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.request-card:not(.request-card-active) .request-timestamp {
+  color: #1b1b1a;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .request-card {
+    flex-wrap: wrap;
+  }
+}

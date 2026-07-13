@@ -1,0 +1,188 @@
+.btn {
+  display: flex;
+  height: 46px;
+  /* padding: 21px 39px; */
+  padding: .5rem 1rem;
+  justify-content: center;
+  align-items: center;
+  gap: .5rem;
+  border-radius: var(--radius-r-10);
+  border: none;
+  font-family: 'Poppins', sans-serif;
+  /* font-size: var(--h6); */
+  font-size: var(--medium);
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn {
+  height: var(--btn-height);
+}
+.btn-small {
+  padding: .5rem 1rem !important;
+  font-size: var(--small) !important;
+  height: var(--btn-small-height) !important;
+}
+.btn-large {
+  padding: .5rem 1rem !important;
+  font-size: var(--large) !important;
+  height: var(--btn-large-height) !important;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================= */
+/* Primary Button */
+/* ============================= */
+
+.btn-primary {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: hsl(var(--primary-600));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px hsla(var(--primary), 0.2);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+
+/* ============================= */
+/* Secondary Button */
+/* ============================= */
+
+.btn-secondary {
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: hsl(var(--secondary-400));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px hsla(var(--secondary), 0.2);
+}
+
+.btn-secondary:active:not(:disabled) {
+  transform: translateY(0);
+}
+/* ============================= */
+
+/* Tertiary Button */
+
+.btn-tertiary {
+  background: hsl(var(--tertiary));
+  color: hsl(var(--tertiary-foreground));
+}
+.btn-tertiary:hover:not(:disabled) {
+  background: hsl(var(--tertiary-400));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px hsla(var(--tertiary), 0.2);
+}
+.btn-tertiary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* ============================= */
+/* quaternary Button */
+.btn-quaternary {
+  background: hsl(var(--quaternary));
+  color: hsl(var(--quaternary-foreground));
+}
+.btn-quaternary:hover:not(:disabled) {
+  background: hsl(var(--quaternary-400));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px hsla(var(--quaternary), 0.2);
+}
+.btn-quaternary:active:not(:disabled) {
+  transform: translateY(0);
+}
+/* ============================= */
+/* Danger Button */
+/* ============================= */   
+.btn-danger {
+  background: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+}
+.btn-danger:hover:not(:disabled) {
+  background: hsl(var(--destructive-600));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px hsla(var(--destructive), 0.2);
+}
+.btn-danger:active:not(:disabled) {
+  transform: translateY(0);
+}
+/* ============================= */
+
+
+/* ============================= */
+/* Outline Button */
+/* ============================= */
+
+.btn-outline {
+  background: transparent;
+  color: hsl(var(--primary));
+  border: 2px solid hsl(var(--primary));
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: hsla(var(--primary), 0.05);
+}
+
+/* ============================= */
+/* Utilities */
+/* ============================= */
+
+.btn-full-width {
+  width: 100%;
+}
+
+.btn-loading-state {
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.btn-icon-spinner {
+  animation: spinner 1s linear infinite;
+  margin-right: 8px;
+}
+
+/* ============================= */
+/* Outline Primary Button */
+/* ============================= */
+
+.btn-outline-primary {
+  background: transparent;
+  border: 2px solid hsl(var(--primary));
+  color: hsl(var(--primary));
+}
+
+.btn-outline-primary:hover:not(:disabled) {
+  color: hsl(var(--primary-foreground));
+  background: hsl(var(--primary));
+  transform: translateY(-1px);  
+  box-shadow: 0 4px 12px hsla(var(--primary), 0.2);
+}
+
+.btn-outline-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* ============================= */
+/* Animations */
+/* ============================= */
+
+@keyframes spinner {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

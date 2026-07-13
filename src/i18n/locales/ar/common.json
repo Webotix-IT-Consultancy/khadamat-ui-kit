@@ -1,0 +1,95 @@
+{
+    "buttons": {
+        "login": "تسجيل الدخول",
+        "submit": "إرسال",
+        "cancel": "إلغاء",
+        "save": "حفظ",
+        "export": "تصدير",
+        "print": "طباعة",
+        "back": "رجوع",
+        "next": "التالي",
+        "saveChanges": "حفظ التغييرات",
+        "downloadReceipt": "تحميل الإيصال",
+        "viewMore": "عرض المزيد",
+        "viewAll": "عرض الكل",
+        "recharge": "شحن",
+        "rechargeNow": "اشحن الآن",
+        "filter": "تصفية",
+        "clear": "مسح",
+        "apply": "تطبيق"
+    },
+    "tabs": {
+        "all": "الكل",
+        "unread": "غير مقروء",
+        "read": "مقروء"
+    },
+    "status": {
+        "success": "ناجح",
+        "pending": "قيد الانتظار",
+        "failed": "فاشل",
+        "paid": "مدفوع",
+        "unpaid": "غير مدفوع",
+        "completed": "مكتمل",
+        "processing": "قيد المعالجة"
+    },
+    "table": {
+        "slNo": "الرقم",
+        "date": "التاريخ",
+        "dateTime": "التاريخ والوقت",
+        "amount": "المبلغ",
+        "status": "الحالة",
+        "action": "إجراء",
+        "description": "الوصف",
+        "transactionId": "رقم العملية",
+        "invoiceNo": "رقم الفاتورة",
+        "requestId": "رقم الطلب",
+        "serviceName": "اسم الخدمة",
+        "type": "النوع",
+        "balance": "الرصيد",
+        "paymentMode": "طريقة الدفع",
+        "rechargeAmount": "مبلغ الشحن",
+        "paid": "المدفوع",
+        "paginationInfo": "إجمالي السجلات: {{count}} | عرض {{from}}-{{to}}",
+        "searchPlaceholder": "بحث...",
+        "rowsPerPage": "الحجم: {{count}}",
+        "rowCount": "{{count}} صفوف"
+    },
+    "emptyStates": {
+        "noData": "لا توجد بيانات متاحة",
+        "noRecentRequests": "لا توجد طلبات حديثة",
+        "noTransactions": "لا توجد عمليات حديثة",
+        "noInvoices": "لا توجد فواتير حديثة"
+    },
+    "messages": {
+        "loading": "جاري التحميل...",
+        "errorGeneric": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+        "successGeneric": "تمت العملية بنجاح"
+    },
+    "validation": {
+        "required": "هذا الحقل مطلوب",
+        "invalidEmail": "عنوان بريد إلكتروني غير صحيح",
+        "minLength": "الحد الأدنى {{count}} أحرف مطلوبة"
+    },
+    "sidebar": {
+        "dashboard": "لوحة القيادة",
+        "wallet": "المحفظة",
+        "transaction": "المعاملات",
+        "invoice": "الفواتير",
+        "enquiries": "الاستفسارات",
+        "onCallService": "خدمة عند الطلب",
+        "profile": "الملف الشخصي",
+        "notifications": "إشعارات",
+        "feedback": "تعليق",
+        "tollFree": "رقم مجاني +971 293 4734 34",
+        "enquiry": "هل لديك أي استفسار؟",
+        "enquiryDesc": "الدردشة معنا",
+        "logout": "تسجيل الخروج",
+        "language": "اللغة",
+        "developedBy": "تصميم وتطوير بواسطة"
+    },
+    "header": {
+        "welcomeBack": "مرحباً بك مرة أخرى",
+        "id": "معرف"
+    },
+    "currency": "درهم"
+}

@@ -1,0 +1,91 @@
+.transaction-card {
+  display: flex;
+  padding: 0.3125rem;
+  justify-content: space-between;
+  align-items: center;
+  align-self: stretch;
+  transition: background 0.2s;
+  border-radius: 8px;
+}
+
+.transaction-card:hover {
+  background: #f9f9f9;
+}
+
+.transaction-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6875rem;
+}
+
+.transaction-icon {
+  display: flex;
+  width: 56px;
+  height: 56px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 12px;
+}
+
+.transaction-icon-wallet {
+  background: #c1ffd4;
+}
+
+.transaction-icon-invoice {
+  background: #06e880;
+}
+
+.transaction-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: -0.125rem;
+}
+
+.transaction-title {
+  color: #000;
+  font-family: Poppins, -apple-system, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.transaction-date {
+  color: #7f7d7a;
+  font-family: Poppins, -apple-system, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.transaction-amounts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: -0.125rem;
+}
+
+.transaction-amount {
+  color: #000;
+  font-family: Poppins, -apple-system, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.transaction-balance {
+  color: #7f7d7a;
+  font-family: Poppins, -apple-system, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .transaction-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .transaction-amounts {
+    width: 100%;
+  }
+}
