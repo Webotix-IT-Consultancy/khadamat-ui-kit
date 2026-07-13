@@ -61,8 +61,38 @@ React, react-router-dom, react-i18next/i18next, zustand, MUI, Radix, and a
 handful of small utility libraries are declared as `peerDependencies` — the
 consuming app controls the actual installed versions. See `package.json`.
 
-## Publishing
+## Installing
 
-Published to GitHub Packages as `@khadamat/ui-kit`. Bump the version in
-`package.json` and push a tag; see the consuming portals' README for how CI
-authenticates to install it.
+No npm registry involved — consuming portals depend on this repo directly via
+a git URL pinned to a tag:
+
+```json
+{
+  "dependencies": {
+    "@khadamat/ui-kit": "github:Webotix-IT-Consultancy/khadamat-ui-kit#v0.1.0"
+  }
+}
+```
+
+npm clones the repo at that ref and links it in as a normal `node_modules`
+package — no `.npmrc`, no PAT, no registry auth, no CI publish step needed in
+either portal.
+
+## Releasing a new version
+
+1. Make your change, commit, push to `main`.
+2. Bump `version` in `package.json` (semver, by convention — nothing enforces
+   it since there's no registry).
+3. Tag the commit and push the tag:
+   ```bash
+   git tag -a v0.2.0 -m "Describe what changed"
+   git push origin v0.2.0
+   ```
+4. In each portal repo that should pick it up:
+   ```bash
+   npm install github:Webotix-IT-Consultancy/khadamat-ui-kit#v0.2.0
+   ```
+   This updates the pinned ref in that portal's `package.json`/lockfile.
+
+Portals can stay on an older tag indefinitely — there's no forced upgrade,
+each one just points at whatever ref it was last bumped to.
