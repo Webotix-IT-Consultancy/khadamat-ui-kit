@@ -1,0 +1,159 @@
+/* TableControls.css */
+/*
+ * Shared styling for the table controls row (search + sort/filter buttons),
+ * the action-menu buttons, and the in-row action icons used by the ui-kit
+ * table components (TablePrimary, TableActionMenu, InvoiceTable,
+ * TransactionTable, RequestTable).
+ *
+ * Loaded via TablePrimary.tsx, which renders on every table view, so any
+ * consuming app (customer or admin portal) gets these styles automatically.
+ */
+
+.table-table-container {
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.table-controls-row {
+  /* display: flex; */
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 900px) {
+  .table-controls-row {
+    flex-wrap: wrap;
+  }
+}
+
+.mui-search-field {
+  flex: 1;
+}
+
+.mui-search-field .MuiOutlinedInput-root {
+  border-radius: 10px;
+  background-color: hsl(var(--white));
+  height: var(--input-height);
+}
+.mui-search-field .MuiOutlinedInput-root.MuiInputBase-sizeSmall {
+  height: var(--input-small-height);
+}
+.mui-search-field .MuiOutlinedInput-root.MuiInputBase-sizeLarge {
+  height: var(--input-large-height);
+}
+
+
+.mui-search-field .MuiOutlinedInput-notchedOutline {
+  border-color: hsl(var(--primary));
+  border-width: 2px;
+}
+
+.mui-search-field:hover .MuiOutlinedInput-notchedOutline {
+  border-color: hsl(var(--primary-600));
+}
+
+.mui-search-field.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: hsl(var(--primary));
+}
+
+.mui-search-field .MuiInputBase-input {
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+}
+
+.table-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+@media (max-width: 900px) {
+  .table-actions {
+    width: 100%;
+  }
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 24px;
+  height: 46px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  /* font-size: 19px; */
+  min-width: 120px;
+  transition: all 0.2s ease;
+}
+
+@media (max-width: 900px) {
+  .action-btn {
+    flex: 1;
+  }
+}
+
+.btn-sort {
+  background-color: hsl(var(--grey-100));
+  color: hsl(var(--black));
+}
+
+.btn-sort:hover {
+  background-color: hsl(var(--grey-200));
+}
+
+.btn-filter {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--white));
+}
+
+.btn-filter:hover {
+  background-color: hsl(var(--primary-600));
+}
+
+.sort-menu-paper {
+  border-radius: 10px !important;
+  margin-top: 8px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+  min-width: 180px !important;
+}
+
+.sort-menu-item {
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 14px !important;
+}
+
+.sort-menu-item.Mui-selected {
+  background-color: rgba(1, 105, 55, 0.08) !important;
+}
+
+.sort-menu-item.Mui-selected:hover {
+  background-color: rgba(1, 105, 55, 0.12) !important;
+}
+
+.table-primary-container table .action-icons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.table-primary-container table .action-icon {
+  cursor: pointer;
+  transition: color 0.2s ease;
+  color: hsl(var(--foreground));
+}
+
+.table-primary-container table .action-icon:hover {
+  color: hsl(var(--primary));
+}
+
+.table-primary-container table .view-icon:hover {
+  color: hsl(var(--primary));
+}
+
+.table-primary-container table .download-icon:hover {
+  color: hsl(var(--primary));
+}

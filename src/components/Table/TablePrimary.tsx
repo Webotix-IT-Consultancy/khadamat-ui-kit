@@ -12,6 +12,7 @@ import {
     Pagination,
 } from '@mui/material';
 import './TablePrimary.css';
+import './TableControls.css';
 import { useTranslation } from 'react-i18next';
 
 export interface ColumnDefinition<T> {
