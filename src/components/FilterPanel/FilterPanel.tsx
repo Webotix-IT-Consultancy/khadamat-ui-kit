@@ -19,12 +19,25 @@ import { useTranslation } from 'react-i18next';
 // Extend dayjs to support custom formats like DD/MM/YYYY
 dayjs.extend(customParseFormat);
 
-export type FilterMode = 'transaction' | 'request' | 'customer' | 'feedback';
+export type FilterMode = 'transaction' | 'request' | 'customer' | 'feedback' | 'enquiry';
+
+export interface FilterOption {
+  label: string;
+  value: string;
+}
 
 interface FilterPanelProps {
   onClose: () => void;
   onApply: (filters: FilterValues) => void;
   mode?: FilterMode;
+  /**
+   * Supervisor choices for `mode="enquiry"`. Sourced from the Employee Master by
+   * the caller, since this package has no data layer. An "Unassigned" entry is
+   * prepended automatically.
+   */
+  supervisorOptions?: FilterOption[];
+  /** Seeds the form so a reopened panel shows the filters already in effect. */
+  initialValues?: Partial<FilterValues>;
 }
 
 export interface FilterValues {
@@ -43,6 +56,9 @@ export interface FilterValues {
   customerStatus?: string;
   // Feedback specific fields
   feedback?: string;
+  // Enquiry specific fields
+  supervisor?: string;
+  enquiryType?: string;
 }
 
 // Styled MUI components to match the project's theme
@@ -54,14 +70,14 @@ const StyledTextField = styled(TextField)({
     fontSize: '16px',
     backgroundColor: '#FFF',
     '& fieldset': {
-      borderColor: '#016937',
+      borderColor: 'hsl(var(--primary))',
       borderWidth: '2px',
     },
     '&:hover fieldset': {
-      borderColor: '#016937',
+      borderColor: 'hsl(var(--primary))',
     },
     '&.Mui-focused fieldset': {
-      borderColor: '#016937',
+      borderColor: 'hsl(var(--primary))',
     },
   },
   '& .MuiInputBase-input::placeholder': {
@@ -79,14 +95,14 @@ const StyledAutocomplete = styled(Autocomplete)({
     backgroundColor: '#FFF',
     border: 'none', // Remove native border to use fieldset border
     '& fieldset': {
-      borderColor: '#016937',
+      borderColor: 'hsl(var(--primary))',
       borderWidth: '2px',
     },
     '&:hover fieldset': {
-      borderColor: '#016937',
+      borderColor: 'hsl(var(--primary))',
     },
     '&.Mui-focused fieldset': {
-      borderColor: '#016937',
+      borderColor: 'hsl(var(--primary))',
     },
   },
   '& .MuiAutocomplete-input': {
@@ -96,24 +112,34 @@ const StyledAutocomplete = styled(Autocomplete)({
   }
 });
 
-const FilterPanel: React.FC<FilterPanelProps> = ({ onClose, onApply, mode = 'transaction' }) => {
-  const { t } = useTranslation(['transactions', 'invoice', 'common']);
+/** Every field empty — an empty string means "All" for a given filter. */
+const EMPTY_FILTERS: FilterValues = {
+  fromDate: '',
+  toDate: '',
+  projectService: '',
+  transactionType: '',
+  paymentMode: '',
+  status: '',
+  contract: '',
+  preferredDate: '',
+  preferredTime: '',
+  customerType: '',
+  customerStatus: '',
+  feedback: '',
+  supervisor: '',
+  enquiryType: ''
+};
 
-  const [filters, setFilters] = useState<FilterValues>({
-    fromDate: '',
-    toDate: '',
-    // Initialize common defaults with empty strings for "All"
-    projectService: '',
-    transactionType: '',
-    paymentMode: '',
-    status: '',
-    contract: '',
-    preferredDate: '',
-    preferredTime: '',
-    customerType: '',
-    customerStatus: '',
-    feedback: ''
-  });
+const FilterPanel: React.FC<FilterPanelProps> = ({
+  onClose,
+  onApply,
+  mode = 'transaction',
+  supervisorOptions = [],
+  initialValues
+}) => {
+  const { t } = useTranslation(['transactions', 'invoice', 'common', 'adminEnquiries']);
+
+  const [filters, setFilters] = useState<FilterValues>({ ...EMPTY_FILTERS, ...initialValues });
 
   const handleInputChange = (field: keyof FilterValues, value: string) => {
     setFilters(prev => ({
@@ -140,20 +166,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onClose, onApply, mode = 'tra
 
 
   const handleClear = () => {
-    setFilters({
-      fromDate: '',
-      toDate: '',
-      projectService: '',
-      transactionType: '',
-      paymentMode: '',
-      status: '',
-      contract: '',
-      preferredDate: '',
-      preferredTime: '',
-      customerType: '',
-      customerStatus: '',
-      feedback: ''
-    });
+    setFilters(EMPTY_FILTERS);
   };
 
   const handleApply = () => {
@@ -206,6 +219,25 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onClose, onApply, mode = 'tra
     { label: t('transactions:filters.all'), value: '' },
     { label: 'Active', value: 'Active' },
     { label: 'Hold', value: 'Hold' }
+  ];
+
+  const enquiryStatusOptions = [
+    { label: t('adminEnquiries:list.filters.allStatuses'), value: '' },
+    { label: t('adminEnquiries:status.active'), value: 'active' },
+    { label: t('adminEnquiries:status.secured'), value: 'secured' },
+    { label: t('adminEnquiries:status.lost'), value: 'lost' }
+  ];
+
+  const enquirySupervisorOptions = [
+    { label: t('adminEnquiries:list.filters.allSupervisors'), value: '' },
+    { label: t('adminEnquiries:list.unassigned'), value: 'unassigned' },
+    ...supervisorOptions
+  ];
+
+  const enquiryTypeOptions = [
+    { label: t('adminEnquiries:list.filters.allTypes'), value: '' },
+    { label: t('adminEnquiries:list.types.enquiry'), value: 'enquiry' },
+    { label: t('adminEnquiries:list.types.renewal'), value: 'renewal' }
   ];
 
   const feedbackStatusOptions = [
@@ -439,6 +471,64 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onClose, onApply, mode = 'tra
                   onChange={(_, newValue: any) => handleInputChange('customerStatus', newValue?.value ?? '')}
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder="Select" />
+                  )}
+                  disablePortal
+                />
+              </div>
+            </>
+          )}
+
+          {mode === 'enquiry' && (
+            <>
+              <div className="filter-group">
+                <label>{t('adminEnquiries:list.filters.status')}</label>
+                <StyledAutocomplete
+                  options={enquiryStatusOptions}
+                  getOptionLabel={(option: any) => option.label || ''}
+                  isOptionEqualToValue={(option: any, value: any) => {
+                    if (typeof value === 'string') return option.value === value;
+                    return option.value === value.value;
+                  }}
+                  value={enquiryStatusOptions.find(opt => opt.value === filters.status) || null}
+                  onChange={(_, newValue: any) => handleInputChange('status', newValue?.value ?? '')}
+                  renderInput={(params) => (
+                    <StyledTextField {...params} placeholder={t('adminEnquiries:form.placeholders.select')} />
+                  )}
+                  disablePortal
+                />
+              </div>
+
+              <div className="filter-group">
+                <label>{t('adminEnquiries:list.filters.supervisor')}</label>
+                <StyledAutocomplete
+                  options={enquirySupervisorOptions}
+                  getOptionLabel={(option: any) => option.label || ''}
+                  isOptionEqualToValue={(option: any, value: any) => {
+                    if (typeof value === 'string') return option.value === value;
+                    return option.value === value.value;
+                  }}
+                  value={enquirySupervisorOptions.find(opt => opt.value === filters.supervisor) || null}
+                  onChange={(_, newValue: any) => handleInputChange('supervisor', newValue?.value ?? '')}
+                  renderInput={(params) => (
+                    <StyledTextField {...params} placeholder={t('adminEnquiries:form.placeholders.select')} />
+                  )}
+                  disablePortal
+                />
+              </div>
+
+              <div className="filter-group">
+                <label>{t('adminEnquiries:list.filters.enquiryType')}</label>
+                <StyledAutocomplete
+                  options={enquiryTypeOptions}
+                  getOptionLabel={(option: any) => option.label || ''}
+                  isOptionEqualToValue={(option: any, value: any) => {
+                    if (typeof value === 'string') return option.value === value;
+                    return option.value === value.value;
+                  }}
+                  value={enquiryTypeOptions.find(opt => opt.value === filters.enquiryType) || null}
+                  onChange={(_, newValue: any) => handleInputChange('enquiryType', newValue?.value ?? '')}
+                  renderInput={(params) => (
+                    <StyledTextField {...params} placeholder={t('adminEnquiries:form.placeholders.select')} />
                   )}
                   disablePortal
                 />
