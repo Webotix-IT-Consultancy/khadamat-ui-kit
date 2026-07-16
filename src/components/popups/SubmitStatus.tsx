@@ -35,6 +35,12 @@ interface SubmitStatusProps {
     serviceDetails?: OnCallServiceDetails;
     userEmail?: string;
     onDownloadReceipt?: () => void;
+    /**
+     * Hides the X close button — for confirmations that dismiss themselves
+     * (e.g. an upload toast). Defaults to false, so existing callers are
+     * unaffected.
+     */
+    hideClose?: boolean;
 }
 
 // Reusable Detail Item Component
@@ -91,6 +97,7 @@ const SubmitStatus: React.FC<SubmitStatusProps> = ({
     serviceDetails,
     userEmail = '',
     onDownloadReceipt,
+    hideClose = false,
 }) => {
     const isSuccess = status === 'success';
     const isWalletType = type === 'wallet';
@@ -114,12 +121,14 @@ const SubmitStatus: React.FC<SubmitStatusProps> = ({
                 }
             }}
         >
-            <IconButton
-                onClick={onClose}
-                sx={{ position: 'absolute', right: 16, top: 16, color: '#666', zIndex: 10 }}
-            >
-                <X size={24} />
-            </IconButton>
+            {!hideClose && (
+                <IconButton
+                    onClick={onClose}
+                    sx={{ position: 'absolute', right: 16, top: 16, color: '#666', zIndex: 10 }}
+                >
+                    <X size={24} />
+                </IconButton>
+            )}
             <div className="flex flex-col items-center p-4 sm:p-6 md:p-8 bg-white relative overflow-y-auto max-h-[calc(90vh-32px)] flex-1">
 
                
