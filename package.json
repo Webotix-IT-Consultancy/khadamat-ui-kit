@@ -1,6 +1,6 @@
 {
   "name": "@khadamat/ui-kit",
-  "version": "0.1.0",
+  "version": "0.1.5",
   "description": "Shared UI components, hooks, stores, utils and i18n scaffolding for the Khadamat customer and admin portals",
   "type": "module",
   "main": "./src/index.ts",
