@@ -57,6 +57,43 @@
   color: #ff3232;
 }
 
+/*
+ * Contract & Quotation lifecycle chips — palette fixed by FR-CC-CON-01
+ * (InProgress=grey, Approved=blue, Awaiting Payment=amber, Live=green,
+ * Completed=dark green, Lost/Cancelled=red) plus Awaiting Signatures=purple (S4.1).
+ * `.status-badge-completed` above already carries the dark green and is reused as-is.
+ */
+.status-badge-contract-in-progress {
+  background: hsl(var(--grey-100));
+  color: hsl(var(--grey-600));
+}
+
+.status-badge-approved {
+  background: #e7f0ff;
+  color: #1666d8;
+}
+
+.status-badge-awaiting-payment {
+  background: #fff1c2;
+  color: #947b3f;
+}
+
+.status-badge-awaiting-signatures {
+  background: #f1e9fe;
+  color: #7a3ec8;
+}
+
+.status-badge-live {
+  background: #e6f7ee;
+  color: #009951;
+}
+
+/* S4.1: an auto-cancelled contract is labelled 'Lost' but shares the red chip. */
+.status-badge-cancelled {
+  background: #fee9e7;
+  color: #ff3232;
+}
+
 
 /* Light status badge */
 .status-badge-light.status-badge-success {
