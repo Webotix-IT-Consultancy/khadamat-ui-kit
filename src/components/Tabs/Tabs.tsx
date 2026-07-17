@@ -57,7 +57,7 @@ const Tabs: React.FC<TabsProps> = ({
                                 "flex items-center gap-2 transition-colors cursor-pointer",
                                 isPill
                                     ? cn(
-                                        "rounded-full border-2 border-primary px-5 py-1.5 text-sm font-medium",
+                                        "rounded-xl border-2 border-primary px-5 py-1.5 text-sm font-medium",
                                         isActive
                                             ? "bg-primary-100 text-black"
                                             : "bg-white text-black hover:bg-primary-100/40"
@@ -79,7 +79,7 @@ const Tabs: React.FC<TabsProps> = ({
                                         ? isActive
                                             ? "bg-primary text-primary-foreground"
                                             : "bg-primary-100 text-black"
-                                        : "bg-grey-200 text-black")
+                                        : "bg-tertiary-200 text-black")
                                 )}>
                                     {tab.count}
                                 </span>
