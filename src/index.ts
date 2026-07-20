@@ -20,3 +20,4 @@ export { cn } from './lib/utils';
 
 export * from './utils/exportTable';
 export * from './utils/receiptGenerator';
+export * from './utils/phone';
