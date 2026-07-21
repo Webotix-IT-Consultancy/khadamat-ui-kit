@@ -79,7 +79,7 @@ const Tabs: React.FC<TabsProps> = ({
                                         ? isActive
                                             ? "bg-primary text-primary-foreground"
                                             : "bg-primary-100 text-black"
-                                        : "bg-tertiary-200 text-black")
+                                        : "bg-primary text-black")
                                 )}>
                                     {tab.count}
                                 </span>
