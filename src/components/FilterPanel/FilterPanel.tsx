@@ -26,10 +26,31 @@ export interface FilterOption {
   value: string;
 }
 
+/**
+ * A caller-defined filter dropdown. Use these via the `fields` prop when a module's
+ * filters should be driven by its own table columns rather than by one of the
+ * hardcoded `mode` layouts below.
+ */
+export interface FilterFieldConfig {
+  /** Key written into the applied FilterValues, e.g. 'status'. */
+  key: string;
+  label: string;
+  /** Column values to offer. Include an "All" entry with value '' if you want one. */
+  options: FilterOption[];
+  placeholder?: string;
+}
+
 interface FilterPanelProps {
   onClose: () => void;
   onApply: (filters: FilterValues) => void;
   mode?: FilterMode;
+  /**
+   * Caller-defined dropdowns, rendered under the From/To date range instead of a
+   * `mode` layout. Prefer this for new modules: `mode` hardcodes each module's
+   * options inside this package, which does not scale and cannot reflect live data.
+   * When `fields` is set, `mode` is ignored.
+   */
+  fields?: FilterFieldConfig[];
   /**
    * Supervisor choices for `mode="enquiry"`. Sourced from the Employee Master by
    * the caller, since this package has no data layer. An "Unassigned" entry is
@@ -38,9 +59,13 @@ interface FilterPanelProps {
   supervisorOptions?: FilterOption[];
   /** Seeds the form so a reopened panel shows the filters already in effect. */
   initialValues?: Partial<FilterValues>;
+  /** Overrides the From/To date labels, e.g. "Start Date From". */
+  dateLabels?: { from?: string; to?: string };
 }
 
 export interface FilterValues {
+  /** Keys supplied via `fields` land here alongside the built-in ones. */
+  [key: string]: string | undefined;
   fromDate: string;
   toDate: string;
   projectService?: string;
@@ -134,12 +159,34 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   onClose,
   onApply,
   mode = 'transaction',
+  fields,
   supervisorOptions = [],
-  initialValues
+  initialValues,
+  dateLabels
 }) => {
   const { t } = useTranslation(['transactions', 'invoice', 'common', 'adminEnquiries']);
 
   const [filters, setFilters] = useState<FilterValues>({ ...EMPTY_FILTERS, ...initialValues });
+
+  /**
+   * Reopening the panel must show the filters currently in effect — including any the
+   * caller changed elsewhere (e.g. list tabs that write the same keys), which is why
+   * this re-seeds rather than relying on the initial useState value.
+   */
+  React.useEffect(() => {
+    setFilters({ ...EMPTY_FILTERS, ...initialValues });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(initialValues)]);
+
+  /** `fields` replaces the hardcoded `mode` layouts entirely. */
+  const useCustomFields = Array.isArray(fields) && fields.length > 0;
+
+  const handleClearCustom = () => {
+    // Keep the caller's keys present but empty, so "All" resolves rather than undefined.
+    const cleared: FilterValues = { ...EMPTY_FILTERS };
+    (fields ?? []).forEach((field) => { cleared[field.key] = ''; });
+    setFilters(cleared);
+  };
 
   const handleInputChange = (field: keyof FilterValues, value: string) => {
     setFilters(prev => ({
@@ -166,6 +213,10 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
 
   const handleClear = () => {
+    if (useCustomFields) {
+      handleClearCustom();
+      return;
+    }
     setFilters(EMPTY_FILTERS);
   };
 
@@ -266,7 +317,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
         <div className="filter-panel-content">
           <div className="filter-group">
-            <label>{t('transactions:filters.fromDate')}</label>
+            <label>{dateLabels?.from ?? t('transactions:filters.fromDate')}</label>
             <DatePicker
               value={filters.fromDate ? dayjs(filters.fromDate, 'DD/MM/YYYY') : null}
               onChange={(date) => handleDateChange('fromDate', date)}
@@ -285,7 +336,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           </div>
 
           <div className="filter-group">
-            <label>{t('transactions:filters.toDate')}</label>
+            <label>{dateLabels?.to ?? t('transactions:filters.toDate')}</label>
             <DatePicker
               value={filters.toDate ? dayjs(filters.toDate, 'DD/MM/YYYY') : null}
               onChange={(date) => handleDateChange('toDate', date)}
@@ -303,7 +354,28 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             />
           </div>
 
-          {mode === 'transaction' && (
+          {/* Caller-defined dropdowns, driven by the module's own table columns. */}
+          {useCustomFields && fields!.map((field) => (
+            <div className="filter-group" key={field.key}>
+              <label>{field.label}</label>
+              <StyledAutocomplete
+                options={field.options}
+                getOptionLabel={(option: any) => option.label || ''}
+                isOptionEqualToValue={(option: any, value: any) => {
+                  if (typeof value === 'string') return option.value === value;
+                  return option.value === value.value;
+                }}
+                value={field.options.find(opt => opt.value === (filters[field.key] ?? '')) || null}
+                onChange={(_, newValue: any) => handleInputChange(field.key, newValue?.value ?? '')}
+                renderInput={(params) => (
+                  <StyledTextField {...params} placeholder={field.placeholder ?? field.label} />
+                )}
+                disablePortal
+              />
+            </div>
+          ))}
+
+          {!useCustomFields && mode === 'transaction' && (
             <>
               <div className="filter-group">
                 <label>{t('transactions:filters.projectService')}</label>
@@ -361,7 +433,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             </>
           )}
 
-          {mode === 'request' && (
+          {!useCustomFields && mode === 'request' && (
             <>
               <div className="filter-group">
                 <label>{t('invoice:filters.status')}</label>
@@ -438,7 +510,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             </>
           )}
 
-          {mode === 'customer' && (
+          {!useCustomFields && mode === 'customer' && (
             <>
               <div className="filter-group">
                 <label>Customer Type</label>
@@ -478,7 +550,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             </>
           )}
 
-          {mode === 'enquiry' && (
+          {!useCustomFields && mode === 'enquiry' && (
             <>
               <div className="filter-group">
                 <label>{t('adminEnquiries:list.filters.status')}</label>
@@ -536,7 +608,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             </>
           )}
 
-          {mode === 'feedback' && (
+          {!useCustomFields && mode === 'feedback' && (
             <>
               <div className="filter-group">
                 <label>Customer Type</label>
