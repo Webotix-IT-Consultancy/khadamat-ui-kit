@@ -9,7 +9,7 @@
       hsl(var(--primary-700)) 100%
     );
 
-  padding: 91px 135px;
+  padding: 48px 135px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -21,7 +21,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 32px;
+  gap: 24px;
   width: 100%;
 }
 
@@ -32,14 +32,15 @@
 }
 
 .auth-sidebar .logo-image {
-  width: 370px;
+  width: 280px;
   height: auto;
   max-width: 100%;
 }
 
 .auth-sidebar .sidebar-title {
   color: hsl(var(--primary-foreground));
-  font-size: var(--h2);
+  font-size: 28px;
+  /* font-size: var(--h2); */
   font-weight: 400;
   text-align: center;
 }
@@ -71,7 +72,7 @@
   padding: 19px 23px;
   display: flex;
   flex-direction: column;
-  gap: 36px;
+  gap: 24px;
   border-radius: 34px;
 
   background: hsla(var(--primary-700), 0.2);
@@ -86,8 +87,8 @@
 }
 
 .auth-sidebar .feature-icon {
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -95,6 +96,10 @@
   color: hsl(var(--primary-foreground));
   background: hsl(var(--primary-600));
   flex-shrink: 0;
+}
+.auth-sidebar .feature-icon svg{
+  width: 36px;
+  height: 36px;
 }
 
 .auth-sidebar .feature-text {
