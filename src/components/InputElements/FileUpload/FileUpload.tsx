@@ -1,6 +1,37 @@
 import React, { useRef, useState } from 'react';
-import { Upload, X } from 'lucide-react';
+import { Eye, FileText, Trash2, Upload } from 'lucide-react';
 import ValidationMessage from '../../ValidationMessage/ValidationMessage';
+
+/**
+ * Opens an uploaded file in a new tab.
+ *
+ * Files picked here are held as `data:` URLs (FileReader), and Chrome refuses
+ * top-level navigation to `data:` URLs — so they're converted to a blob URL
+ * first. Remote URLs are opened directly.
+ */
+const openInNewTab = (url: string) => {
+    if (!url || url === '#') return;
+
+    if (!url.startsWith('data:')) {
+        window.open(url, '_blank', 'noopener');
+        return;
+    }
+
+    try {
+        const [meta, base64] = url.split(',');
+        const mime = /data:([^;]+)/.exec(meta)?.[1] || 'application/octet-stream';
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+
+        const blobUrl = URL.createObjectURL(new Blob([bytes], { type: mime }));
+        window.open(blobUrl, '_blank', 'noopener');
+        // Released on a delay so the new tab has time to load it first.
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+    } catch (error) {
+        console.error('Could not open attachment:', error);
+    }
+};
 
 interface FileUploadProps {
     label?: string;
@@ -78,6 +109,15 @@ const FileUpload: React.FC<FileUploadProps> = ({
         onChange('', '');
     };
 
+    const handleView = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (value) openInNewTab(value);
+    };
+
+    const tile =
+        'flex h-10 w-10 shrink-0 items-center justify-center rounded-10 bg-tertiary-100 text-black transition-colors';
+    const actionTile = `${tile} hover:bg-tertiary`;
+
     return (
         <div className="w-full">
             {label && (
@@ -104,22 +144,32 @@ const FileUpload: React.FC<FileUploadProps> = ({
                     aria-label={label || 'Upload file'}
                 />
                 {value ? (
-                    <div className="flex items-center gap-3 w-full justify-center">
-                        {value.startsWith('data:image') ? (
-                            <img src={value} alt={fileName || 'attachment'} className="h-16 w-16 object-cover rounded-lg" />
-                        ) : (
-                            <div className="h-16 w-16 rounded-lg bg-primary-light flex items-center justify-center text-primary text-xs font-medium">
-                                FILE
-                            </div>
-                        )}
-                        <span className="text-sm text-black truncate max-w-[200px]">{fileName || 'Uploaded file'}</span>
+                    /* Uploaded-file chip: tan document tile, file name, then tan
+                       eye / trash tiles on a cream pill. The buttons stop
+                       propagation so they don't also re-open the file picker
+                       through the dropzone's onClick. */
+                    <div className="inline-flex max-w-full items-center gap-3 rounded-xl bg-primary-light p-2">
+                        <span className={tile}>
+                            <FileText size={20} />
+                        </span>
+
+                        <span className="truncate font-semibold text-black">{fileName || 'Uploaded file'}</span>
+
+                        <button
+                            type="button"
+                            onClick={handleView}
+                            aria-label={`View ${fileName || 'file'}`}
+                            className={actionTile}
+                        >
+                            <Eye size={20} />
+                        </button>
                         <button
                             type="button"
                             onClick={handleRemove}
-                            aria-label="Remove file"
-                            className="h-6 w-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600"
+                            aria-label={`Remove ${fileName || 'file'}`}
+                            className={actionTile}
                         >
-                            <X size={14} />
+                            <Trash2 size={20} />
                         </button>
                     </div>
                 ) : (

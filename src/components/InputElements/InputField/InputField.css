@@ -24,7 +24,7 @@
 
 .required-mark {
   color: hsl(var(--destructive));
-  font-size: var(--extra-small);
+  font-size: var(--small);
   font-weight: 400;
 }
 

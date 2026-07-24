@@ -34,7 +34,7 @@ const MUIDatePicker: React.FC<MUIDatePickerProps> = ({
                 {label && (
                     <div className="field-label">
                         <label>{label}</label>
-                        {required && <span className="required-indicator">*</span>}
+                        {required && <span className="required-mark">*</span>}
                     </div>
                 )}
                 <DatePicker

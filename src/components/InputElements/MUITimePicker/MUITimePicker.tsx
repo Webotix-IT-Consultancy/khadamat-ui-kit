@@ -37,7 +37,7 @@ const MUITimePicker: React.FC<MUITimePickerProps> = ({
                 {label && (
                     <div className="field-label">
                         <label>{label}</label>
-                        {required && <span className="required-indicator">*</span>}
+                        {required && <span className="required-mark">*</span>}
                     </div>
                 )}
                 <TimePicker

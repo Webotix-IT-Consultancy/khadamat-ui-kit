@@ -37,7 +37,7 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
             {label && (
                 <div className="field-label input-label">
                     <label htmlFor={name}>{label}</label>
-                    {required && <span className="required-indicator">*</span>}
+                    {required && <span className="required-mark">*</span>}
                 </div>
             )}
             <Autocomplete
