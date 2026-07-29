@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { Eye, FileText, Trash2, Upload } from 'lucide-react';
+import { Upload } from 'lucide-react';
+import FileChip from '../../FileChip/FileChip';
 import ValidationMessage from '../../ValidationMessage/ValidationMessage';
 
 /**
@@ -44,6 +45,23 @@ interface FileUploadProps {
     onError?: (message: string) => void;
     error?: string;
     helperText?: string;
+    /**
+     * Takes over the eye button. Needed when the stored file must be fetched through an
+     * authenticated API call rather than opened from `value` — a URL pointing at a protected
+     * endpoint has no Authorization header when the browser navigates to it, so the tab 401s.
+     * Without this prop the built-in `value`-opening behaviour is kept.
+     */
+    onView?: () => void;
+    /** Adds a download button next to the eye. Same reasoning as `onView`. */
+    onDownload?: () => void;
+    /**
+     * Thumbnail for the uploaded file, shown in place of the document icon. Must be loadable
+     * without auth (`blob:` / `data:`) — the control cannot fetch one itself, so the caller
+     * resolves it (in the admin portal: `useFileObjectUrl` from `@/lib/files`).
+     */
+    previewUrl?: string;
+    /** Disables the chip's actions while the caller is fetching the file. */
+    busy?: boolean;
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({
@@ -57,6 +75,10 @@ const FileUpload: React.FC<FileUploadProps> = ({
     onError,
     error,
     helperText,
+    onView,
+    onDownload,
+    previewUrl,
+    busy = false,
 }) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const [isDragging, setIsDragging] = useState(false);
@@ -104,19 +126,18 @@ const FileUpload: React.FC<FileUploadProps> = ({
         setIsDragging(false);
     };
 
-    const handleRemove = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        onChange('', '');
-    };
+    // FileChip stops propagation for all three, so these are plain callbacks.
+    const handleRemove = () => onChange('', '');
 
-    const handleView = (e: React.MouseEvent) => {
-        e.stopPropagation();
+    const handleView = () => {
+        if (onView) {
+            onView();
+            return;
+        }
         if (value) openInNewTab(value);
     };
 
-    const tile =
-        'flex h-10 w-10 shrink-0 items-center justify-center rounded-10 bg-tertiary-100 text-black transition-colors';
-    const actionTile = `${tile} hover:bg-tertiary`;
+    const handleDownload = () => onDownload?.();
 
     return (
         <div className="w-full">
@@ -144,34 +165,18 @@ const FileUpload: React.FC<FileUploadProps> = ({
                     aria-label={label || 'Upload file'}
                 />
                 {value ? (
-                    /* Uploaded-file chip: tan document tile, file name, then tan
-                       eye / trash tiles on a cream pill. The buttons stop
-                       propagation so they don't also re-open the file picker
+                    /* The same chip the view screens render, so an uploaded document looks and
+                       behaves identically whether you are reading the record or editing it.
+                       Its buttons stop propagation, so they don't also re-open the file picker
                        through the dropzone's onClick. */
-                    <div className="inline-flex max-w-full items-center gap-3 rounded-xl bg-primary-light p-2">
-                        <span className={tile}>
-                            <FileText size={20} />
-                        </span>
-
-                        <span className="truncate font-semibold text-black">{fileName || 'Uploaded file'}</span>
-
-                        <button
-                            type="button"
-                            onClick={handleView}
-                            aria-label={`View ${fileName || 'file'}`}
-                            className={actionTile}
-                        >
-                            <Eye size={20} />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={handleRemove}
-                            aria-label={`Remove ${fileName || 'file'}`}
-                            className={actionTile}
-                        >
-                            <Trash2 size={20} />
-                        </button>
-                    </div>
+                    <FileChip
+                        fileName={fileName}
+                        previewUrl={previewUrl}
+                        onView={handleView}
+                        onDownload={onDownload ? handleDownload : undefined}
+                        onRemove={handleRemove}
+                        busy={busy}
+                    />
                 ) : (
                     <>
                         <Upload className="text-primary" size={24} />

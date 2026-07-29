@@ -198,7 +198,9 @@ body.admin-theme {
   /* #EDC56A */
   --primary-600: 36 57% 25%;
   /* Dark Secondary */
-  --primary-700: 36 57% 15%;
+  /* --primary-700: 36 57% 15%; */
+  --primary-700: 41 58% 8%;
+
   /* Darkest */
   --primary-vibrant: 42 47% 54%;
   /* #BF9F54 (Tertiary) */
@@ -338,4 +340,10 @@ body.admin-theme {
   --font-poppins: var(--font-poppins);
   --radius-md: var(--radius);
   --radius-10: var(--radius-r-10);
+}
+
+
+/* Custom CSS */
+button,a{
+  cursor: pointer;
 }

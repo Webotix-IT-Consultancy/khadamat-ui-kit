@@ -12,7 +12,7 @@ const AuthSidebar: React.FC<AuthSidebarProps> = ({ background }) => {
   const { t } = useTranslation(['auth', 'common']);
 
   return (
-    <div className="sidebar auth-sidebar">
+    <div className="sidebar auth-sidebar w-full md:w-1/2">
     {/* <div className="sidebar auth-sidebar" style={background ? { background: `url(${background})
       center / cover no-repeat,linear-gradient(
       180deg,

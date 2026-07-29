@@ -5,6 +5,12 @@ import ValidationMessage from '../../ValidationMessage/ValidationMessage';
 interface Option {
     label: string;
     value: string | number;
+    /**
+     * Secondary line under the label in the dropdown (a code, a reference…). Use it when
+     * labels can repeat — e.g. two customers with the same Account Name are only tellable
+     * apart by their Customer Code. Also searchable, so typing the code finds the row.
+     */
+    description?: string;
 }
 
 interface MUIAutocompleteProps {
@@ -16,6 +22,7 @@ interface MUIAutocompleteProps {
     error?: string;
     disabled?: boolean;
     required?: boolean;
+    className?: string;
     name?: string;
 }
 
@@ -23,6 +30,7 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
     options,
     value,
     onChange,
+    className,
     label,
     placeholder,
     error,
@@ -31,9 +39,10 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
     name,
 }) => {
     const selectedOption = options.find((opt) => opt.value === value) || null;
+    const hasDescriptions = options.some((opt) => !!opt.description);
 
     return (
-        <div className={`form-field ${error ? 'has-error' : ''}`}>
+        <div className={`form-field ${className || ''} ${error ? 'has-error' : ''}`}>
             {label && (
                 <div className="field-label input-label">
                     <label htmlFor={name}>{label}</label>
@@ -44,11 +53,49 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
                 id={name}
                 options={options}
                 getOptionLabel={(option) => option.label}
+                // Options are usually rebuilt on each render, so identity comparison would
+                // drop the selection; and repeated labels make `value` the only safe key.
+                isOptionEqualToValue={(option, selected) => option.value === selected.value}
                 value={selectedOption}
                 onChange={(_, newValue) => {
                     onChange(newValue ? newValue.value : null);
                 }}
                 disabled={disabled}
+                // Only overridden when descriptions are in play — with duplicate labels the
+                // code is what the user actually searches on. `undefined` keeps MUI's own
+                // filter (accent-insensitive) for every other dropdown.
+                filterOptions={
+                    hasDescriptions
+                        ? (opts, state) => {
+                            const query = state.inputValue.trim().toLowerCase();
+                            if (!query) return opts;
+                            return opts.filter(
+                                (o) =>
+                                    o.label.toLowerCase().includes(query) ||
+                                    (o.description ?? '').toLowerCase().includes(query),
+                            );
+                        }
+                        : undefined
+                }
+                renderOption={(props, option) => {
+                    // MUI puts `key` inside the spread props; React warns unless it is passed
+                    // separately, and repeated labels make `value` the only stable key.
+                    const { key: _key, ...liProps } = props as React.HTMLAttributes<HTMLLIElement> & {
+                        key?: React.Key;
+                    };
+                    return (
+                        <li key={String(option.value)} {...liProps}>
+                            {option.description ? (
+                                <span className="flex flex-col">
+                                    <span>{option.label}</span>
+                                    <span className="text-xs text-grey-500">{option.description}</span>
+                                </span>
+                            ) : (
+                                option.label
+                            )}
+                        </li>
+                    );
+                }}
                 renderInput={(params) => (
                     <TextField
                         {...params}

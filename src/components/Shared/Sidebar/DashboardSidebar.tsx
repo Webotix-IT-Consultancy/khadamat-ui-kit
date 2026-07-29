@@ -38,13 +38,21 @@ interface DashboardSidebarProps {
   menuItems?: MenuItem[];
   onLogout: () => void;
   userType: 'customer' | 'admin';
+  /**
+   * Render the Language row + `LanguageSwitcher`. Defaults to `true` so the customer
+   * portal (bilingual EN/AR) is unaffected; the admin portal is English-only and passes
+   * `false`. Keep the default `true` — flipping it would silently drop the toggle from
+   * the customer sidebar.
+   */
+  showLanguageSwitcher?: boolean;
 }
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   isMobile = false,
   menuItems: propsMenuItems,
   onLogout: handleLogout,
-  userType
+  userType,
+  showLanguageSwitcher = true
 }) => {
   const { t, i18n } = useTranslation('common');
   const location = useLocation();
@@ -374,7 +382,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       )
      }
 
-      {/* Language Switcher */}
+      {/* Language Switcher — hidden when the host portal is single-language (admin). */}
+      {showLanguageSwitcher && (
       <div className={cn(
         " flex items-center overflow-hidden transition-all duration-200",
         actualCollapsed ? "justify-center" : "justify-between px-1.5"
@@ -394,6 +403,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           <LanguageSwitcher actualCollapsed={actualCollapsed} />
         </div>
       </div>
+      )}
 
       {/* Logout */}
       <TooltipProvider delayDuration={0}>

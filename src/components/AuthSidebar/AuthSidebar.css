@@ -1,6 +1,5 @@
 .auth-sidebar {
-  width: 745px;
-  min-height: 600px;
+  /* min-height: 600px; */
   background:
     url('/src/assets/images/auth-hero.png')
       center / cover no-repeat,linear-gradient(
@@ -9,7 +8,7 @@
       hsl(var(--primary-700)) 100%
     );
 
-  padding: 48px 135px;
+  padding: 28px 60px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -87,19 +86,19 @@
 }
 
 .auth-sidebar .feature-icon {
-  width: 60px;
-  height: 60px;
+  width: 40px;
+  height: 40px;
   display: flex;
   justify-content: center;
   align-items: center;
-  border-radius: 20px;
+  border-radius: 12px;
   color: hsl(var(--primary-foreground));
   background: hsl(var(--primary-600));
   flex-shrink: 0;
 }
 .auth-sidebar .feature-icon svg{
-  width: 36px;
-  height: 36px;
+  width: 20px;
+  height: 20px;
 }
 
 .auth-sidebar .feature-text {
@@ -111,7 +110,7 @@
 
 .auth-sidebar .feature-title {
   color: hsl(var(--primary-foreground));
-  font-size: var(--h5);
+  font-size: var(--p);
   font-weight: 600;
 }
 
@@ -226,11 +225,7 @@
 /* ============================= */
 
 @media (max-width: 1024px) {
-  .sidebar.auth-sidebar {
-    width: 100%;
-    min-height: 400px;
-    padding: 48px 32px;
-  }
+
 
   .auth-sidebar .logo-image {
     width: 250px;
@@ -263,21 +258,22 @@
   }
 
   .auth-sidebar .feature-icon {
-    width: 60px;
-    height: 60px;
+    width: 40px;
+    height: 40px;
   }
 
   .auth-sidebar .feature-icon svg {
-    width: 36px;
-    height: 36px;
+    width: 20px;
+    height: 20px;
   }
 
   .auth-sidebar .feature-title {
-    font-size: 18px;
+    font-size: 16px;
   }
 
   .auth-sidebar .feature-description {
     font-size: 14px;
+    
   }
 
   .auth-sidebar .footer-links {
