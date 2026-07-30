@@ -1,0 +1,54 @@
+/**
+ * Colours come from the design tokens so the boxes follow whichever theme the host
+ * portal is in (gold under `body.admin-theme`, green in the customer portal).
+ *
+ * Geometry is deliberately NOT tokenised — the two portals draw differently sized
+ * boxes. Override these custom properties on the wrapper (via `className`) instead
+ * of writing new rules for `.kw-otp__box`:
+ *
+ *   --otp-gap, --otp-box-w, --otp-box-h, --otp-radius, --otp-border-w,
+ *   --otp-font-size, --otp-font-weight, --otp-bg, --otp-color,
+ *   --otp-focus-border, --otp-focus-ring
+ *
+ * The defaults below are the customer-portal values.
+ */
+
+.kw-otp {
+  display: flex;
+  justify-content: center;
+  gap: var(--otp-gap, 21px);
+}
+
+.kw-otp__box {
+  width: var(--otp-box-w, 63px);
+  height: var(--otp-box-h, 52px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-radius: var(--otp-radius, var(--radius-r-10));
+  border: var(--otp-border-w, 2px) solid hsl(var(--primary));
+  background: var(--otp-bg, transparent);
+  font-family: 'Poppins', sans-serif;
+  font-size: var(--otp-font-size, var(--h4));
+  font-weight: var(--otp-font-weight, 500);
+  color: var(--otp-color, hsl(var(--foreground)));
+  outline: none;
+  caret-color: transparent;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.kw-otp__box:focus {
+  border-color: var(--otp-focus-border, hsl(var(--primary)));
+  box-shadow: var(--otp-focus-ring, 0 0 0 3px hsla(var(--primary), 0.1));
+}
+
+.kw-otp__box--error {
+  border-color: hsl(var(--destructive));
+  color: hsl(var(--destructive));
+}
+
+.kw-otp__box:disabled {
+  cursor: default;
+  opacity: 1; /* read-only mirrors show the code at full strength, not greyed out */
+}
