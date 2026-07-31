@@ -14,8 +14,15 @@
   z-index: 999;
 }
 
+/*
+ * KP1-I67 / KP1-I74: the close button is the only child of this row, and a flex row
+ * defaults to flex-start, so it sat on the LEFT edge of a panel that slides in from
+ * the right. `flex-end` is direction-aware, so it stays on the panel's outer edge in
+ * RTL (the customer portal) rather than pinning to a physical side.
+ */
 .filter-panel-header {
   display: flex;
+  justify-content: flex-end;
   align-items: center;
   gap: 0.625rem;
 }
@@ -52,21 +59,7 @@
   color: #000;
 }
 
-.clear-all-button {
-  font-family: 'Poppins', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 16px;
-  font-weight: 500;
-  color: #000;
-  text-decoration: underline;
-  transition: opacity 0.2s ease;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-.clear-all-button:hover {
-  opacity: 0.8;
-}
+/* `.clear-all-button` (the underlined header Clear link) was removed with KP1-I55. */
 
 .filter-panel-content {
   display: flex;
@@ -174,10 +167,6 @@
   }
 
   .filter-panel-title h3 {
-    font-size: 14px;
-  }
-
-  .clear-all-button {
     font-size: 14px;
   }
 }

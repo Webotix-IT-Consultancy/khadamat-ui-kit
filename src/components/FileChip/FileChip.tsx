@@ -47,8 +47,8 @@ const FileChip: React.FC<FileChipProps> = ({
 }) => {
     const name = fileName || 'Uploaded file';
     const tile =
-        'flex h-10 w-10 shrink-0 items-center justify-center rounded-10 bg-tertiary-100 text-black transition-colors';
-    const actionTile = `${tile} hover:bg-tertiary disabled:opacity-40 disabled:cursor-not-allowed`;
+        'flex h-10 w-10 shrink-0 items-center justify-center rounded-10 bg-primary-200 text-black transition-colors';
+    const actionTile = `${tile} hover:bg-primary hover:text-white disabled:opacity-40 disabled:cursor-not-allowed`;
 
     // The buttons stop propagation so a chip sitting inside a clickable dropzone doesn't also
     // re-open the file picker.

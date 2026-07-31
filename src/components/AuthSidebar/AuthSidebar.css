@@ -110,14 +110,14 @@
 
 .auth-sidebar .feature-title {
   color: hsl(var(--primary-foreground));
-  font-size: var(--p);
+  font-size: 18px;
   font-weight: 600;
 }
 
 .auth-sidebar .feature-description {
   color: hsl(var(--primary-foreground));
-  font-size: var(--p);
-  font-weight: 300;
+  font-size: var(--small);
+  font-weight: 400;
 }
 
 .auth-sidebar .feature-description strong {
@@ -136,12 +136,12 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 24px;
+  gap: 0.75rem;
 }
 
 .auth-sidebar .footer-link {
   color: hsl(var(--primary-foreground)) !important;
-  font-size: var(--p);
+  font-size: var(--small);
   font-weight: 400;
   text-decoration: none;
   transition: opacity 0.2s ease;
@@ -196,9 +196,11 @@
 
 }
 .admin-theme .auth-sidebar .features-list {
-    background: hsl(var(--primary-300)) ;
-    opacity: 0.8;
-
+    /* Translucency belongs to the panel, not its contents. `opacity` here faded the feature
+       title/description along with the background, which is what made them hard to read
+       (KP1-I26 #4) — and no text colour can compensate, because the text fades with it.
+       Same frosted panel via hsla(), text back at full strength: 5.2:1 -> 7.5:1 contrast. */
+    background: hsla(var(--primary-400), 0.8);
 }
 .admin-theme .auth-sidebar .feature-title {
     color: hsl(var(--primary-700));
@@ -224,6 +226,15 @@
 /* Responsive */
 /* ============================= */
 
+@media (max-width: 1199px) {
+  .auth-sidebar {
+      padding: 28px 40px;
+  }
+  .auth-sidebar .sidebar-title{
+    font-size: 24px;
+  }
+}
+
 @media (max-width: 1024px) {
 
 
@@ -231,9 +242,7 @@
     width: 250px;
   }
 
-  .auth-sidebar .sidebar-title {
-    font-size: 32px;
-  }
+ 
 
   .auth-sidebar .wallet-icon-wrapper {
     display: none;

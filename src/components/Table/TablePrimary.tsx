@@ -34,7 +34,25 @@ interface TablePrimaryProps<T> {
     totalCount: number;
     onPageChange: (event: unknown, newPage: number) => void;
     rowKey: (row: T) => string | number;
+    /**
+     * Shown instead of an empty cell, so "no value" reads as absent data rather than
+     * a rendering bug (KP1-I48). Pass `''` to keep cells blank.
+     */
+    emptyPlaceholder?: React.ReactNode;
+    /**
+     * Pins the last column to the right edge while the table scrolls horizontally
+     * (KP1-I50). Opt-in: it only makes sense when that column is the row's actions,
+     * so a table whose last column is data (a balance, a status) leaves it off.
+     */
+    stickyLastColumn?: boolean;
 }
+
+/**
+ * A cell is blank only when there is genuinely nothing to show. A numeric 0 and a
+ * `false` are data — the same trap `DetailField`'s `hideWhenEmpty` avoids.
+ */
+const isBlank = (value: React.ReactNode) =>
+    value === null || value === undefined || (typeof value === 'string' && value.trim() === '');
 
 const TablePrimary = <T extends Record<string, any>>({
     columns,
@@ -47,13 +65,18 @@ const TablePrimary = <T extends Record<string, any>>({
     totalCount,
     onPageChange,
     rowKey,
+    emptyPlaceholder = '-',
+    stickyLastColumn = false,
 }: TablePrimaryProps<T>) => {
     const { t } = useTranslation('common');
 
     return (
         <Box className="table-primary-container">
             <TableContainer component={Paper} className="table-primary-wrapper">
-                <Table stickyHeader className="transaction-table">
+                <Table
+                    stickyHeader
+                    className={`transaction-table${stickyLastColumn ? ' table-primary-sticky-last' : ''}`}
+                >
                     <TableHead className="table-primary-head">
                         <TableRow>
                             {columns.map((column) => (
@@ -86,20 +109,25 @@ const TablePrimary = <T extends Record<string, any>>({
                                 key={rowKey(row)}
                                 className={`table-primary-row ${index % 2 === 1 ? 'table-primary-row-alternate' : ''}`}
                             >
-                                {columns.map((column) => (
-                                    <TableCell
-                                        key={column.key as string}
-                                        className="table-primary-cell text-xs! sm:text-sm! lg:text-sm!"
-                                        style={{
-                                            maxWidth: column.maxWidth,
-                                            overflow: column.maxWidth ? 'hidden' : 'visible',
-                                            textOverflow: column.maxWidth ? 'ellipsis' : 'clip',
-                                            whiteSpace: 'nowrap',
-                                        }}
-                                    >
-                                        {column.format ? column.format(row[column.key], row, index) : row[column.key]}
-                                    </TableCell>
-                                ))}
+                                {columns.map((column) => {
+                                    const raw = row[column.key];
+                                    const content = column.format ? column.format(raw, row, index) : raw;
+
+                                    return (
+                                        <TableCell
+                                            key={column.key as string}
+                                            className="table-primary-cell text-xs! sm:text-sm! lg:text-sm!"
+                                            style={{
+                                                maxWidth: column.maxWidth,
+                                                overflow: column.maxWidth ? 'hidden' : 'visible',
+                                                textOverflow: column.maxWidth ? 'ellipsis' : 'clip',
+                                                whiteSpace: 'nowrap',
+                                            }}
+                                        >
+                                            {isBlank(content) ? emptyPlaceholder : content}
+                                        </TableCell>
+                                    );
+                                })}
                             </TableRow>
                         ))}
                     </TableBody>

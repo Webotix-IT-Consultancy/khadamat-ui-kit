@@ -2,7 +2,7 @@ import React from 'react';
 import './AuthSidebar.css';
 import khadamatLogo from '../../assets/images/khadamat-logo.png';
 import webotixLogo from '../../assets/images/webotix-logo.png';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 interface AuthSidebarProps {
   background?: string;
@@ -12,7 +12,7 @@ const AuthSidebar: React.FC<AuthSidebarProps> = ({ background }) => {
   const { t } = useTranslation(['auth', 'common']);
 
   return (
-    <div className="sidebar auth-sidebar w-full md:w-1/2">
+    <div className="sidebar auth-sidebar w-full md:w-9/20">
     {/* <div className="sidebar auth-sidebar" style={background ? { background: `url(${background})
       center / cover no-repeat,linear-gradient(
       180deg,
@@ -49,7 +49,13 @@ const AuthSidebar: React.FC<AuthSidebarProps> = ({ background }) => {
               </div>
               <div className="feature-text">
                 <h3 className="feature-title">{t('auth:layout.sidebar.features.secureWallet.title')}</h3>
-                <p className="feature-description">{t('auth:layout.sidebar.features.secureWallet.desc')}</p>
+                {/* Descriptions render through `Trans` so a locale string may emphasise words
+                    inline (`<strong>` is in react-i18next's default keep-list, and
+                    `.feature-description strong` is already styled below). A string with no
+                    tags renders exactly as `t()` did. */}
+                <p className="feature-description">
+                  <Trans t={t} i18nKey="auth:layout.sidebar.features.secureWallet.desc" />
+                </p>
               </div>
             </div>
 
@@ -63,7 +69,7 @@ const AuthSidebar: React.FC<AuthSidebarProps> = ({ background }) => {
               <div className="feature-text">
                 <h3 className="feature-title">{t('auth:layout.sidebar.features.realTimeSync.title')}</h3>
                 <p className="feature-description">
-                  {t('auth:layout.sidebar.features.realTimeSync.desc')}
+                  <Trans t={t} i18nKey="auth:layout.sidebar.features.realTimeSync.desc" />
                 </p>
               </div>
             </div>
@@ -77,7 +83,9 @@ const AuthSidebar: React.FC<AuthSidebarProps> = ({ background }) => {
               </div>
               <div className="feature-text">
                 <h3 className="feature-title">{t('auth:layout.sidebar.features.notifications.title')}</h3>
-                <p className="feature-description">{t('auth:layout.sidebar.features.notifications.desc')}</p>
+                <p className="feature-description">
+                  <Trans t={t} i18nKey="auth:layout.sidebar.features.notifications.desc" />
+                </p>
               </div>
             </div>
           </div>

@@ -54,7 +54,7 @@ const parsePhoneNumber = (phoneValue: string, countries: typeof defaultCountries
 };
 
 const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
-    ({ className, onChange, value, label, required, error, defaultCountry = "ae", placeholder = "ex.5663 3723 323", ...props }, ref) => {
+    ({ className, onChange, value, label, required, error, disabled, defaultCountry = "ae", placeholder = "ex.5663 3723 323", ...props }, ref) => {
 
         // Parse the initial value to extract country and local number
         const parsedValue = React.useMemo(() => {
@@ -126,6 +126,11 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
                         "flex items-center rounded-10 border-2 border-primary bg-background h-[var(--input-large-height)] overflow-hidden",
                         "focus-within:ring-4 focus-within:ring-primary-light focus-within:border-primary",
                         error && "border-destructive focus-within:border-destructive focus-within:ring-destructive/30",
+                        // Match InputField's read-only surface (InputField.css: #EEEEEE + no border),
+                        // so a disabled phone field reads as disabled next to the text fields on a
+                        // view screen instead of looking editable. `disabled` used to reach only the
+                        // inner <input> through `...props`, and every visible style lives out here.
+                        disabled && "bg-[#EEEEEE] border-transparent focus-within:ring-0 focus-within:border-transparent",
                         className
                     )}
                 >
@@ -134,10 +139,13 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
                         onChange={handleCountryChange}
                         options={options}
                         selectedDialCode={selectedCountry?.dialCode || ""}
+                        // Without this the flag/dial-code dropdown stayed live on a disabled
+                        // field, so callers had to smother it with `pointer-events-none`.
+                        disabled={disabled}
                     />
 
                     {/* Vertical Separator */}
-                    <div className="h-6 w-px bg-gray-300 shrink-0" />
+                    <div className={cn("h-6 w-px bg-gray-300 shrink-0", disabled && "bg-gray-400/40")} />
 
                     <input
                         ref={inputRef}
@@ -145,9 +153,11 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
                         value={localPhone}
                         onChange={handlePhoneChange}
                         placeholder={placeholder}
+                        disabled={disabled}
                         className={cn(
                             "flex-1 h-full px-3 bg-transparent text-foreground placeholder:text-muted-foreground",
-                            "outline-none border-0 focus:ring-0"
+                            "outline-none border-0 focus:ring-0",
+                            disabled && "cursor-not-allowed"
                         )}
                         {...props}
                     />
@@ -219,7 +229,9 @@ const CountrySelect = ({
                     className={cn(
                         "flex gap-1.5 items-center px-3 h-full",
                         "disabled:cursor-not-allowed disabled:opacity-50",
-                        "hover:bg-accent/50 transition-colors outline-none focus:outline-none"
+                        // `enabled:` — a disabled button still matches :hover in some browsers,
+                        // and a hover highlight on a dead control reads as clickable.
+                        "enabled:hover:bg-accent/50 transition-colors outline-none focus:outline-none"
                     )}
                     disabled={disabled}
                 >

@@ -225,6 +225,14 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     onApply(filters);
   };
 
+  /**
+   * The range ends as dayjs, parsed with the panel's own DD/MM/YYYY dialect (the APIs
+   * use YYYY-MM-DD; conversion happens at the caller's boundary). One source for both
+   * the To picker's value and the bounds each picker puts on the other (KP1-I65).
+   */
+  const fromDateValue = filters.fromDate ? dayjs(filters.fromDate, 'DD/MM/YYYY') : null;
+  const toDateValue = filters.toDate ? dayjs(filters.toDate, 'DD/MM/YYYY') : null;
+
   // Options as objects for stability and localization
   const projectOptions = [
     { label: t('transactions:filters.allProject'), value: '' },
@@ -308,20 +316,30 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           </button>
         </div>
 
+        {/*
+          * KP1-I55: one Clear only. This row used to carry an underlined "Clear"
+          * link next to the heading that did exactly what the Clear button in
+          * `filter-panel-actions` does — two controls, one behaviour.
+          */}
         <div className="filter-panel-title">
           <h3>{t('transactions:filters.title')}</h3>
-          <button className="clear-all-button" onClick={handleClear}>
-            {t('common:buttons.clear')}
-          </button>
         </div>
 
         <div className="filter-panel-content">
+          {/*
+            * KP1-I65: the range can only be built forwards. `To` cannot go before a chosen
+            * `From`, and `From` cannot go past a chosen `To` — the second half matters
+            * because picking To first would otherwise leave an inverted range reachable,
+            * which is the same defect from the other end. Both bounds are undefined until
+            * their counterpart is set, so an empty panel still offers every date.
+            */}
           <div className="filter-group">
             <label>{dateLabels?.from ?? t('transactions:filters.fromDate')}</label>
             <DatePicker
-              value={filters.fromDate ? dayjs(filters.fromDate, 'DD/MM/YYYY') : null}
+              value={fromDateValue}
               onChange={(date) => handleDateChange('fromDate', date)}
               format="DD/MM/YYYY"
+              maxDate={toDateValue ?? undefined}
               enableAccessibleFieldDOMStructure={false}
               slots={{
                 textField: (params) => (
@@ -338,9 +356,10 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           <div className="filter-group">
             <label>{dateLabels?.to ?? t('transactions:filters.toDate')}</label>
             <DatePicker
-              value={filters.toDate ? dayjs(filters.toDate, 'DD/MM/YYYY') : null}
+              value={toDateValue}
               onChange={(date) => handleDateChange('toDate', date)}
               format="DD/MM/YYYY"
+              minDate={fromDateValue ?? undefined}
               enableAccessibleFieldDOMStructure={false}
               slots={{
                 textField: (params) => (

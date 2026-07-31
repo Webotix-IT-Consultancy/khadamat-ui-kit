@@ -104,6 +104,36 @@
     white-space: nowrap !important;
 }
 
+/*
+ * KP1-I50 — pinned action column (opt-in via TablePrimary's `stickyLastColumn`).
+ *
+ * A wide listing pushes the row actions off-screen, so View/Edit are only reachable
+ * after scrolling to the far right. The last column sticks to the right edge instead.
+ * The cells need their own background: a sticky cell is otherwise transparent and the
+ * scrolling columns run underneath it. Header keeps a higher z-index than the body
+ * cells so it still wins where the two sticky axes meet.
+ */
+.table-primary-sticky-last th.table-primary-header-cell:last-child,
+.table-primary-sticky-last td.table-primary-cell:last-child {
+    position: sticky;
+    right: 0;
+    background-color: hsl(var(--white));
+    box-shadow: -6px 0 6px -6px rgba(0, 0, 0, 0.18);
+}
+
+.table-primary-sticky-last th.table-primary-header-cell:last-child {
+    z-index: 3;
+}
+
+.table-primary-sticky-last td.table-primary-cell:last-child {
+    z-index: 1;
+}
+
+/* The row's hover colour is painted on the row, which a sticky cell does not inherit. */
+.table-primary-sticky-last .table-primary-row:hover td.table-primary-cell:last-child {
+    background-color: hsl(var(--grey-100));
+}
+
 /* Pagination Styling */
 .table-primary-pagination-container {
     display: flex;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import LogoutConfirmation from '../popups/LogoutConfirmation';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../../lib/utils';
@@ -13,14 +13,36 @@ interface DashboardHeaderProps {
     user?: any;
     onLogout: () => void;
     userType: 'customer' | 'admin';
+    /**
+     * Show the "Today: Dec 5 2025 : 5:34 PM" stamp left of the user block (admin
+     * portal Figma). Off by default so the customer header is unchanged.
+     */
+    showDateTime?: boolean;
+    /**
+     * The signed-in user's role, shown as a chip under the name (admin portal Figma).
+     * Comes from the caller's auth store — omit it and the name stands alone rather
+     * than the UI inventing a role the server never sent.
+     */
+    roleLabel?: string;
 }
+
+/** Figma stamp format: `Dec 5 2025 : 5:34 PM` (no comma after the day). */
+const formatStamp = (now: Date) => {
+    const date = now
+        .toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        .replace(/,/g, '');
+    const time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    return `${date} : ${time}`;
+};
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     onNotificationClick,
     notificationCount = 32,
     user,
     onLogout: handleLogout,
-    userType
+    userType,
+    showDateTime = false,
+    roleLabel
 }) => {
     const { t } = useTranslation('common');
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -44,6 +66,16 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     };
 
     const { title, breadcrumbs } = usePageStore();
+
+    // The stamp is a clock, not a render-time snapshot: re-read the clock every 30s
+    // so the minute stays true on a screen that is left open. Only mounted when the
+    // stamp is actually shown.
+    const [now, setNow] = useState(() => new Date());
+    useEffect(() => {
+        if (!showDateTime) return;
+        const id = setInterval(() => setNow(new Date()), 30_000);
+        return () => clearInterval(id);
+    }, [showDateTime]);
 
     return (
         <div className="flex justify-between items-center w-full h-full">
@@ -84,15 +116,29 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             </div>
 
             <div className="flex items-center gap-2 md:gap-3">
+                {/* Current date & time (admin Figma) - too wide for small screens */}
+                {showDateTime && (
+                    <span className="hidden lg:block text-[12px] font-normal text-gray-500 font-poppins whitespace-nowrap">
+                        {t('header.today', { defaultValue: 'Today' })}: {formatStamp(now)}
+                    </span>
+                )}
+
                 {/* User Info - Hidden on mobile */}
                 <div className="hidden sm:flex items-center gap-3">
                     <div className="flex flex-col items-end">
                         <div className="text-sm md:text-[16px] font-semibold text-black font-poppins">
                             {user?.companyName || 'User'}
                         </div>
-                        <div className="text-[11px] md:text-[13px] font-normal text-black font-poppins">
-                            {t('header.id')} {user?.id || 'Unknown'}
-                        </div>
+                        {/*
+                          * The Figma carries the user's ROLE here, not their ID (the old
+                          * `ID {user.id}` line). Rendered only when the caller actually has
+                          * a role from /auth/me.
+                          */}
+                        {roleLabel && (
+                            <span className="mt-0.5 rounded-full bg-primary px-2.5 py-0.5 text-[11px] font-medium text-primary-dark font-poppins">
+                                {roleLabel}
+                            </span>
+                        )}
                     </div>
                     <div className="w-10 h-10 md:w-11 md:h-11 rounded-full overflow-hidden bg-[#d9d9d9] shrink-0">
                         <img

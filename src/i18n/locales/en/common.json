@@ -91,7 +91,8 @@
     },
     "header": {
         "welcomeBack": "Welcome back",
-        "id": "ID"
+        "id": "ID",
+        "today": "Today"
     },
     "currency": "AED"
 }

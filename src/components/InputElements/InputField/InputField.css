@@ -31,7 +31,7 @@
 .input-wrapper {
   display: flex;
   height: var(--input-large-height);
-  padding: 15px 17px;
+  padding: 12px 10px;
   align-items: center;
   gap: 5px;
   border-radius: var(--radius-r-10);
