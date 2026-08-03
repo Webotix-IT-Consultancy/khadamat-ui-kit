@@ -1,3 +1,11 @@
+/*
+ * KP1-I75: the panel is a fixed-height column — header, a SCROLLING field area, and a
+ * footer that never leaves the bottom.
+ *
+ * It used to be `min-height: 100vh` in normal flow, so tall content (Postpaid adds a
+ * fourth field) or a short/zoomed viewport pushed Clear and Apply below the fold with
+ * nothing to scroll. Same root cause the tester hit at 100% zoom.
+ */
 .filter-panel {
   display: flex;
   flex-direction: column;
@@ -7,7 +15,8 @@
   gap: 0.625rem;
   background: #FFF;
   box-shadow: 0 4px 24.4px 0 rgba(0, 0, 0, 0.11);
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   position: fixed;
   top: 0;
   right: 0;
@@ -61,11 +70,18 @@
 
 /* `.clear-all-button` (the underlined header Clear link) was removed with KP1-I55. */
 
+/* The only part that scrolls; `min-height: 0` is what lets a flex child shrink. */
 .filter-panel-content {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.6875rem;
+  gap: 0.625rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  width: 100%;
+  /* room for the scrollbar so a focused field's outline isn't clipped */
+  padding-right: 0.25rem;
 }
 
 .filter-group {
@@ -86,26 +102,30 @@
 
 /* Removed legacy input styles as MUI handles them now */
 
+/* Pinned to the bottom: never scrolls away, never shrinks (KP1-I75). */
 .filter-panel-actions {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.625rem;
   width: 100%;
-  margin-top: 1rem;
+  flex: 0 0 auto;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid hsl(var(--grey-200));
 }
 
 .clear-button,
 .apply-button {
   display: flex;
-  height: 57px;
-  padding: 1.3125rem 2.4375rem;
+  height: 44px;
+  padding: 0.625rem 1.25rem;
   justify-content: center;
   align-items: center;
-  gap: 0.9375rem;
+  gap: 0.5rem;
   flex: 1;
   border-radius: 10px;
   font-family: 'Poppins', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 19px;
+  font-size: 15px;
   font-weight: 400;
   transition: background-color 0.2s ease;
   cursor: pointer;
@@ -159,11 +179,12 @@
     font-size: 14px;
   }
 
+  /* Keep the touch target a touch taller than desktop, but no bigger than it was. */
   .clear-button,
   .apply-button {
-    height: 48px;
-    padding: 0.75rem 1.5rem;
-    font-size: 16px;
+    height: 46px;
+    padding: 0.625rem 1.25rem;
+    font-size: 15px;
   }
 
   .filter-panel-title h3 {

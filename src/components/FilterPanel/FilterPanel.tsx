@@ -86,13 +86,15 @@ export interface FilterValues {
   enquiryType?: string;
 }
 
-// Styled MUI components to match the project's theme
+// Styled MUI components to match the project's theme.
+// KP1-I75: 52px/16px fields made the panel taller than the viewport; 44px/14px keeps
+// them readable while the whole set fits without stretching.
 const StyledTextField = styled(TextField)({
   '& .MuiOutlinedInput-root': {
-    height: '52px',
+    height: '44px',
     borderRadius: '10px',
     fontFamily: "'Poppins', sans-serif",
-    fontSize: '16px',
+    fontSize: '14px',
     backgroundColor: '#FFF',
     '& fieldset': {
       borderColor: 'hsl(var(--primary))',
@@ -115,7 +117,7 @@ const StyledAutocomplete = styled(Autocomplete)({
   width: '100%',
   '& .MuiOutlinedInput-root': {
     padding: '0 12px', // Adjust padding for Autocomplete
-    height: '52px',
+    height: '44px',
     borderRadius: '10px',
     backgroundColor: '#FFF',
     border: 'none', // Remove native border to use fieldset border
@@ -132,7 +134,7 @@ const StyledAutocomplete = styled(Autocomplete)({
   },
   '& .MuiAutocomplete-input': {
     fontFamily: "'Poppins', sans-serif",
-    fontSize: '16px',
+    fontSize: '14px',
     color: '#000',
   }
 });
@@ -389,7 +391,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 renderInput={(params) => (
                   <StyledTextField {...params} placeholder={field.placeholder ?? field.label} />
                 )}
-                disablePortal
               />
             </div>
           ))}
@@ -410,7 +411,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder={t('transactions:filters.projectService')} />
                   )}
-                  disablePortal
                 />
               </div>
 
@@ -428,7 +428,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder={t('transactions:filters.transactionType')} />
                   )}
-                  disablePortal
                 />
               </div>
 
@@ -446,7 +445,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder={t('transactions:filters.paymentMode')} />
                   )}
-                  disablePortal
                 />
               </div>
             </>
@@ -468,7 +466,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder={t('invoice:filters.status')} />
                   )}
-                  disablePortal
                 />
               </div>
 
@@ -486,7 +483,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder={t('transactions:filters.contract')} />
                   )}
-                  disablePortal
                 />
               </div>
 
@@ -545,7 +541,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder="Select" />
                   )}
-                  disablePortal
                 />
               </div>
 
@@ -563,7 +558,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder="Select" />
                   )}
-                  disablePortal
                 />
               </div>
             </>
@@ -585,7 +579,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder={t('adminEnquiries:form.placeholders.select')} />
                   )}
-                  disablePortal
                 />
               </div>
 
@@ -603,7 +596,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder={t('adminEnquiries:form.placeholders.select')} />
                   )}
-                  disablePortal
                 />
               </div>
 
@@ -621,7 +613,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder={t('adminEnquiries:form.placeholders.select')} />
                   )}
-                  disablePortal
                 />
               </div>
             </>
@@ -643,7 +634,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder="Select" />
                   )}
-                  disablePortal
                 />
               </div>
 
@@ -661,7 +651,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder="Select" />
                   )}
-                  disablePortal
                 />
               </div>
             </>
