@@ -50,6 +50,17 @@
   --error: 0 100% 60%;
   /* #FF3232 */
 
+  /*
+   * These were defined only in `body.admin-theme`, so anything written as
+   * hsl(var(--danger)) produced an invalid colour in the customer portal and the
+   * declaration was dropped (StatusBadge's danger tones render there). The admin
+   * override below is identical and stays; this is the base both portals inherit.
+   */
+  --danger: 0 100% 60%;
+  /* #FF3232 */
+  --danger-light: 0 100% 96%;
+  /* #FFEBEB */
+
   --white: 0 0% 100%;
   /* #FFF */
   --black: 0 0% 0%;

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import '../FormField.css';
 import './InputField.css';
 import ValidationMessage from '../../ValidationMessage/ValidationMessage';
 

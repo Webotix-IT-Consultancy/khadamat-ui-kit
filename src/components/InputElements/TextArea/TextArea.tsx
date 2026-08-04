@@ -1,4 +1,5 @@
 import React from 'react';
+import '../FormField.css';
 import './TextArea.css';
 import ValidationMessage from '../../ValidationMessage/ValidationMessage';
 

@@ -16,14 +16,11 @@
     color: #1A1A1A;
 }
 
-.label-error {
-    color: #FF3232;
-}
-
-.required-mark {
-    color: #FF3232;
-    margin-left: 2px;
-}
+/* `.label-error` and `.required-mark` are deliberately NOT redefined here (KP1-I109).
+   They are global class names owned by ../FormField.css, and a second copy in this file
+   overrode the shared ones for EVERY control on any page that happened to render a
+   TextArea — with a hardcoded #FF3232 and an extra 2px margin. TextArea.tsx imports
+   FormField.css, so the shared rules apply. */
 
 .textarea-wrapper {
     position: relative;
@@ -36,9 +33,13 @@
     padding: 12px;
 }
 
+/* KP1-I109: was the literal #016937 — `:root --primary`, the CUSTOMER portal's green — so
+   focusing a Description box inside the admin portal's gold theme turned it green. The
+   1px/8px geometry above is left as-is (a TextArea is always full-width, so it shares no
+   row); only the theme leak is corrected here. */
 .textarea-wrapper:focus-within {
-    border-color: #016937;
-    box-shadow: 0 0 0 2px rgba(1, 105, 55, 0.1);
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.1);
 }
 
 .textarea-wrapper-error {
@@ -76,9 +77,24 @@
     color: #555555;
 }
 
-/* Specific style for readonly to match the Profile usage if needed, 
+/* Specific style for readonly to match the Profile usage if needed,
    but generic enough to reuse */
 .textarea-wrapper:has(.textarea-element[readonly]) {
     background-color: #EEEEEE;
     border-color: transparent;
+}
+
+/*
+ * KP1-I128 — same for DISABLED. A view screen passes `disabled`, not `readonly`, so the
+ * rule above never fired and the box kept its editable surface. Separate rule, not a
+ * selector list: an unknown selector invalidates a whole `:has()` list.
+ */
+.textarea-wrapper:has(.textarea-element:disabled) {
+    background-color: #EEEEEE;
+    border-color: transparent;
+}
+
+.textarea-element:disabled {
+    -webkit-text-fill-color: #555555; /* Safari/iOS ignore `color` on a disabled control. */
+    opacity: 1;
 }

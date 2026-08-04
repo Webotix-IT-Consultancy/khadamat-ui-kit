@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Upload } from 'lucide-react';
 import FileChip from '../../FileChip/FileChip';
+import '../FormField.css';
 import ValidationMessage from '../../ValidationMessage/ValidationMessage';
 
 /**
@@ -139,12 +140,14 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
     const handleDownload = () => onDownload?.();
 
+    // Shared form shell (KP1-I107/I108) — this hand-rolled its label with a 6px gap and a
+    // 12px asterisk where every other control uses 4px and 14px.
     return (
-        <div className="w-full">
+        <div className="input-field">
             {label && (
-                <div className="flex items-center gap-1 mb-1.5">
-                    <label className={`text-sm capitalize ${error ? 'text-destructive' : 'text-black'}`}>{label}</label>
-                    {required && <span className="text-destructive text-xs">*</span>}
+                <div className="input-label">
+                    <label className={error ? 'label-error' : ''}>{label}</label>
+                    {required && <span className="required-mark">*</span>}
                 </div>
             )}
             <div

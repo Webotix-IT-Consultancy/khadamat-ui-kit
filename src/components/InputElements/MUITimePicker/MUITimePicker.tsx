@@ -52,21 +52,40 @@ const MUITimePicker: React.FC<MUITimePickerProps> = ({
                             fullWidth: true,
                             error: !!error,
                             placeholder: 'Select Time',
+                            // Same treatment as MUIDatePicker (KP1-I109): this carried the
+                            // identical hardcoded palette — `#CCC9C4` at rest and `#016937`
+                            // (the customer portal's green) on hover/focus — so it went green
+                            // inside the admin portal's gold theme too. Tokens now, matching
+                            // `.input-wrapper` in InputField.css.
                             sx: {
                                 '& .MuiOutlinedInput-root': {
-                                    borderRadius: '10px',
-                                    backgroundColor: disabled ? '#ECECEC' : '#fff',
+                                    height: 'var(--input-large-height)',
+                                    borderRadius: 'var(--radius-r-10)',
+                                    backgroundColor: disabled ? '#EEEEEE' : 'hsl(var(--background))',
                                     '& fieldset': {
-                                        borderColor: error ? '#FF3232' : '#CCC9C4',
+                                        borderColor: error
+                                            ? 'hsl(var(--destructive))'
+                                            : disabled
+                                                ? 'transparent'
+                                                : 'hsl(var(--primary))',
                                         borderWidth: '2px',
                                     },
                                     '&:hover:not(.Mui-disabled) fieldset': {
-                                        borderColor: error ? '#FF3232' : '#016937 !important',
+                                        borderColor: error
+                                            ? 'hsl(var(--destructive))'
+                                            : 'hsl(var(--primary))',
                                         borderWidth: '2px',
                                     },
                                     '&.Mui-focused fieldset': {
-                                        borderColor: '#016937 !important',
+                                        borderColor: error
+                                            ? 'hsl(var(--destructive))'
+                                            : 'hsl(var(--primary))',
                                         borderWidth: '2px',
+                                    },
+                                    '&.Mui-focused': {
+                                        boxShadow: error
+                                            ? '0 0 0 4px hsl(var(--destructive) / 0.3)'
+                                            : '0 0 0 4px hsl(var(--primary-light))',
                                     },
                                 },
                                 '& .MuiInputBase-input': {

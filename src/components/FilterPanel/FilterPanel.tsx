@@ -61,6 +61,16 @@ interface FilterPanelProps {
   initialValues?: Partial<FilterValues>;
   /** Overrides the From/To date labels, e.g. "Start Date From". */
   dateLabels?: { from?: string; to?: string };
+  /**
+   * KP1-I78: the From/To range filters records that ALREADY EXIST, so by default
+   * nothing after today can be picked — a future range can only ever return an empty
+   * table.
+   *
+   * Opt out when the range targets a date that legitimately looks forward. Today that
+   * is exactly one caller: the admin Contract list filters on `startDate`, and a
+   * contract can be created now to start next month.
+   */
+  allowFutureDates?: boolean;
 }
 
 export interface FilterValues {
@@ -113,7 +123,7 @@ const StyledTextField = styled(TextField)({
   },
 });
 
-const StyledAutocomplete = styled(Autocomplete)({
+const AutocompleteBase = styled(Autocomplete)({
   width: '100%',
   '& .MuiOutlinedInput-root': {
     padding: '0 12px', // Adjust padding for Autocomplete
@@ -138,6 +148,37 @@ const StyledAutocomplete = styled(Autocomplete)({
     color: '#000',
   }
 });
+
+/**
+ * KP1-I57: an Autocomplete's option list is portaled to <body> and positioned against
+ * the viewport, so nothing about this panel's own layout stopped it from opening
+ * straight over the Clear/Apply bar that KP1-I75 pinned to the bottom.
+ *
+ * Two constraints make that impossible, and they belong on the base component rather
+ * than on each call site so any dropdown added here later inherits them:
+ *  - `preventOverflow` on the alt (vertical) axis, whose default boundary is the
+ *    reference's clipping parents — i.e. `.filter-panel-content`, the scrolling field
+ *    area whose bottom edge is exactly where the action bar starts. The list is kept
+ *    inside it instead of running past it.
+ *  - a height cap, so a long list still fits ABOVE the field when `flip` sends it
+ *    there rather than being clamped on top of its own input.
+ */
+const OPTION_LIST_MAX_HEIGHT = 176; // ~4.5 rows; short enough to fit either side of a field
+
+const StyledAutocomplete: React.FC<any> = (props) => (
+  <AutocompleteBase
+    slotProps={{
+      listbox: { sx: { maxHeight: `${OPTION_LIST_MAX_HEIGHT}px` } },
+      popper: {
+        modifiers: [
+          { name: 'flip', enabled: true, options: { padding: 8 } },
+          { name: 'preventOverflow', enabled: true, options: { padding: 8, altAxis: true } },
+        ],
+      },
+    }}
+    {...props}
+  />
+);
 
 /** Every field empty — an empty string means "All" for a given filter. */
 const EMPTY_FILTERS: FilterValues = {
@@ -164,7 +205,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   fields,
   supervisorOptions = [],
   initialValues,
-  dateLabels
+  dateLabels,
+  allowFutureDates = false
 }) => {
   const { t } = useTranslation(['transactions', 'invoice', 'common', 'adminEnquiries']);
 
@@ -182,6 +224,18 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
   /** `fields` replaces the hardcoded `mode` layouts entirely. */
   const useCustomFields = Array.isArray(fields) && fields.length > 0;
+
+  /**
+   * KP1-I56: a `fields` dropdown fell back to `field.label` for its placeholder, so
+   * every one of them printed its own label twice — "Customer Type" above the box and
+   * "Customer Type" inside it. The `mode` layouts below already say "Select"; this is
+   * the same default for the path that replaced them.
+   *
+   * The literal is passed as i18next's defaultValue rather than relying on the key
+   * existing: a missing key in this package fails silently as visible raw text, and a
+   * placeholder reading `common:placeholders.select` would be worse than the bug.
+   */
+  const selectPlaceholder = t('common:placeholders.select', 'Select');
 
   const handleClearCustom = () => {
     // Keep the caller's keys present but empty, so "All" resolves rather than undefined.
@@ -234,6 +288,20 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
    */
   const fromDateValue = filters.fromDate ? dayjs(filters.fromDate, 'DD/MM/YYYY') : null;
   const toDateValue = filters.toDate ? dayjs(filters.toDate, 'DD/MM/YYYY') : null;
+
+  /**
+   * KP1-I78: the range filters records that already exist, so both ends stop at today
+   * unless the caller opted out (`allowFutureDates`). Computed per render rather than
+   * memoised, so a panel left open across midnight still bounds correctly.
+   *
+   * This stacks with KP1-I65's cross-bounds instead of replacing them: `From` is capped
+   * by whichever comes FIRST — a chosen `To`, or today.
+   */
+  const latestSelectable = allowFutureDates ? null : dayjs().endOf('day');
+  const earlier = (a: Dayjs | null, b: Dayjs | null) =>
+    a && b ? (a.isBefore(b) ? a : b) : (a ?? b);
+
+  const fromMaxDate = earlier(toDateValue, latestSelectable);
 
   // Options as objects for stability and localization
   const projectOptions = [
@@ -341,7 +409,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               value={fromDateValue}
               onChange={(date) => handleDateChange('fromDate', date)}
               format="DD/MM/YYYY"
-              maxDate={toDateValue ?? undefined}
+              maxDate={fromMaxDate ?? undefined}
               enableAccessibleFieldDOMStructure={false}
               slots={{
                 textField: (params) => (
@@ -362,6 +430,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               onChange={(date) => handleDateChange('toDate', date)}
               format="DD/MM/YYYY"
               minDate={fromDateValue ?? undefined}
+              maxDate={latestSelectable ?? undefined}
               enableAccessibleFieldDOMStructure={false}
               slots={{
                 textField: (params) => (
@@ -389,7 +458,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 value={field.options.find(opt => opt.value === (filters[field.key] ?? '')) || null}
                 onChange={(_, newValue: any) => handleInputChange(field.key, newValue?.value ?? '')}
                 renderInput={(params) => (
-                  <StyledTextField {...params} placeholder={field.placeholder ?? field.label} />
+                  <StyledTextField {...params} placeholder={field.placeholder ?? selectPlaceholder} />
                 )}
               />
             </div>

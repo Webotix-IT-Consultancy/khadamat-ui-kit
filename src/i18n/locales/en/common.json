@@ -50,7 +50,7 @@
         "rechargeAmount": "Recharge",
         "paid": "Paid",
         "paginationInfo": "Total Records: {{count}} | Showing {{from}}-{{to}}",
-        "searchPlaceholder": "Search...",
+        "searchPlaceholder": "Search",
         "rowsPerPage": "Size: {{count}}",
         "rowCount": "{{count}} rows",
         "view": "View"
@@ -94,5 +94,8 @@
         "id": "ID",
         "today": "Today"
     },
-    "currency": "AED"
+    "currency": "AED",
+    "placeholders": {
+        "select": "Select"
+    }
 }

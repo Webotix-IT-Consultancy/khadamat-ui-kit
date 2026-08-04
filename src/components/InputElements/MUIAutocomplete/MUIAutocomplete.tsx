@@ -1,5 +1,6 @@
 import React from 'react';
 import { Autocomplete, TextField } from '@mui/material';
+import '../FormField.css';
 import ValidationMessage from '../../ValidationMessage/ValidationMessage';
 
 interface Option {
@@ -106,15 +107,22 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
                         fullWidth
                         sx={{
                             '& .MuiOutlinedInput-root': {
-                                borderRadius: '10px',
-                                backgroundColor: disabled ? '#ECECEC' : '#fff',
+                                // KP1-I107/I108: MUI sizes its own control (~56px at
+                                // size="medium"), so a dropdown stood taller than the
+                                // InputField and PhoneInput beside it in the same row. Same
+                                // token as `.input-wrapper` in InputField.css.
+                                height: 'var(--input-large-height)',
+                                // KP1-I109: tokens, so the surface follows the theme and the
+                                // disabled grey matches InputField.css's read-only `#EEEEEE`.
+                                borderRadius: 'var(--radius-r-10)',
+                                backgroundColor: disabled ? '#EEEEEE' : 'hsl(var(--background))',
                                 '& fieldset': {
-                                    borderColor: error ? '#FF3232' : 'hsl(var(--primary))',
+                                    borderColor: error ? 'hsl(var(--destructive))' : 'hsl(var(--primary))',
                                     borderWidth: '2px',
 
                                 },
                                 '&:hover fieldset': {
-                                    borderColor: error ? '#FF3232' : 'hsl(var(--primary))',
+                                    borderColor: error ? 'hsl(var(--destructive))' : 'hsl(var(--primary))',
 
                                 },
                                 '&.Mui-focused fieldset': {

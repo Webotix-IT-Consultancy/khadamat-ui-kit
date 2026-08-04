@@ -50,7 +50,7 @@
         "rechargeAmount": "مبلغ الشحن",
         "paid": "المدفوع",
         "paginationInfo": "إجمالي السجلات: {{count}} | عرض {{from}}-{{to}}",
-        "searchPlaceholder": "بحث...",
+        "searchPlaceholder": "بحث",
         "rowsPerPage": "الحجم: {{count}}",
         "rowCount": "{{count}} صفوف"
     },
@@ -93,5 +93,8 @@
         "id": "معرف",
         "today": "اليوم"
     },
-    "currency": "درهم"
+    "currency": "درهم",
+    "placeholders": {
+        "select": "اختر"
+    }
 }

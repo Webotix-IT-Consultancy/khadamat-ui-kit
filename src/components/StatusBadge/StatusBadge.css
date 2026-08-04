@@ -1,3 +1,22 @@
+/*
+ * A FIXED TONE PALETTE — no status name appears in this file.
+ *
+ * This file used to carry one rule per status (`.status-badge-secured`,
+ * `.status-badge-awaiting-signatures`, …), which meant every new status needed new CSS
+ * and left near-duplicates behind: `lost` and `cancelled` were byte-identical, `paid`
+ * and `success` shared a rule, and three greens differed by a shade nobody could see.
+ *
+ * Now StatusBadge.tsx maps a status onto one of the tones below. Adding a status is one
+ * line in that map and ZERO css. Adding a tone here should be rare — if a new status
+ * needs a colour that is not already in this list, that is a design question, not a
+ * styling one.
+ *
+ * Weights: a bare tone is the solid fill (light text); `-soft` is the tinted fill with
+ * strong text; `-light` is the token-driven pair used by `variant="light"`, which is
+ * theme-aware (the two portals resolve those tokens differently) and therefore cannot
+ * be folded into `-soft`.
+ */
+
 .status-badge {
   display: inline-flex;
   padding: 0.125rem 0.5625rem;
@@ -10,113 +29,93 @@
   white-space: nowrap;
 }
 
-.status-badge-in-progress {
-  background: #06e880;
-  color: #016937;
-}
+/* ── Solid tones ─────────────────────────────────────────────────────────── */
 
-.status-badge-scheduled {
-  background: #fff1c2;
-  color: #947b3f;
-}
-
-.status-badge-completed {
-  background: #ebffee;
-  color: #016937;
-}
-
-.status-badge-paid,
+/* KP1-I59: #049351 is the literal Figma green, sampled from the Enquiry export. */
 .status-badge-success {
-  background: hsl(152, 96%, 38%);
+  background: #049351;
   color: #fff;
-
 }
 
-.status-badge-pending {
+.status-badge-warning {
   background: hsl(var(--tertiary));
   color: hsl(var(--white));
 }
 
-.status-badge-failed {
+.status-badge-danger {
   background: hsl(var(--danger));
   color: hsl(var(--white));
 }
 
-.status-badge-active {
-  background: #009951;
-  color: #fff;
-}
-
-.status-badge-secured {
-  background: #bf9f54;
-  color: #fff;
-}
-
-.status-badge-lost {
-  background: #fee9e7;
-  color: #ff3232;
-}
-
 /*
- * Contract & Quotation lifecycle chips — palette fixed by FR-CC-CON-01
- * (InProgress=grey, Approved=blue, Awaiting Payment=amber, Live=green,
- * Completed=dark green, Lost/Cancelled=red) plus Awaiting Signatures=purple (S4.1).
- * `.status-badge-completed` above already carries the dark green and is reused as-is.
+ * "Work underway" — deliberately NOT the same as the lifecycle in-progress below.
+ * The FRD gives both states the name "In Progress"; they are different things
+ * (on-call work has started vs. a contract has not left the first stage yet).
  */
-.status-badge-contract-in-progress {
+.status-badge-progress {
+  background: #06e880;
+  color: #016937;
+}
+
+.status-badge-neutral {
   background: hsl(var(--grey-100));
   color: hsl(var(--grey-600));
 }
 
-.status-badge-approved {
-  background: #e7f0ff;
-  color: #1666d8;
+/* ── Soft tones ──────────────────────────────────────────────────────────── */
+
+.status-badge-success-soft {
+  background: #ebffee;
+  color: #016937;
 }
 
-.status-badge-awaiting-payment {
+.status-badge-warning-soft {
   background: #fff1c2;
   color: #947b3f;
 }
 
-.status-badge-awaiting-signatures {
-  background: #f1e9fe;
-  color: #7a3ec8;
-}
-
-.status-badge-live {
-  background: #e6f7ee;
-  color: #009951;
-}
-
-/* S4.1: an auto-cancelled contract is labelled 'Lost' but shares the red chip. */
-.status-badge-cancelled {
+.status-badge-danger-soft {
   background: #fee9e7;
   color: #ff3232;
 }
 
+.status-badge-info-soft {
+  background: #e7f0ff;
+  color: #1666d8;
+}
 
-/* Light status badge */
-.status-badge-light.status-badge-success {
+.status-badge-violet-soft {
+  background: #f1e9fe;
+  color: #7a3ec8;
+}
+
+/* ── Light tones (variant="light"; token-driven, so they follow the portal theme) ── */
+
+.status-badge-success-light {
   background: hsl(var(--success-light));
   color: hsl(var(--success));
 }
-.status-badge-light.status-badge-pending {
+
+.status-badge-warning-light {
   background: hsl(var(--tertiary-light));
   color: hsl(var(--tertiary));
 }
-.status-badge-light.status-badge-failed {
+
+.status-badge-danger-light {
   background: hsl(var(--danger-light));
   color: hsl(var(--danger));
 }
-.status-badge-light.status-badge-orange {
+
+.status-badge-orange-light {
   background: hsl(var(--orange-light));
   color: hsl(var(--orange));
 }
 
-.status-badge-light.status-badge-primary {
+.status-badge-primary-light {
   background: hsl(var(--primary-light));
   color: hsl(var(--primary-600));
 }
+
 @media (max-width: 640px) {
   .status-badge {
     font-size: 12px;

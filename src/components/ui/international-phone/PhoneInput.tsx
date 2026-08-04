@@ -6,6 +6,9 @@ import {
 } from "react-international-phone";
 
 import { cn } from "../../../lib/utils";
+import "../../InputElements/FormField.css";
+import ValidationMessage from "../../ValidationMessage/ValidationMessage";
+import { UAE_MOBILE_EXAMPLE } from "../../../utils/phone";
 import {
     Popover,
     PopoverContent,
@@ -53,8 +56,59 @@ const parsePhoneNumber = (phoneValue: string, countries: typeof defaultCountries
     return { countryIso2: null, localNumber: cleanValue };
 };
 
+/**
+ * A real national number per country, used to fill the placeholder mask below. Only
+ * countries we actually validate need an entry — everything else falls back to the
+ * mask's own shape, which is still honest about length and grouping.
+ */
+const EXAMPLE_NATIONAL: Record<string, string> = {
+    ae: UAE_MOBILE_EXAMPLE,
+};
+
+/**
+ * The country's display format from react-international-phone's own country data, e.g.
+ * UAE `.. ... ....`. Newer entries carry an object keyed by prefix regex plus a
+ * `default`; older ones are a bare string.
+ */
+const countryMask = (iso2: CountryIso2): string | undefined => {
+    const format = defaultCountries.find((c) => c[1] === iso2)?.[3] as
+        | string
+        | { default?: string }
+        | undefined;
+
+    if (!format) return undefined;
+    return typeof format === "string" ? format : format.default;
+};
+
+/**
+ * KP1-I85: the placeholder was a hardcoded `ex.5663 3723 323` — eleven digits and no
+ * country — displayed next to a selector reading +971, and contradicting the 9-digit
+ * rule `utils/phone.ts` enforces on the very same value.
+ *
+ * It is derived from the selected country now, so it cannot drift from the dial code
+ * again: the shape comes from the country data this file already imports, and the
+ * digits from a real example where we hold one (UAE -> `eg. 50 123 4567`).
+ */
+const examplePlaceholder = (iso2: CountryIso2): string => {
+    const mask = countryMask(iso2);
+    const digits = EXAMPLE_NATIONAL[iso2] ?? "";
+
+    if (!mask) return digits ? `eg. ${digits}` : "";
+
+    let i = 0;
+    const filled = mask.replace(/\./g, () => {
+        // Past the end of a known example (or with none at all) keep counting 1-9, so
+        // the length and grouping still read correctly for that country.
+        const digit = digits[i] ?? String((i % 9) + 1);
+        i += 1;
+        return digit;
+    });
+
+    return `eg. ${filled}`;
+};
+
 const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
-    ({ className, onChange, value, label, required, error, disabled, defaultCountry = "ae", placeholder = "ex.5663 3723 323", ...props }, ref) => {
+    ({ className, onChange, value, label, required, error, disabled, defaultCountry = "ae", placeholder, ...props }, ref) => {
 
         // Parse the initial value to extract country and local number
         const parsedValue = React.useMemo(() => {
@@ -91,6 +145,12 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
 
         const selectedCountry = options.find((opt) => opt.value === currentCountry);
 
+        // Follows the country selector, including after the user changes it.
+        const countryPlaceholder = React.useMemo(
+            () => examplePlaceholder(currentCountry),
+            [currentCountry]
+        );
+
         // Handle phone input change
         const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             const newLocalPhone = e.target.value;
@@ -113,13 +173,17 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
 
 
 
+        // KP1-I107/I108: this shared none of the form shell — a bare `w-full` div and a
+        // Tailwind label with a 6px gap where every other control uses 4px, and no
+        // `capitalize`. So a Tel No. sat a couple of pixels off the text field beside it in
+        // the same row. Same classes as InputField now (../FormField.css).
         return (
-            <div className="w-full">
+            <div className="input-field">
                 {label && (
-                    <label className="block text-sm text-foreground mb-1.5">
-                        {label}
-                        {required && <span className="text-destructive ml-1">*</span>}
-                    </label>
+                    <div className="input-label">
+                        <label className={error ? 'label-error' : ''}>{label}</label>
+                        {required && <span className="required-mark">*</span>}
+                    </div>
                 )}
                 <div
                     className={cn(
@@ -152,7 +216,7 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
                         type="tel"
                         value={localPhone}
                         onChange={handlePhoneChange}
-                        placeholder={placeholder}
+                        placeholder={placeholder ?? countryPlaceholder}
                         disabled={disabled}
                         className={cn(
                             "flex-1 h-full px-3 bg-transparent text-foreground placeholder:text-muted-foreground",
@@ -162,9 +226,11 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
                         {...props}
                     />
                 </div>
-                {error && (
-                    <p className="mt-1.5 text-xs text-destructive">{error}</p>
-                )}
+                {/* The shared message slot, like every other control (KP1-I107/I108). The
+                    hand-rolled `<p className="mt-1.5 text-xs text-destructive">` this
+                    replaces sat 6px below the control where ValidationMessage sits 4px, so
+                    an errored phone field pushed its row taller than an errored text field. */}
+                <ValidationMessage error={error} />
             </div>
         );
     }

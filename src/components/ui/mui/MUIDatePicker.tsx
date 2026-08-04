@@ -40,6 +40,10 @@ const MUIDatePicker: React.FC<MUIDatePickerProps> = ({
                 <DatePicker
                     value={value ? dayjs(value) : null}
                     onChange={(newValue) => onChange(newValue ? newValue.format('YYYY-MM-DD') : null)}
+                    // Kept in step with components/InputElements/MUIDatePicker (KP1-I95).
+                    // NOTE: this file is a byte-identical copy of that one and nothing imports
+                    // it — fixed rather than left to rot, but it should be deleted.
+                    format="DD/MM/YYYY"
                     disabled={disabled}
                     minDate={minDate}
                     slots={{

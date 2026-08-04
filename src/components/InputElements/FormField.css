@@ -1,0 +1,59 @@
+/**
+ * The shared shell every form control renders: label row, control, message.
+ *
+ * KP1-I107 / KP1-I108 — "fields in the same row are not uniformly sized".
+ *
+ * Four controls sit side by side in a form row (InputField, PhoneInput, MUIAutocomplete,
+ * MUIDatePicker) and each had invented its own shell, so a row mixing them was never
+ * aligned:
+ *
+ *   - `.form-field` and `.field-label` — the classes MUIAutocomplete and MUIDatePicker
+ *     wrap themselves in — were **defined nowhere at all**. Those two controls had no
+ *     column layout, no gap, and (for the date picker, whose label carries only
+ *     `.field-label`) a browser-default 16px label next to everyone else's 14px.
+ *   - `.required-mark` lived in InputField.css, so the red asterisk was styled only on
+ *     screens that happened to also render an InputField.
+ *   - PhoneInput hand-rolled `text-sm mb-1.5` in Tailwind: same font size, 6px gap
+ *     instead of 4px, and no `capitalize`.
+ *
+ * Everything is defined ONCE here, under both class names, and every control imports this
+ * file. A new control gets the row's alignment by using `.form-field` + `.field-label`,
+ * and cannot drift by forgetting a rule.
+ *
+ * Control HEIGHT is the other half of the alignment and cannot live in CSS for the MUI
+ * controls (they compose their own DOM) — each pins `var(--input-large-height)` in its
+ * `sx`. Keep those in step with `.input-wrapper` in InputField.css.
+ */
+
+.input-field,
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+}
+
+.input-label,
+.field-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.input-label label,
+.field-label label {
+    color: hsl(var(--foreground));
+    font-size: var(--small);
+    font-weight: 400;
+    text-transform: capitalize;
+}
+
+.label-error {
+    color: hsl(var(--destructive)) !important;
+}
+
+.required-mark {
+    color: hsl(var(--destructive));
+    font-size: var(--small);
+    font-weight: 400;
+}

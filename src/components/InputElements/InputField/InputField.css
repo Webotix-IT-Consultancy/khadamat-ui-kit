@@ -1,32 +1,6 @@
-.input-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 100%;
-}
-
-.input-label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.input-label label {
-  color: hsl(var(--foreground));
-  font-size: var(--small);
-  font-weight: 400;
-  text-transform: capitalize;
-}
-
-.label-error {
-  color: hsl(var(--destructive)) !important;
-}
-
-.required-mark {
-  color: hsl(var(--destructive));
-  font-size: var(--small);
-  font-weight: 400;
-}
+/* `.input-field`, `.input-label`, `.label-error` and `.required-mark` moved to the shared
+   ../FormField.css (KP1-I107 / KP1-I108) — they are the row's alignment contract, and every
+   control in a row needs them, not just this one. Imported from InputField.tsx. */
 
 .input-wrapper {
   display: flex;
@@ -91,6 +65,32 @@
   opacity: 0.7;
 }
 
+/*
+ * KP1-I7: Edge draws its OWN reveal button inside every <input type="password">, so a
+ * field that also renders `.password-toggle` showed two eye icons. Chrome, Firefox and
+ * Safari draw nothing, which is why it only reproduced in Edge.
+ *
+ * Suppressing the native control (rather than dropping ours) keeps one behaviour in
+ * every browser, and ours is the one that must stay: it is a real <button> with
+ * aria-label/aria-pressed, and it drives the same `showPassword` state the field reads.
+ *
+ * `:has(.password-toggle)` scopes this to fields that actually have our toggle — a
+ * password field added later WITHOUT one keeps the browser's reveal rather than losing
+ * every way to unmask. (`:has` is already load-bearing in this file, see the read-only
+ * rule at the bottom.)
+ *
+ * Kept as two rules, not one selector list: an unknown selector invalidates the WHOLE
+ * list, so grouping these with a -webkit- pseudo later would silently kill both.
+ */
+.input-wrapper:has(.password-toggle) .input-element::-ms-reveal {
+  display: none;
+}
+
+/* Edge's X-clear, the same class of duplicate chrome on a field we already decorate. */
+.input-element::-ms-clear {
+  display: none;
+}
+
 .input-error-message {
   color: hsl(var(--destructive));
   font-size: var(--extra-small);
@@ -144,4 +144,32 @@
 .input-wrapper:has(.input-element:read-only) {
   background-color: #EEEEEE;
   border-color: transparent;
+}
+
+/*
+ * KP1-I128 — a DISABLED field must look disabled too.
+ *
+ * View screens pass `disabled={isView}`, which reaches the <input> through `...props`, so
+ * the field genuinely could not be typed into. But only the `:read-only` rule above
+ * repainted the surface, so a disabled field kept the white background and the 2px gold
+ * border — it read as editable, and testers reported the view screen as editable because
+ * it looked it. Every other control already had a disabled surface (MUIAutocomplete,
+ * MUIDatePicker, PhoneInput, all #EEEEEE/#ECECEC), which made these the odd ones out.
+ *
+ * Deliberately a SEPARATE rule rather than a selector list with the one above: an unknown
+ * selector invalidates a whole `:has()` list, which would silently kill both — the same
+ * caution the password-toggle comment above records.
+ */
+.input-wrapper:has(.input-element:disabled) {
+  background-color: #EEEEEE;
+  border-color: transparent;
+}
+
+/* The browser greys disabled text by default and the shade varies; pin it to the same
+   colour the read-only fields use so the two states are indistinguishable. */
+.input-element:disabled {
+  color: #555555;
+  -webkit-text-fill-color: #555555; /* Safari/iOS ignore `color` on a disabled input. */
+  opacity: 1;
+  cursor: default;
 }
