@@ -58,12 +58,14 @@
         "noData": "لا توجد بيانات متاحة",
         "noRecentRequests": "لا توجد طلبات حديثة",
         "noTransactions": "لا توجد عمليات حديثة",
-        "noInvoices": "لا توجد فواتير حديثة"
+        "noInvoices": "لا توجد فواتير حديثة",
+        "noMatches": "لا توجد نتائج مطابقة"
     },
     "messages": {
         "loading": "جاري التحميل...",
         "errorGeneric": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
-        "successGeneric": "تمت العملية بنجاح"
+        "successGeneric": "تمت العملية بنجاح",
+        "checkFields": "يرجى تصحيح الحقول المميزة."
     },
     "validation": {
         "required": "هذا الحقل مطلوب",
@@ -91,7 +93,8 @@
     "header": {
         "welcomeBack": "مرحباً بك مرة أخرى",
         "id": "معرف",
-        "today": "اليوم"
+        "today": "اليوم",
+        "genericUser": "مستخدم"
     },
     "currency": "درهم",
     "placeholders": {

@@ -181,7 +181,9 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
             <div className="input-field">
                 {label && (
                     <div className="input-label">
-                        <label className={error ? 'label-error' : ''}>{label}</label>
+                        {/* KP1-I82: default label colour on error; the field border and the
+                            ValidationMessage carry it. */}
+                        <label>{label}</label>
                         {required && <span className="required-mark">*</span>}
                     </div>
                 )}
@@ -220,6 +222,10 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
                         disabled={disabled}
                         className={cn(
                             "flex-1 h-full px-3 bg-transparent text-foreground placeholder:text-muted-foreground",
+                            // KP1-I99: this input had no size of its own and inherited body
+                            // copy, so it would have stayed 16px while the InputField next
+                            // to it stepped down to 14px below `xl`.
+                            "text-[length:var(--input-font-size)]",
                             "outline-none border-0 focus:ring-0",
                             disabled && "cursor-not-allowed"
                         )}

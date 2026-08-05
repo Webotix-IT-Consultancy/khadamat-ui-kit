@@ -1,5 +1,6 @@
 import React from 'react';
 import { Autocomplete, TextField } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import '../FormField.css';
 import ValidationMessage from '../../ValidationMessage/ValidationMessage';
 
@@ -25,6 +26,14 @@ interface MUIAutocompleteProps {
     required?: boolean;
     className?: string;
     name?: string;
+    /**
+     * KP1-I91: what the dropdown says when the typed text matches nothing.
+     *
+     * Defaults to the shared "No matches found". Override only when a field can say
+     * something more useful than that — not to restate the field's own name, which the
+     * label directly above the box already gives.
+     */
+    noOptionsText?: React.ReactNode;
 }
 
 const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
@@ -38,9 +47,29 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
     disabled = false,
     required = false,
     name,
+    noOptionsText,
 }) => {
+    const { t } = useTranslation(['common']);
     const selectedOption = options.find((opt) => opt.value === value) || null;
     const hasDescriptions = options.some((opt) => !!opt.description);
+
+    /**
+     * KP1-I91: MUI's own default is the bare "No options", which reads as though the
+     * dropdown is broken or empty rather than as an answer to what was typed. A search that
+     * matches nothing — including one containing characters no area or account name has —
+     * now says so.
+     *
+     * This is the tester's second suggestion rather than the first: silently stripping
+     * "invalid" characters from the query would answer a question the user did not ask, and
+     * these lists hold real names with `&`, `-`, `(`, `.` in them. The field cannot accept a
+     * typed non-value in any case — no Autocomplete here is `freeSolo`, so MUI restores the
+     * last valid selection on blur.
+     *
+     * The literal is passed as i18next's defaultValue, not left to the key existing: a
+     * missing key in this package fails silently as visible raw text, and a dropdown reading
+     * `common:emptyStates.noMatches` would be worse than the bug (KP1-I56).
+     */
+    const emptyText = noOptionsText ?? t('common:emptyStates.noMatches', 'No matches found');
 
     return (
         <div className={`form-field ${className || ''} ${error ? 'has-error' : ''}`}>
@@ -62,6 +91,7 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
                     onChange(newValue ? newValue.value : null);
                 }}
                 disabled={disabled}
+                noOptionsText={emptyText}
                 // Only overridden when descriptions are in play — with duplicate labels the
                 // code is what the user actually searches on. `undefined` keeps MUI's own
                 // filter (accent-insensitive) for every other dropdown.
@@ -132,7 +162,13 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
                                 },
                             },
                             '& .MuiInputBase-input': {
-                                fontSize: '16px',
+                                // KP1-I99: a literal 16px cannot answer a media query, and
+                                // this is the control the ticket was filed against — at
+                                // 1200px the selected "United Arab Emirates (UAE)" needed
+                                // ~216px in a column that offered ~224px, so MUI's
+                                // `text-overflow: ellipsis` cut it. The token drops to 14px
+                                // below `xl`, where the columns are narrow.
+                                fontSize: 'var(--input-font-size)',
                                 fontFamily: "'Poppins', sans-serif",
                                 color: '#000',
                             }

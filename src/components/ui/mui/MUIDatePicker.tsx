@@ -6,6 +6,7 @@ import { TextField } from '@mui/material';
 import dayjs, { Dayjs } from 'dayjs';
 import { Calendar } from 'lucide-react';
 import ValidationMessage from '../../ValidationMessage/ValidationMessage';
+import useExclusivePicker from '../../../hooks/useExclusivePicker';
 
 interface MUIDatePickerProps {
     value: string | null;
@@ -28,6 +29,8 @@ const MUIDatePicker: React.FC<MUIDatePickerProps> = ({
     minDate,
     helperText
 }) => {
+    const picker = useExclusivePicker();
+
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
             <div className={`form-field ${error ? 'has-error' : ''}`}>
@@ -40,10 +43,13 @@ const MUIDatePicker: React.FC<MUIDatePickerProps> = ({
                 <DatePicker
                     value={value ? dayjs(value) : null}
                     onChange={(newValue) => onChange(newValue ? newValue.format('YYYY-MM-DD') : null)}
-                    // Kept in step with components/InputElements/MUIDatePicker (KP1-I95).
-                    // NOTE: this file is a byte-identical copy of that one and nothing imports
+                    // Kept in step with components/InputElements/MUIDatePicker (KP1-I95,
+                    // KP1-I77). NOTE: this file is a copy of that one and nothing imports
                     // it — fixed rather than left to rot, but it should be deleted.
                     format="DD/MM/YYYY"
+                    open={picker.open}
+                    onOpen={picker.onOpen}
+                    onClose={picker.onClose}
                     disabled={disabled}
                     minDate={minDate}
                     slots={{

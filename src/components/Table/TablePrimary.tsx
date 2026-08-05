@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Table,
     TableBody,
@@ -70,6 +70,31 @@ const TablePrimary = <T extends Record<string, any>>({
 }: TablePrimaryProps<T>) => {
     const { t } = useTranslation('common');
 
+    /**
+     * KP1-I93: a column is marked as sorted only once the USER has sorted it.
+     *
+     * Every list here seeds an `orderBy` so the first page arrives in a sensible order
+     * (Enquiry by Date Raised, Contract by Created On, and twelve more across the two
+     * portals). MUI's `TableSortLabel` renders `active` as a selection — darker label plus a
+     * permanent arrow — so each of those lists opened with one column already looking
+     * clicked, which is what the ticket reports against Date Raised.
+     *
+     * The distinction is between the default order (an implementation choice) and a sort the
+     * user asked for. The DATA still arrives in the default order; only the marker waits.
+     *
+     * Held here rather than threaded through a prop because the click already passes through
+     * this component — so all 23 call sites are fixed without touching one of them, and a
+     * list added later cannot forget. Remounting resets it, which is right: a fresh page
+     * load is not a user sort.
+     */
+    const [userSorted, setUserSorted] = useState(false);
+    const sortedColumn = userSorted ? orderBy : undefined;
+
+    const handleSort = (key: keyof T) => {
+        setUserSorted(true);
+        onSort(key);
+    };
+
     return (
         <Box className="table-primary-container">
             <TableContainer component={Paper} className="table-primary-wrapper">
@@ -82,14 +107,14 @@ const TablePrimary = <T extends Record<string, any>>({
                             {columns.map((column) => (
                                 <TableCell
                                     key={column.key as string}
-                                    sortDirection={orderBy === column.key ? order : false}
+                                    sortDirection={sortedColumn === column.key ? order : false}
                                     className="table-primary-header-cell text-xs! sm:text-sm! lg:text-base!"
                                 >
                                     {column.sortable !== false ? (
                                         <TableSortLabel
-                                            active={orderBy === column.key}
-                                            direction={orderBy === column.key ? order : 'asc'}
-                                            onClick={() => onSort(column.key)}
+                                            active={sortedColumn === column.key}
+                                            direction={sortedColumn === column.key ? order : 'asc'}
+                                            onClick={() => handleSort(column.key)}
                                             className="table-primary-sort-label"
                                             classes={{ icon: 'table-primary-sort-icon' }}
                                         >

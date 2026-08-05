@@ -59,12 +59,14 @@
         "noData": "No data available",
         "noRecentRequests": "No recent requests",
         "noTransactions": "No recent transactions",
-        "noInvoices": "No recent invoices"
+        "noInvoices": "No recent invoices",
+        "noMatches": "No matches found"
     },
     "messages": {
         "loading": "Loading...",
         "errorGeneric": "Something went wrong. Please try again.",
-        "successGeneric": "Login completed successfully"
+        "successGeneric": "Login completed successfully",
+        "checkFields": "Please correct the highlighted fields."
     },
     "validation": {
         "required": "This field is required",
@@ -87,12 +89,13 @@
         "language": "Language",
         "enquiry": "Any enquiry ?",
         "enquiryDesc": "Chat with us",
-        "developedBy": "Design and Developed by"
+        "developedBy": "Designed and Developed by"
     },
     "header": {
         "welcomeBack": "Welcome back",
         "id": "ID",
-        "today": "Today"
+        "today": "Today",
+        "genericUser": "User"
     },
     "currency": "AED",
     "placeholders": {

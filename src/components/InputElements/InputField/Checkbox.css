@@ -55,13 +55,20 @@
     padding-top: 2px;
 }
 
-.label-error {
+/*
+ * KP1-I82: both rules below used to be `.label-error` and `.required-mark` — copies of the
+ * class names ../FormField.css owns, so any page rendering a single Checkbox re-styled the
+ * labels and asterisks of EVERY other control on it (the leak KP1-I109 removed from
+ * TextArea.css). They are scoped to this component now.
+ *
+ * The checkbox is the one control that KEEPS a red label on error: it is a native
+ * `<input type="checkbox">` with no border to redden, so the label and the message below
+ * are the only signals it has. Field labels above an input do not do this any more.
+ */
+.checkbox-label-error {
     color: hsl(var(--destructive)) !important;
 }
 
-.required-mark {
-    color: hsl(var(--destructive));
-    font-size: var(--small);
-    font-weight: 400;
+.checkbox-label .required-mark {
     margin-left: 2px;
 }

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '../../lib/utils';
 import userProfileImage from '../../assets/images/avatar/user-demo.png';
 import { usePageStore } from '../../store/usePageStore';
+import { resolveDisplayName, toFirstName } from '../../utils/displayName';
 import { ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -48,8 +49,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+    // KP1-I151: the generic label is the LAST resort now, not the only outcome.
+    const displayName = resolveDisplayName(user) || t('header.genericUser', { defaultValue: 'User' });
     // Extracting first name for the welcome message
-    const firstName = user?.companyName?.split(' ')[0] || 'User';
+    const firstName = toFirstName(displayName);
 
     const handleLogoutClick = () => {
         setShowLogoutConfirm(true);
@@ -127,7 +130,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 <div className="hidden sm:flex items-center gap-3">
                     <div className="flex flex-col items-end">
                         <div className="text-sm md:text-[16px] font-semibold text-black font-poppins">
-                            {user?.companyName || 'User'}
+                            {displayName}
                         </div>
                         {/*
                           * The Figma carries the user's ROLE here, not their ID (the old

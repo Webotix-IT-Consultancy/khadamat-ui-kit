@@ -51,7 +51,9 @@ const AutocompleteInput = <T extends any>({
         <div className={`input-field ${className} ${error ? 'has-error' : ''}`}>
             {label && (
                 <div className="input-label">
-                    <label className={error ? 'label-error' : ''} htmlFor={name}>{label}</label>
+                    {/* KP1-I82, like every other control. NOTE: nothing imports this file —
+                        kept in step rather than left to rot, but it should be deleted. */}
+                    <label htmlFor={name}>{label}</label>
                     {required && <span className="required-mark">*</span>}
                 </div>
             )}
@@ -66,6 +68,9 @@ const AutocompleteInput = <T extends any>({
                 disabled={disabled}
                 loading={loading}
                 onBlur={onBlur}
+                /* KP1-I91, like the InputElements copy. NOTE: nothing imports this file —
+                   kept in step rather than left to rot, but it should be deleted. */
+                noOptionsText="No matches found"
                 renderInput={(params) => (
                     <TextField
                         {...params}

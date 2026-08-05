@@ -48,9 +48,21 @@
     text-transform: capitalize;
 }
 
-.label-error {
-    color: hsl(var(--destructive)) !important;
-}
+/*
+ * KP1-I82: `.label-error` (label → destructive on error) is GONE, not disabled.
+ *
+ * A failed field is signalled by its control border and its ValidationMessage; the label
+ * keeps `hsl(var(--foreground))` so the form still reads as a form when several fields
+ * fail at once. MUIAutocomplete, MUIDatePicker and MUITimePicker never reddened their
+ * labels, so the Create Enquiry screen highlighted some labels and not others depending
+ * on which control the field happened to use — the inconsistency the tester saw.
+ *
+ * The class name is not resurrected in a component's own CSS either: a second copy of a
+ * shared class name overrides it for EVERY control on any page that renders that one
+ * component (KP1-I109 — TextArea.css did exactly this). Checkbox keeps a red label under
+ * its OWN name, `.checkbox-label-error`, because a native checkbox has no border to
+ * redden.
+ */
 
 .required-mark {
     color: hsl(var(--destructive));

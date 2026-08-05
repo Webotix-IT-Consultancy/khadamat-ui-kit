@@ -7,6 +7,7 @@ import '../FormField.css';
 import dayjs, { Dayjs } from 'dayjs';
 import { Calendar } from 'lucide-react';
 import ValidationMessage from '../../ValidationMessage/ValidationMessage';
+import useExclusivePicker from '../../../hooks/useExclusivePicker';
 
 interface MUIDatePickerProps {
     value: string | null;
@@ -29,6 +30,10 @@ const MUIDatePicker: React.FC<MUIDatePickerProps> = ({
     minDate,
     helperText
 }) => {
+    // KP1-I77: one picker popup on screen at a time — see the hook for why MUI's own
+    // click-away cannot be relied on for this.
+    const picker = useExclusivePicker();
+
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
             <div className={`form-field ${error ? 'has-error' : ''}`}>
@@ -51,6 +56,9 @@ const MUIDatePicker: React.FC<MUIDatePickerProps> = ({
                     // FilterPanel (which does pass `format`) showed the same date the other
                     // way round. DISPLAY only — `onChange` still emits YYYY-MM-DD for the API.
                     format="DD/MM/YYYY"
+                    open={picker.open}
+                    onOpen={picker.onOpen}
+                    onClose={picker.onClose}
                     disabled={disabled}
                     minDate={minDate}
                     slots={{
@@ -115,7 +123,9 @@ const MUIDatePicker: React.FC<MUIDatePickerProps> = ({
                                     },
                                 },
                                 '& .MuiInputBase-input': {
-                                    fontSize: '16px',
+                                    // KP1-I99: the shared control scale, so this field keeps
+                                    // matching the InputField beside it at every width.
+                                    fontSize: 'var(--input-font-size)',
                                     fontFamily: "'Poppins', sans-serif",
                                     color: '#000',
                                 }

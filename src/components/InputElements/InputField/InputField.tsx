@@ -69,7 +69,9 @@ const InputField = React.forwardRef(({
     <div className="input-field">
       {label && (
         <div className="input-label">
-          <label className={error ? 'label-error' : ''}>{label}</label>
+          {/* KP1-I82: the label keeps its default colour on error — the wrapper border
+              and the ValidationMessage below carry the failure. */}
+          <label>{label}</label>
           {required && <span className="required-mark">*</span>}
         </div>
       )}

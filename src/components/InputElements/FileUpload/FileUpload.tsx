@@ -42,7 +42,8 @@ interface FileUploadProps {
     maxSizeMB?: number;
     value?: string;
     fileName?: string;
-    onChange: (dataUrl: string, fileName: string) => void;
+    /** Single-file selection. Optional only because `multiple` callers use `onFilesChange`. */
+    onChange?: (dataUrl: string, fileName: string) => void;
     onError?: (message: string) => void;
     error?: string;
     helperText?: string;
@@ -63,6 +64,36 @@ interface FileUploadProps {
     previewUrl?: string;
     /** Disables the chip's actions while the caller is fetching the file. */
     busy?: boolean;
+    /**
+     * KP1-I122: accept several files from one pick or one drop.
+     *
+     * OPT-IN, and deliberately so. The API takes `Files` / `FileCategoryIds` as parallel
+     * arrays on every multipart command, so several files are possible everywhere — but they
+     * are not *wanted* everywhere. Half the call sites are one-document-per-slot (TRN
+     * Attachment, Trade Licence, Emirates ID, the signed contract document): those hold a
+     * single named document, their schemas type it as one object, and their view screens
+     * render one chip. Turning this on for them would be a data-model change, not a UX one.
+     *
+     * Off by default, so every existing caller keeps its single-file behaviour untouched.
+     */
+    multiple?: boolean;
+    /**
+     * Multi-file counterpart to `onChange`, required when `multiple` is set. Reports the
+     * WHOLE current selection, not the delta, so the caller's state is a straight assignment
+     * — the control owns no list of its own.
+     */
+    onFilesChange?: (files: UploadedFile[]) => void;
+    /**
+     * The current selection when `multiple` is set. Same contract as `value`/`fileName` for
+     * the single-file case: the caller owns it, the control only renders it.
+     */
+    files?: UploadedFile[];
+}
+
+/** One picked file, in the shape the callers already keep in form state. */
+export interface UploadedFile {
+    dataUrl: string;
+    name: string;
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({
@@ -80,41 +111,83 @@ const FileUpload: React.FC<FileUploadProps> = ({
     onDownload,
     previewUrl,
     busy = false,
+    multiple = false,
+    onFilesChange,
+    files,
 }) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const [isDragging, setIsDragging] = useState(false);
 
     const acceptedTypes = accept.split(',').map((type) => type.trim());
+    const selected = files ?? [];
+
+    /** `''` when the file is acceptable, otherwise the reason. */
+    const reject = (file: File): string => {
+        if (!acceptedTypes.includes(file.type)) return 'Unsupported file format';
+        if (file.size > maxSizeMB * 1024 * 1024) return `File size must be less than ${maxSizeMB} MB`;
+        return '';
+    };
+
+    const readDataUrl = (file: File) =>
+        new Promise<UploadedFile>((resolve, reject_) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve({ dataUrl: reader.result as string, name: file.name });
+            reader.onerror = () => reject_(reader.error);
+            reader.readAsDataURL(file);
+        });
 
     const processFile = (file: File) => {
-        if (!acceptedTypes.includes(file.type)) {
-            onError?.('Unsupported file format');
+        const reason = reject(file);
+        if (reason) {
+            onError?.(reason);
             return;
         }
+        readDataUrl(file).then(({ dataUrl, name }) => onChange?.(dataUrl, name));
+    };
 
-        if (file.size > maxSizeMB * 1024 * 1024) {
-            onError?.(`File size must be less than ${maxSizeMB} MB`);
-            return;
+    /**
+     * KP1-I122: several files in one go.
+     *
+     * Each is judged on its own — a rejected file reports its reason and is dropped, while
+     * the acceptable ones in the same selection are still added. Rejecting the whole batch
+     * because one file was a .docx would make the user re-pick the good ones.
+     *
+     * They are read in parallel but appended in the order the user picked them, because the
+     * command builder pairs `Files[i]` with `FileCategoryIds[i]` positionally — a reordered
+     * list would categorise the wrong attachment.
+     */
+    const processFiles = (picked: File[]) => {
+        const usable: File[] = [];
+        for (const file of picked) {
+            const reason = reject(file);
+            if (reason) onError?.(`${file.name}: ${reason}`);
+            else usable.push(file);
         }
+        if (!usable.length) return;
 
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            onChange(reader.result as string, file.name);
-        };
-        reader.readAsDataURL(file);
+        Promise.all(usable.map(readDataUrl)).then((read) => {
+            // Appends to the caller's current selection, so a second pick adds rather than
+            // replaces — the behaviour the Edit screen already had by picking repeatedly.
+            onFilesChange?.([...selected, ...read]);
+        });
+    };
+
+    const accept_ = (list: FileList | null | undefined) => {
+        const picked = list ? Array.from(list) : [];
+        if (!picked.length) return;
+        if (multiple) processFiles(picked);
+        else processFile(picked[0]);
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) processFile(file);
+        accept_(e.target.files);
         e.target.value = '';
     };
 
     const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         setIsDragging(false);
-        const file = e.dataTransfer.files?.[0];
-        if (file) processFile(file);
+        accept_(e.dataTransfer.files);
     };
 
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -128,7 +201,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
     };
 
     // FileChip stops propagation for all three, so these are plain callbacks.
-    const handleRemove = () => onChange('', '');
+    const handleRemove = () => onChange?.('', '');
 
     const handleView = () => {
         if (onView) {
@@ -146,7 +219,9 @@ const FileUpload: React.FC<FileUploadProps> = ({
         <div className="input-field">
             {label && (
                 <div className="input-label">
-                    <label className={error ? 'label-error' : ''}>{label}</label>
+                    {/* KP1-I82: default label colour on error; the dropzone border and the
+                        ValidationMessage carry it. */}
+                    <label>{label}</label>
                     {required && <span className="required-mark">*</span>}
                 </div>
             )}
@@ -163,11 +238,43 @@ const FileUpload: React.FC<FileUploadProps> = ({
                     ref={inputRef}
                     type="file"
                     accept={accept}
+                    /* KP1-I122: without this attribute the OS picker only ever lets ONE file
+                       be selected, whatever the handler does with the list. */
+                    multiple={multiple}
                     className="hidden"
                     onChange={handleInputChange}
                     aria-label={label || 'Upload file'}
                 />
-                {value ? (
+                {multiple ? (
+                    selected.length ? (
+                        /* One chip per file, each removable on its own — the caller is handed
+                           the remaining list, never a delta. */
+                        <div className="flex flex-wrap justify-center gap-2">
+                            {selected.map((file, index) => (
+                                <FileChip
+                                    key={`${file.name}-${index}`}
+                                    fileName={file.name}
+                                    previewUrl={file.dataUrl.startsWith('data:image/') ? file.dataUrl : undefined}
+                                    onView={() => openInNewTab(file.dataUrl)}
+                                    onRemove={() =>
+                                        onFilesChange?.(selected.filter((_, i) => i !== index))
+                                    }
+                                    busy={busy}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <>
+                            <Upload className="text-primary" size={24} />
+                            <p className="text-base text-black text-center">
+                                Drag &amp; drop files here or click to browse
+                            </p>
+                            <p className="text-[11px] text-grey-200 text-center">
+                                {helperText || 'Supported formats: PDF, JPG, PNG (Max 10 MB)'}
+                            </p>
+                        </>
+                    )
+                ) : value ? (
                     /* The same chip the view screens render, so an uploaded document looks and
                        behaves identically whether you are reading the record or editing it.
                        Its buttons stop propagation, so they don't also re-open the file picker

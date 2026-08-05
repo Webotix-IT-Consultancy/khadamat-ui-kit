@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { Clock } from 'lucide-react';
 import ValidationMessage from '../../ValidationMessage/ValidationMessage';
+import useExclusivePicker from '../../../hooks/useExclusivePicker';
 
 dayjs.extend(customParseFormat);
 
@@ -31,6 +32,10 @@ const MUITimePicker: React.FC<MUITimePickerProps> = ({
     // Handle time value string "HH:mm" to Dayjs object
     const timeValue = value ? dayjs(value, 'HH:mm') : null;
 
+    // KP1-I77: shares the slot with the date pickers — a clock popup and a calendar popup
+    // are the same defect when both are on screen (On-Call Request has them side by side).
+    const picker = useExclusivePicker();
+
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
             <div className={`form-field ${error ? 'has-error' : ''}`}>
@@ -43,6 +48,9 @@ const MUITimePicker: React.FC<MUITimePickerProps> = ({
                 <TimePicker
                     value={timeValue}
                     onChange={(newValue) => onChange(newValue ? newValue.format('HH:mm') : null)}
+                    open={picker.open}
+                    onOpen={picker.onOpen}
+                    onClose={picker.onClose}
                     disabled={disabled}
                     slots={{
                         openPickerIcon: () => <Clock size={20} color="#000" />,
@@ -89,7 +97,8 @@ const MUITimePicker: React.FC<MUITimePickerProps> = ({
                                     },
                                 },
                                 '& .MuiInputBase-input': {
-                                    fontSize: '16px',
+                                    // KP1-I99: the shared control scale, as MUIDatePicker.
+                                    fontSize: 'var(--input-font-size)',
                                     fontFamily: "'Poppins', sans-serif",
                                     color: '#000',
                                 }

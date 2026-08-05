@@ -1,6 +1,7 @@
-/* `.input-field`, `.input-label`, `.label-error` and `.required-mark` moved to the shared
-   ../FormField.css (KP1-I107 / KP1-I108) — they are the row's alignment contract, and every
-   control in a row needs them, not just this one. Imported from InputField.tsx. */
+/* `.input-field`, `.input-label` and `.required-mark` moved to the shared ../FormField.css
+   (KP1-I107 / KP1-I108) — they are the row's alignment contract, and every control in a row
+   needs them, not just this one. Imported from InputField.tsx.
+   (`.label-error` was there too until KP1-I82 removed red labels altogether.) */
 
 .input-wrapper {
   display: flex;
@@ -39,7 +40,9 @@
   outline: none;
   color: hsl(var(--foreground));
   font-family: 'Poppins', sans-serif;
-  font-size: var(--p);
+  /* KP1-I99: the control scale, not body copy — it steps down below `xl`, where the
+     dashboard's 306px sidebar leaves the columns too narrow for 16px text. */
+  font-size: var(--input-font-size);
   font-weight: 400;
   background: transparent;
   padding: 0 9px;
@@ -106,7 +109,9 @@
   justify-content: center;
   flex-shrink: 0;
   color: hsl(var(--muted-foreground));
-  font-size: var(--p);
+  /* Same scale as `.input-element` beside it (KP1-I99) — a prefix that stayed 16px next to
+     14px input text would look like a different control. */
+  font-size: var(--input-font-size);
   font-weight: 500;
 }
 

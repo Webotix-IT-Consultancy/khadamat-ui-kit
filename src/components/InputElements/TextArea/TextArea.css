@@ -16,11 +16,11 @@
     color: #1A1A1A;
 }
 
-/* `.label-error` and `.required-mark` are deliberately NOT redefined here (KP1-I109).
-   They are global class names owned by ../FormField.css, and a second copy in this file
-   overrode the shared ones for EVERY control on any page that happened to render a
-   TextArea — with a hardcoded #FF3232 and an extra 2px margin. TextArea.tsx imports
-   FormField.css, so the shared rules apply. */
+/* `.required-mark` is deliberately NOT redefined here (KP1-I109). It is a global class name
+   owned by ../FormField.css, and a second copy in this file overrode the shared one for
+   EVERY control on any page that happened to render a TextArea — with a hardcoded #FF3232
+   and an extra 2px margin. TextArea.tsx imports FormField.css, so the shared rule applies.
+   (`.label-error` was the other half of that copy; red labels are gone since KP1-I82.) */
 
 .textarea-wrapper {
     position: relative;

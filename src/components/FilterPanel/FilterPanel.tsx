@@ -15,6 +15,7 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import './FilterPanel.css';
 import Button from '../Button/Button';
 import { useTranslation } from 'react-i18next';
+import useExclusivePicker from '../../hooks/useExclusivePicker';
 
 // Extend dayjs to support custom formats like DD/MM/YYYY
 dayjs.extend(customParseFormat);
@@ -165,8 +166,29 @@ const AutocompleteBase = styled(Autocomplete)({
  */
 const OPTION_LIST_MAX_HEIGHT = 176; // ~4.5 rows; short enough to fit either side of a field
 
+/**
+ * A component, not a string: `StyledAutocomplete` is defined at module scope where
+ * `useTranslation` cannot be called, and the panel's own `t` is scoped inside the
+ * FilterPanel function below (KP1-I91).
+ */
+const NoMatchesText: React.FC = () => {
+  const { t } = useTranslation(['common']);
+  return <>{t('common:emptyStates.noMatches', 'No matches found')}</>;
+};
+
 const StyledAutocomplete: React.FC<any> = (props) => (
   <AutocompleteBase
+    /**
+     * KP1-I91: "No matches found" rather than MUI's bare "No options", for every dropdown
+     * in this panel at once — the ticket asks for it on any field searched with data that
+     * matches nothing, not just the Enquiry form's Area Name.
+     *
+     * Set here on the base rather than per call site so a filter added later inherits it,
+     * and overridable by a caller that passes its own. The default sits in the shared
+     * `common` namespace; the literal is i18next's defaultValue so a missing key can never
+     * render as raw text (KP1-I56).
+     */
+    noOptionsText={props.noOptionsText ?? <NoMatchesText />}
     slotProps={{
       listbox: { sx: { maxHeight: `${OPTION_LIST_MAX_HEIGHT}px` } },
       popper: {
@@ -211,6 +233,20 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const { t } = useTranslation(['transactions', 'invoice', 'common', 'adminEnquiries']);
 
   const [filters, setFilters] = useState<FilterValues>({ ...EMPTY_FILTERS, ...initialValues });
+
+  /**
+   * KP1-I77: the panel's pickers are the pair a tester is most likely to have open at
+   * once — From and To sit one above the other. Each drives MUI's controlled `open`
+   * through the shared registry, so opening one closes the other (and any picker
+   * elsewhere on the page) without depending on a click reaching `document`.
+   *
+   * The `request` mode's Preferred Date/Time pickers join the same slot; the hooks are
+   * called unconditionally because that mode is chosen at render time.
+   */
+  const fromPicker = useExclusivePicker();
+  const toPicker = useExclusivePicker();
+  const preferredDatePicker = useExclusivePicker();
+  const preferredTimePicker = useExclusivePicker();
 
   /**
    * Reopening the panel must show the filters currently in effect — including any the
@@ -409,6 +445,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               value={fromDateValue}
               onChange={(date) => handleDateChange('fromDate', date)}
               format="DD/MM/YYYY"
+              open={fromPicker.open}
+              onOpen={fromPicker.onOpen}
+              onClose={fromPicker.onClose}
               maxDate={fromMaxDate ?? undefined}
               enableAccessibleFieldDOMStructure={false}
               slots={{
@@ -429,6 +468,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               value={toDateValue}
               onChange={(date) => handleDateChange('toDate', date)}
               format="DD/MM/YYYY"
+              open={toPicker.open}
+              onOpen={toPicker.onOpen}
+              onClose={toPicker.onClose}
               minDate={fromDateValue ?? undefined}
               maxDate={latestSelectable ?? undefined}
               enableAccessibleFieldDOMStructure={false}
@@ -561,6 +603,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   value={filters.preferredDate ? dayjs(filters.preferredDate, 'DD/MM/YYYY') : null}
                   onChange={(date) => handleDateChange('preferredDate', date)}
                   format="DD/MM/YYYY"
+                  open={preferredDatePicker.open}
+                  onOpen={preferredDatePicker.onOpen}
+                  onClose={preferredDatePicker.onClose}
                   enableAccessibleFieldDOMStructure={false}
                   slots={{
                     textField: (params) => (
@@ -579,6 +624,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 <TimePicker
                   value={filters.preferredTime ? dayjs(filters.preferredTime, 'HH:mm') : null}
                   onChange={(time) => handleTimeChange(time)}
+                  open={preferredTimePicker.open}
+                  onOpen={preferredTimePicker.onOpen}
+                  onClose={preferredTimePicker.onClose}
                   enableAccessibleFieldDOMStructure={false}
                   slots={{
                     textField: (params) => (

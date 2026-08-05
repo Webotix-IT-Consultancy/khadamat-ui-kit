@@ -197,6 +197,43 @@
   --input-large-height: 52px;
   --input-height: 46px;
   --input-small-height: 44px;
+
+  /*
+   * KP1-I99: the text size INSIDE a form control, as opposed to `--p` (body copy).
+   *
+   * It exists so the control scale below can move independently of body text — and
+   * because the four MUI-based controls compose their own DOM and set this in `sx`, where
+   * a hardcoded `16px` cannot respond to a media query. Every control reads this token:
+   * InputField/TextArea via CSS, MUIAutocomplete/MUIDatePicker/MUITimePicker/PhoneInput
+   * via `sx`. Keep them in step or a row will mix two text sizes.
+   */
+  --input-font-size: 16px;
+}
+
+/*
+ * KP1-I99 — the compact control scale.
+ *
+ * The dashboard shell puts a FIXED 306px sidebar beside the page from `md` (768px), so the
+ * usable content width is `viewport - 306 - 56`: 406px at 768, 662px at 1024, 838px at
+ * 1200. Controls, meanwhile, were one size for every viewport (52px tall, 16px text) — the
+ * token block above had no media query at all. A three-column row at 1200px therefore left
+ * about 224px of text room for a selected value that needs ~216px, and "United Arab
+ * Emirates (UAE)" ellipsised (MUI sets `text-overflow: ellipsis` on the Autocomplete
+ * input). It is the longest string in the narrowest column, not a fault of that field.
+ *
+ * Below `xl` the controls step down: 14px text fits the same value in ~189px with room to
+ * spare, and 44px rows take roughly 120px off a fifteen-field form — the other half of the
+ * report, that forms are needlessly tall on a laptop. The breakpoint matches the one the
+ * portals' form grids now use for their third column, so text and layout shrink together.
+ *
+ * 1279px, not 1280px: Tailwind's `xl:` applies from `min-width: 1280px`, so this must stop
+ * one pixel short or the two rules overlap on exactly-1280px viewports.
+ */
+@media (max-width: 1279px) {
+  :root {
+    --input-large-height: 44px;
+    --input-font-size: 14px;
+  }
 }
 
 /* ============================= */

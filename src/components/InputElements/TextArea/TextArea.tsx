@@ -20,7 +20,9 @@ const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(({
         <div className={`textarea-field ${className || ''}`}>
             {label && (
                 <div className="textarea-label">
-                    <label className={error ? 'label-error' : ''}>{label}</label>
+                    {/* KP1-I82: default label colour on error; the wrapper border and the
+                        ValidationMessage carry it. */}
+                    <label>{label}</label>
                     {required && <span className="required-mark">*</span>}
                 </div>
             )}
