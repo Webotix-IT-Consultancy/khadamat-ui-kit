@@ -73,15 +73,19 @@
 .textarea-element:disabled,
 .textarea-element[readonly] {
     cursor: default;
-    /* Or not-allowed if strictly disabled */
-    color: #555555;
+    color: hsl(var(--disabled-fg));
 }
 
 /* Specific style for readonly to match the Profile usage if needed,
-   but generic enough to reuse */
+   but generic enough to reuse.
+   KP1-I128: surface and radius come from the shared tokens — see styles/index.css. The
+   10px radius is deliberate and applies to the read-only state ONLY: a view screen stacks
+   textareas next to InputFields, and this file's editable 8px left the corners visibly
+   different from every other field on the page. The editable geometry above is untouched. */
 .textarea-wrapper:has(.textarea-element[readonly]) {
-    background-color: #EEEEEE;
+    background-color: hsl(var(--disabled-bg));
     border-color: transparent;
+    border-radius: var(--radius-r-10);
 }
 
 /*
@@ -90,11 +94,13 @@
  * selector list: an unknown selector invalidates a whole `:has()` list.
  */
 .textarea-wrapper:has(.textarea-element:disabled) {
-    background-color: #EEEEEE;
+    background-color: hsl(var(--disabled-bg));
     border-color: transparent;
+    border-radius: var(--radius-r-10);
 }
 
 .textarea-element:disabled {
-    -webkit-text-fill-color: #555555; /* Safari/iOS ignore `color` on a disabled control. */
+    /* Safari/iOS ignore `color` on a disabled control. */
+    -webkit-text-fill-color: hsl(var(--disabled-fg));
     opacity: 1;
 }

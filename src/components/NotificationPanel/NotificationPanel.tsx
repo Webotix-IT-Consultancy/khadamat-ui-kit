@@ -105,7 +105,11 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, onClose, 
         <div className="notification-panel-content">
           <div className="notification-header-row">
             <h3 className="notification-title">Notification</h3>
-            <button className="clear-button">Clear</button>
+            {/* `notification-clear-button`, not the bare `clear-button` this used to carry:
+                that name is FilterPanel's, and this panel is mounted by the dashboard layout
+                on every page, so its underline was leaking onto every filter panel's Clear.
+                See the note in NotificationPanel.css. */}
+            <button className="notification-clear-button">Clear</button>
           </div>
 
           {loading ? (

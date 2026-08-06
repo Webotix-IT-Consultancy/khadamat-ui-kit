@@ -192,11 +192,12 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
                         "flex items-center rounded-10 border-2 border-primary bg-background h-[var(--input-large-height)] overflow-hidden",
                         "focus-within:ring-4 focus-within:ring-primary-light focus-within:border-primary",
                         error && "border-destructive focus-within:border-destructive focus-within:ring-destructive/30",
-                        // Match InputField's read-only surface (InputField.css: #EEEEEE + no border),
-                        // so a disabled phone field reads as disabled next to the text fields on a
-                        // view screen instead of looking editable. `disabled` used to reach only the
-                        // inner <input> through `...props`, and every visible style lives out here.
-                        disabled && "bg-[#EEEEEE] border-transparent focus-within:ring-0 focus-within:border-transparent",
+                        // Match InputField's read-only surface, so a disabled phone field reads as
+                        // disabled next to the text fields on a view screen instead of looking
+                        // editable. `disabled` used to reach only the inner <input> through
+                        // `...props`, and every visible style lives out here.
+                        // KP1-I128: `bg-disabled` is the shared token; it was a literal #EEEEEE.
+                        disabled && "bg-disabled border-transparent focus-within:ring-0 focus-within:border-transparent",
                         className
                     )}
                 >
@@ -227,7 +228,12 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
                             // to it stepped down to 14px below `xl`.
                             "text-[length:var(--input-font-size)]",
                             "outline-none border-0 focus:ring-0",
-                            disabled && "cursor-not-allowed"
+                            // KP1-I128: the same pinned read-only text colour every other
+                            // control uses, so the number doesn't sit darker than the fields
+                            // beside it. `[-webkit-text-fill-color]` because Safari/iOS
+                            // ignore `color` on a disabled input.
+                            disabled &&
+                                "cursor-default text-disabled-foreground [-webkit-text-fill-color:hsl(var(--disabled-fg))] opacity-100"
                         )}
                         {...props}
                     />

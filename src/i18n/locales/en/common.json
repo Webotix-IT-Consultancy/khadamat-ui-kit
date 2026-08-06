@@ -62,6 +62,12 @@
         "noInvoices": "No recent invoices",
         "noMatches": "No matches found"
     },
+    "confirmLeave": {
+        "title": "Do you really want to exit this page?",
+        "message": "Any information you have entered will be lost.",
+        "yes": "Yes",
+        "no": "No"
+    },
     "messages": {
         "loading": "Loading...",
         "errorGeneric": "Something went wrong. Please try again.",
@@ -71,7 +77,8 @@
     "validation": {
         "required": "This field is required",
         "invalidEmail": "Invalid email address",
-        "minLength": "Minimum {{count}} characters required"
+        "minLength": "Minimum {{count}} characters required",
+        "lengthRange": "{{field}} must be between {{min}} and {{max}} characters."
     },
     "sidebar": {
         "dashboard": "Dashboard",
@@ -95,10 +102,19 @@
         "welcomeBack": "Welcome back",
         "id": "ID",
         "today": "Today",
-        "genericUser": "User"
+        "genericUser": "User",
+        "logout": "Logout"
     },
     "currency": "AED",
     "placeholders": {
         "select": "Select"
+    },
+    "fileUpload": {
+        "cta": "Drag & drop files here or click to browse",
+        "hint": "Supported formats: PDF, JPG, PNG (Max {{max}} MB)",
+        "errors": {
+            "format": "Unsupported file format",
+            "tooLarge": "File size must be less than {{max}} MB"
+        }
     }
 }

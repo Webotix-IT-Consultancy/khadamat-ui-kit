@@ -5,8 +5,10 @@ import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { Clock } from 'lucide-react';
+import '../FormField.css';
 import ValidationMessage from '../../ValidationMessage/ValidationMessage';
 import useExclusivePicker from '../../../hooks/useExclusivePicker';
+import pickerFieldSx from '../pickerFieldSx';
 
 dayjs.extend(customParseFormat);
 
@@ -53,56 +55,24 @@ const MUITimePicker: React.FC<MUITimePickerProps> = ({
                     onClose={picker.onClose}
                     disabled={disabled}
                     slots={{
-                        openPickerIcon: () => <Clock size={20} color="#000" />,
+                        // KP1-I152: was a literal #000 while MUIDatePicker's calendar uses
+                        // `hsl(var(--primary))` (KP1-I109) — the two pickers sit side by side
+                        // on the On-Call Request form with one black icon and one themed one.
+                        openPickerIcon: () => <Clock size={20} color="hsl(var(--primary))" />,
                     }}
                     slotProps={{
                         textField: {
                             fullWidth: true,
                             error: !!error,
-                            placeholder: 'Select Time',
-                            // Same treatment as MUIDatePicker (KP1-I109): this carried the
-                            // identical hardcoded palette — `#CCC9C4` at rest and `#016937`
-                            // (the customer portal's green) on hover/focus — so it went green
-                            // inside the admin portal's gold theme too. Tokens now, matching
-                            // `.input-wrapper` in InputField.css.
-                            sx: {
-                                '& .MuiOutlinedInput-root': {
-                                    height: 'var(--input-large-height)',
-                                    borderRadius: 'var(--radius-r-10)',
-                                    backgroundColor: disabled ? '#EEEEEE' : 'hsl(var(--background))',
-                                    '& fieldset': {
-                                        borderColor: error
-                                            ? 'hsl(var(--destructive))'
-                                            : disabled
-                                                ? 'transparent'
-                                                : 'hsl(var(--primary))',
-                                        borderWidth: '2px',
-                                    },
-                                    '&:hover:not(.Mui-disabled) fieldset': {
-                                        borderColor: error
-                                            ? 'hsl(var(--destructive))'
-                                            : 'hsl(var(--primary))',
-                                        borderWidth: '2px',
-                                    },
-                                    '&.Mui-focused fieldset': {
-                                        borderColor: error
-                                            ? 'hsl(var(--destructive))'
-                                            : 'hsl(var(--primary))',
-                                        borderWidth: '2px',
-                                    },
-                                    '&.Mui-focused': {
-                                        boxShadow: error
-                                            ? '0 0 0 4px hsl(var(--destructive) / 0.3)'
-                                            : '0 0 0 4px hsl(var(--primary-light))',
-                                    },
-                                },
-                                '& .MuiInputBase-input': {
-                                    // KP1-I99: the shared control scale, as MUIDatePicker.
-                                    fontSize: 'var(--input-font-size)',
-                                    fontFamily: "'Poppins', sans-serif",
-                                    color: '#000',
-                                }
-                            }
+                            // KP1-I152: carried the same dead `.MuiOutlinedInput-root` /
+                            // `.MuiInputBase-input` selectors as MUIDatePicker and rendered
+                            // just as unstyled — v8's TimePicker composes the same accessible
+                            // field DOM. One shared definition now; see `pickerFieldSx`.
+                            //
+                            // `placeholder: 'Select Time'` is gone with it — the accessible
+                            // field has no <input> to put it on, and the empty sections show
+                            // the time format instead, as the date picker shows DD/MM/YYYY.
+                            sx: pickerFieldSx({ error: !!error, disabled }),
                         },
                     }}
                 />

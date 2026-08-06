@@ -266,48 +266,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
      {
       userType === "customer" && (
         <>
-         {/* Feedback item */}
-
-
-      {!actualCollapsed && (
-        <Link
-          key={"feedback"}
-          to={"/feedback"}
-          className={cn(
-            "flex items-center gap-2.5 h-12 px-1.5 rounded-lg bg-primary-base text-white my-1 transition-all duration-200",
-            actualCollapsed ? "justify-center" : "justify-start"
-          )}
-          onClick={() => setMobileOpen(false)}
-        >
-          <div className="flex items-center justify-center w-10 h-10 shrink-0">
-            <MessageSquare size={20} />
-          </div>
-          {!actualCollapsed && (
-            <span className="text-base text-xs font-poppins font-normal truncate">
-              {t('sidebar.feedback')}
-            </span>
-          )}
-        </Link>
-      )
-      }
-      {actualCollapsed && (
-        <TooltipProvider delayDuration={0}>
-          <Tooltip key={"feedback"}>
-            <TooltipTrigger asChild>
-              <Button variant="primary p-0! mt-auto! mb-4! h-12! w-full! rounded-lg! flex items-center justify-center ">
-                <MessageSquare />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side={isRTL ? "left" : "right"}>
-              {t('sidebar.feedback')}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      )}
+        
 
       {/* Toll free */}
 
-      {!actualCollapsed && (
+      {/* {!actualCollapsed && (
         <Link
           key={"tollFree"}
           to={"tel:+971 293 4734 34"}
@@ -341,12 +304,12 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-      )}
+      )} */}
 
 
       {/* Help/CTA Section - Hidden when collapsed */}
       {!actualCollapsed && (
-        <div className="mt-auto p-3 rounded-2xl bg-[#016937] flex items-center gap-2 mb-3 transition-all duration-300 overflow-hidden cursor-pointer">
+        <div className="mt-auto p-2.5 rounded-xl bg-primary flex items-center gap-2 mb-3 transition-all duration-300 overflow-hidden cursor-pointer">
           <div className=" bg-primary-200 flex items-center justify-center rounded-lg w-10 h-10 shrink-0">
             <img width={38} height={38} src={enquiryAvatar} alt="Enquiry" />
           </div>
@@ -397,7 +360,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                 <path d="M12.9999 2.0498C12.9999 2.0498 15.9999 5.9998 15.9999 11.9998C15.9999 17.9998 12.9999 21.9498 12.9999 21.9498M10.9999 21.9498C10.9999 21.9498 7.99988 17.9998 7.99988 11.9998C7.99988 5.9998 10.9999 2.0498 10.9999 2.0498M2.62988 15.4998H21.3699M2.62988 8.4998H21.3699" stroke="#016937" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <span className="text-base text-[#016937] font-poppins">{t('sidebar.language')}</span>
+            <span className="text-[14px] text-primary">{t('sidebar.language')}</span>
           </div>
         )}
         <div className={cn(actualCollapsed ? "scale-75 origin-center" : "")}>

@@ -62,6 +62,24 @@
   padding: 0;
   flex-shrink: 0;
   transition: opacity 0.2s ease;
+  /*
+   * KP1-I154 — "the eye icons appear slightly close to the right border".
+   *
+   * The BOX was never misaligned: this button, `.input-icon-left` and `.input-suffix` all
+   * sit 12px in (10px wrapper padding + 2px border). What differs is the ink inside it.
+   * Measured from the rendered paths, both icons draw into a 24-unit viewBox at 20px:
+   *
+   *   lock  x 3 → 21   =>  2.50px of slack each side  =>  optical inset 14.5px
+   *   eye   x 1 → 23   =>  0.83px of slack each side  =>  optical inset 12.8px
+   *
+   * So the eye genuinely reads ~1.7px tighter than every other icon in the app even though
+   * the boxes agree — the tester was seeing the ink, not the box. 2px of margin lands it at
+   * 14.8px, which matches the lock.
+   *
+   * LOGICAL, not `margin-right`: the toggle flips to the other side under `dir="rtl"` in the
+   * customer portal's Arabic, and a physical margin would push it INTO the border there.
+   */
+  margin-inline-end: 2px;
 }
 
 .password-toggle:hover {
@@ -145,9 +163,10 @@
   box-shadow: none;
 }
 
-/* Read-only style */
+/* Read-only style. KP1-I128: the surface is `--disabled-bg`, not a literal — see the token's
+   comment in styles/index.css for why three greys existed and which one won. */
 .input-wrapper:has(.input-element:read-only) {
-  background-color: #EEEEEE;
+  background-color: hsl(var(--disabled-bg));
   border-color: transparent;
 }
 
@@ -166,15 +185,16 @@
  * caution the password-toggle comment above records.
  */
 .input-wrapper:has(.input-element:disabled) {
-  background-color: #EEEEEE;
+  background-color: hsl(var(--disabled-bg));
   border-color: transparent;
 }
 
 /* The browser greys disabled text by default and the shade varies; pin it to the same
    colour the read-only fields use so the two states are indistinguishable. */
 .input-element:disabled {
-  color: #555555;
-  -webkit-text-fill-color: #555555; /* Safari/iOS ignore `color` on a disabled input. */
+  color: hsl(var(--disabled-fg));
+  /* Safari/iOS ignore `color` on a disabled input. */
+  -webkit-text-fill-color: hsl(var(--disabled-fg));
   opacity: 1;
   cursor: default;
 }

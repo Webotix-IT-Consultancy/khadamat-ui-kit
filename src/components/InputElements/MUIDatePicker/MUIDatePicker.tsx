@@ -2,12 +2,12 @@ import React from 'react';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { TextField } from '@mui/material';
 import '../FormField.css';
 import dayjs, { Dayjs } from 'dayjs';
 import { Calendar } from 'lucide-react';
 import ValidationMessage from '../../ValidationMessage/ValidationMessage';
 import useExclusivePicker from '../../../hooks/useExclusivePicker';
+import pickerFieldSx from '../pickerFieldSx';
 
 interface MUIDatePickerProps {
     value: string | null;
@@ -71,65 +71,21 @@ const MUIDatePicker: React.FC<MUIDatePickerProps> = ({
                         textField: {
                             fullWidth: true,
                             error: !!error,
-                            placeholder: 'DD/MM/YYYY',
                             /**
-                             * KP1-I109: every colour here was a literal, and they were the
-                             * WRONG literals — `#CCC9C4` at rest where the InputField beside
-                             * it uses `hsl(var(--primary))`, and `#016937` (which is `:root
-                             * --primary`, the customer portal's green) on hover and focus, so
-                             * in the admin portal's gold theme this one field went green.
+                             * KP1-I152: this block used to spell out the whole look against
+                             * `.MuiOutlinedInput-root` / `.MuiInputBase-input` — classes
+                             * `@mui/x-date-pickers` v8 no longer renders, so none of it
+                             * applied and the field fell back to MUI's stock 56px/4px/Roboto
+                             * outline. It now shares one definition with MUITimePicker;
+                             * `pickerFieldSx` documents the DOM change and mirrors
+                             * `.input-wrapper` in InputField.css (KP1-I99, I107/I108, I109).
                              *
-                             * Mirrors `.input-wrapper` in InputField.css token for token —
-                             * that is the "adjacent Trade License input field" the ticket says
-                             * this must match, and tokens are what make it follow the theme.
+                             * The old `placeholder: 'DD/MM/YYYY'` went with it: the accessible
+                             * field has no <input> to carry a placeholder, and the empty
+                             * sections already render the `format` above — DD/MM/YYYY — which
+                             * is what was actually on screen the whole time.
                              */
-                            sx: {
-                                '& .MuiOutlinedInput-root': {
-                                    // KP1-I107/I108: MUI sizes its own control (~56px at
-                                    // size="medium"), so a date picker stood 4px taller than
-                                    // the InputField and PhoneInput beside it in the same row.
-                                    height: 'var(--input-large-height)',
-                                    borderRadius: 'var(--radius-r-10)',
-                                    // #EEEEEE is InputField.css's read-only surface (the
-                                    // `:has(:read-only)` rule); PhoneInput matches it too.
-                                    backgroundColor: disabled ? '#EEEEEE' : 'hsl(var(--background))',
-                                    '& fieldset': {
-                                        borderColor: error
-                                            ? 'hsl(var(--destructive))'
-                                            : disabled
-                                                ? 'transparent'
-                                                : 'hsl(var(--primary))',
-                                        borderWidth: '2px',
-                                    },
-                                    '&:hover:not(.Mui-disabled) fieldset': {
-                                        borderColor: error
-                                            ? 'hsl(var(--destructive))'
-                                            : 'hsl(var(--primary))',
-                                        borderWidth: '2px',
-                                    },
-                                    '&.Mui-focused fieldset': {
-                                        borderColor: error
-                                            ? 'hsl(var(--destructive))'
-                                            : 'hsl(var(--primary))',
-                                        borderWidth: '2px',
-                                    },
-                                    // The focus ring the other controls show (InputField via
-                                    // `focus-within:ring-4`, MUIAutocomplete via this same
-                                    // boxShadow). Its absence was part of "overall appearance".
-                                    '&.Mui-focused': {
-                                        boxShadow: error
-                                            ? '0 0 0 4px hsl(var(--destructive) / 0.3)'
-                                            : '0 0 0 4px hsl(var(--primary-light))',
-                                    },
-                                },
-                                '& .MuiInputBase-input': {
-                                    // KP1-I99: the shared control scale, so this field keeps
-                                    // matching the InputField beside it at every width.
-                                    fontSize: 'var(--input-font-size)',
-                                    fontFamily: "'Poppins', sans-serif",
-                                    color: '#000',
-                                }
-                            }
+                            sx: pickerFieldSx({ error: !!error, disabled }),
                         },
                     }}
                 />

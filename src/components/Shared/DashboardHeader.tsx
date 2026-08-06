@@ -2,9 +2,8 @@ import React, { useEffect, useState } from 'react';
 import LogoutConfirmation from '../popups/LogoutConfirmation';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../../lib/utils';
-import userProfileImage from '../../assets/images/avatar/user-demo.png';
 import { usePageStore } from '../../store/usePageStore';
-import { resolveDisplayName, toFirstName } from '../../utils/displayName';
+import { resolveDisplayName, toFirstName, toInitial } from '../../utils/displayName';
 import { ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -51,6 +50,21 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
     // KP1-I151: the generic label is the LAST resort now, not the only outcome.
     const displayName = resolveDisplayName(user) || t('header.genericUser', { defaultValue: 'User' });
+
+    /**
+     * KP1-I172: a real profile picture, when the session carries one. The two portals'
+     * `/auth/me` payloads name it differently (the customer Account DTO already maps
+     * `avatar` / `Avatar` / `profilePictureUrl`), so the candidates are checked in turn —
+     * the same approach `resolveDisplayName` takes to the name. Absent one, the initial
+     * below is what shows.
+     */
+    const avatarUrl: string | undefined = [
+        user?.avatar,
+        user?.avatarUrl,
+        user?.profileImage,
+        user?.profilePictureUrl,
+        user?.photoUrl,
+    ].find((candidate) => typeof candidate === 'string' && candidate.trim() !== '');
     // Extracting first name for the welcome message
     const firstName = toFirstName(displayName);
 
@@ -96,7 +110,12 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                         ) : (
                                             <span>{bc.label}</span>
                                         )}
-                                        {index < breadcrumbs.length - 1 && <ChevronRight className="w-3.5 h-3.5" />}
+                                        {/* KP1-I162: the separator points the way the trail
+                                            reads, so it mirrors with the trail. Found while
+                                            fixing the logout arrow in this same header. */}
+                                        {index < breadcrumbs.length - 1 && (
+                                            <ChevronRight className="w-3.5 h-3.5 rtl-mirror" />
+                                        )}
                                     </React.Fragment>
                                 ))}
                             </div>
@@ -128,7 +147,56 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
                 {/* User Info - Hidden on mobile */}
                 <div className="hidden sm:flex items-center gap-3">
-                    <div className="flex flex-col items-end">
+                    {/*
+                      * KP1-I172 — the avatar leads, the name follows it.
+                      *
+                      * The name block used to come first with the avatar trailing it. Ordering
+                      * the DOM avatar-then-name is what puts the avatar on the inline START,
+                      * and it stays correct under `dir="rtl"`: the flex row follows the
+                      * document direction, so in the customer portal's Arabic the avatar moves
+                      * to the right-hand side — still the side the reader begins on — with no
+                      * separate RTL branch.
+                      *
+                      * The text block below is aligned to `items-start` for the same reason it
+                      * used to be `items-end`: it should hug the avatar, and that edge has now
+                      * swapped. `start` is the logical keyword, so it flips with direction too.
+                      */}
+                    {/*
+                      * KP1-I172 — the avatar shows the user's own initial.
+                      *
+                      * It used to be a bundled `user-demo.png`: a stock photo of a stranger,
+                      * identical for every user in both portals, and completely unrelated to
+                      * whoever was signed in. It is not a fallback that had gone wrong — no
+                      * code path ever showed anything else.
+                      *
+                      * A real picture still wins when the session actually carries one, so
+                      * this improves rather than replaces that; `avatarUrl` is checked across
+                      * the field names the two portals' `/auth/me` payloads use, the same way
+                      * `resolveDisplayName` handles the name. Otherwise the letter comes from
+                      * `displayName` — the very string rendered beside it — so the avatar and
+                      * the name can never disagree.
+                      *
+                      * `toInitial` returns '' when the server sent no name at all; the circle
+                      * then stays empty rather than showing an invented letter.
+                      */}
+                    <div className="w-10 h-10 md:w-11 md:h-11 rounded-full overflow-hidden bg-primary-light text-primary shrink-0 flex items-center justify-center">
+                        {avatarUrl ? (
+                            <img
+                                src={avatarUrl}
+                                alt={displayName || 'User avatar'}
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <span
+                                className="font-poppins text-base md:text-lg font-semibold leading-none select-none"
+                                aria-hidden="true"
+                            >
+                                {toInitial(displayName)}
+                            </span>
+                        )}
+                    </div>
+
+                    <div className="flex flex-col items-start">
                         <div className="text-sm md:text-[16px] font-semibold text-black font-poppins">
                             {displayName}
                         </div>
@@ -142,13 +210,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                 {roleLabel}
                             </span>
                         )}
-                    </div>
-                    <div className="w-10 h-10 md:w-11 md:h-11 rounded-full overflow-hidden bg-[#d9d9d9] shrink-0">
-                        <img
-                            src={userProfileImage}
-                            alt="User avatar"
-                            className="w-full h-full object-cover"
-                        />
                     </div>
                 </div>
 
@@ -170,10 +231,29 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 {/* Logout */}
                 <button
                     className="flex justify-center items-center w-10 h-10 md:w-12 md:h-12 rounded-[10px] text-primary bg-primary-light border-none cursor-pointer hover:bg-primary/25 transition-colors"
-                    aria-label="Logout"
+                    aria-label={t('header.logout', { defaultValue: 'Logout' })}
                     onClick={handleLogoutClick}
                 >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    {/*
+                      * KP1-I162: this glyph is an arrow leaving a circle, i.e. it means
+                      * "out" by POINTING somewhere — so it has to follow the reading
+                      * direction. Under `dir="rtl"` the header mirrors around it but the
+                      * arrow kept pointing right, which in Arabic reads as going back IN.
+                      *
+                      * Mirrored with a class rather than a second SVG, so there is still one
+                      * path to maintain. Non-directional icons in this header (the bell, the
+                      * avatar) are deliberately left alone — mirroring those would be wrong.
+                      *
+                      * `.rtl-mirror` is plain CSS in this package's own stylesheet, NOT a
+                      * Tailwind `rtl:` variant. A utility class written in ui-kit source only
+                      * exists if Tailwind scanned the file it was written in, and which copy
+                      * gets scanned differs between the pinned-tag build and
+                      * `VITE_UIKIT_LOCAL` — `rtl:-scale-x-100` was tried first here and
+                      * computed to `transform: none`, silently leaving the arrow unmirrored.
+                      *
+                      * The admin portal never sets `dir="rtl"`, so this is inert there.
+                      */}
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="rtl-mirror">
                         <path d="M18 8L22 12M22 12L18 16M22 12H9M15 4.20404C13.7252 3.43827 12.2452 3 10.6667 3C5.8802 3 2 7.02944 2 12C2 16.9706 5.8802 21 10.6667 21C12.2452 21 13.7252 20.5617 15 19.796"
                          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>

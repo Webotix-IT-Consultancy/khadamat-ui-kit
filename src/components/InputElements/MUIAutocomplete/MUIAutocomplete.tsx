@@ -142,18 +142,59 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
                                 // InputField and PhoneInput beside it in the same row. Same
                                 // token as `.input-wrapper` in InputField.css.
                                 height: 'var(--input-large-height)',
-                                // KP1-I109: tokens, so the surface follows the theme and the
-                                // disabled grey matches InputField.css's read-only `#EEEEEE`.
+                                // KP1-I109: tokens, so the surface follows the theme; KP1-I128
+                                // makes the disabled grey THE shared token rather than a
+                                // literal copy of InputField.css's value.
                                 borderRadius: 'var(--radius-r-10)',
-                                backgroundColor: disabled ? '#EEEEEE' : 'hsl(var(--background))',
+                                backgroundColor: disabled ? 'hsl(var(--disabled-bg))' : 'hsl(var(--background))',
+                                /*
+                                 * KP1-I128 — a disabled dropdown must lose its border too.
+                                 *
+                                 * The surface already greyed, but this fieldset kept the 2px
+                                 * `--primary` outline in every state, so on a view screen the
+                                 * dropdowns were the only fields still wearing a gold border
+                                 * while the InputFields beside them had gone borderless
+                                 * (InputField.css's `:disabled` rule). That contrast is what
+                                 * the tester read as "some fields are highlighted / editable" —
+                                 * the Enquiry view carries three of these.
+                                 *
+                                 * Hover is excluded for the same reason: MUI still matches
+                                 * `:hover` on a disabled control, so without the guard the
+                                 * border came back the moment the pointer crossed it.
+                                 */
                                 '& fieldset': {
-                                    borderColor: error ? 'hsl(var(--destructive))' : 'hsl(var(--primary))',
+                                    borderColor: error
+                                        ? 'hsl(var(--destructive))'
+                                        : disabled
+                                            ? 'transparent'
+                                            : 'hsl(var(--primary))',
                                     borderWidth: '2px',
 
                                 },
-                                '&:hover fieldset': {
+                                '&:hover:not(.Mui-disabled) fieldset': {
                                     borderColor: error ? 'hsl(var(--destructive))' : 'hsl(var(--primary))',
 
+                                },
+                                /*
+                                 * KP1-I128 (second pass) — SPECIFICITY. The `& fieldset` rule
+                                 * above is not enough on its own: it compiles to
+                                 *   .css-hash .MuiOutlinedInput-root fieldset            (0,2,1)
+                                 * while MUI ships
+                                 *   .MuiOutlinedInput-root.Mui-disabled
+                                 *     .MuiOutlinedInput-notchedOutline                   (0,3,0)
+                                 * which is HIGHER, so MUI's own disabled outline —
+                                 * `rgba(0,0,0,0.26)`, a grey — kept winning and the searchable
+                                 * dropdowns still drew a border on the view screens.
+                                 *
+                                 * Naming both classes in one compound selector gives
+                                 *   .css-hash .MuiOutlinedInput-root.Mui-disabled
+                                 *     .MuiOutlinedInput-notchedOutline                   (0,4,0)
+                                 * which beats it without `!important`. Keep the 2px width so
+                                 * the control does not change size between modes.
+                                 */
+                                '&.Mui-disabled .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: 'transparent',
+                                    borderWidth: '2px',
                                 },
                                 '&.Mui-focused fieldset': {
                                     borderColor: 'hsl(var(--primary))',
@@ -171,12 +212,30 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
                                 fontSize: 'var(--input-font-size)',
                                 fontFamily: "'Poppins', sans-serif",
                                 color: '#000',
+                                // KP1-I128: MUI fades a disabled value to rgba(0,0,0,.38);
+                                // `--disabled-fg` is what every other read-only control
+                                // shows, so the row stays one colour.
+                                '&.Mui-disabled': {
+                                    color: 'hsl(var(--disabled-fg))',
+                                    WebkitTextFillColor: 'hsl(var(--disabled-fg))',
+                                },
                             }
                         }}
                     />
                 )}
                 sx={{
                     width: '100%',
+                    /*
+                     * KP1-I128: no chevron on a read-only field. A dropdown arrow is an
+                     * affordance — it advertises "there are other values to pick" — so on a
+                     * view screen it reads as editable even once the border is gone, and it
+                     * is the last thing distinguishing these boxes from the plain value
+                     * boxes beside them. `visibility` rather than `display: none` so the
+                     * value keeps the same width and stays aligned with the row.
+                     */
+                    '& .MuiAutocomplete-endAdornment': {
+                        visibility: disabled ? 'hidden' : 'visible',
+                    },
                 }}
                 popupIcon={
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

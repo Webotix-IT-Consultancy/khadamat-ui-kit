@@ -33,8 +33,26 @@
 
   --info-amber-bg: 38 88% 92%;
   /* #FBEFDC */
-  --disabled-bg: 0 0% 93%;
-  /* #ECECEC */
+  /*
+   * KP1-I128 — THE read-only / disabled field surface. One definition, referenced by every
+   * control; do not spell a grey out again anywhere.
+   *
+   * There were three of them, all claiming to be this: `#EEEEEE` hardcoded in InputField.css,
+   * TextArea.css, MUIAutocomplete, PhoneInput and pickerFieldSx; this token at `0 0% 93%`
+   * (= #EDEDED, though the comment beside it said #ECECEC); and an inline `bg-[#ECECEC]` on
+   * the seven hand-rolled <textarea>s in the two portals' view screens. Individually the
+   * three are almost indistinguishable — side by side in one form they are the "fields don't
+   * look the same" the ticket reports.
+   *
+   * #EEEEEE wins because it is what the shared controls already paint, i.e. what the majority
+   * of fields on any view screen already show; the token moves to meet them.
+   */
+  --disabled-bg: 0 0% 93.3%;
+  /* #EEEEEE */
+  /* The text colour inside that surface. Pinned so a `readonly` field and a `disabled` one
+     are indistinguishable, and so browsers' differing default disabled greys never show. */
+  --disabled-fg: 0 0% 33.3%;
+  /* #555555 */
 
   /* --grey-100: 30 14% 94%; */
   /* #F1F0EF */
@@ -388,6 +406,9 @@ body.admin-theme {
 
   --color-info-amber: hsl(var(--info-amber-bg));
   --color-disabled: hsl(var(--disabled-bg));
+  /* KP1-I128: so a read-only value box can use `text-disabled-foreground` instead of
+     inventing its own grey (a Tailwind utility only exists if its token is registered here). */
+  --color-disabled-foreground: hsl(var(--disabled-fg));
 
   --font-poppins: var(--font-poppins);
   --radius-md: var(--radius);
@@ -398,4 +419,27 @@ body.admin-theme {
 /* Custom CSS */
 button,a{
   cursor: pointer;
+}
+
+/*
+ * KP1-I162 — mirror a DIRECTIONAL icon under `dir="rtl"`.
+ *
+ * Some glyphs carry a reading direction (an arrow leaving a box for "log out", a back
+ * chevron); under RTL the layout around them flips but the glyph does not, so they end up
+ * pointing the wrong way. Put this class on those, and only those — a bell, an avatar or a
+ * calendar must NOT be mirrored.
+ *
+ * Deliberately plain CSS here rather than Tailwind's `rtl:` variant. A utility written in
+ * ui-kit source only exists if Tailwind scanned the copy of the file it was written in, and
+ * which copy that is differs between the pinned-tag install and `VITE_UIKIT_LOCAL`
+ * (`@source` in each portal's index.css vs uikit-local.css). `rtl:-scale-x-100` was tried
+ * first for the logout icon and computed to `transform: none` — a silent no-op of exactly
+ * the kind KP1-I152 was about. This stylesheet ships with the package and is imported by
+ * both portals, so it cannot go missing.
+ *
+ * Only the customer portal ever sets `dir="rtl"`; the admin portal pins `ltr`, so this is
+ * inert there.
+ */
+[dir='rtl'] .rtl-mirror {
+  transform: scaleX(-1);
 }
