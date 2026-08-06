@@ -81,14 +81,17 @@ interface FileUploadProps {
     /**
      * KP1-I122: accept several files from one pick or one drop.
      *
-     * OPT-IN, and deliberately so. The API takes `Files` / `FileCategoryIds` as parallel
-     * arrays on every multipart command, so several files are possible everywhere — but they
-     * are not *wanted* everywhere. Half the call sites are one-document-per-slot (TRN
-     * Attachment, Trade Licence, Emirates ID, the signed contract document): those hold a
-     * single named document, their schemas type it as one object, and their view screens
-     * render one chip. Turning this on for them would be a data-model change, not a UX one.
+     * **Every upload slot in both portals now sets this** — the document slots (TRN, Trade
+     * Licence, Emirates ID, the signed contract/quotation document, the cancellation
+     * documents) were converted from one-document-per-slot to lists, which is why
+     * `onViewFile` / `onDownloadFile` and the stored-file fields on `UploadedFile` exist.
+     * The API always allowed it: `Files` / `FileCategoryIds` are parallel arrays on every
+     * multipart command, so several files under one category was never the constraint.
      *
-     * Off by default, so every existing caller keeps its single-file behaviour untouched.
+     * It stays off by DEFAULT regardless, because the flag also decides the shape the control
+     * reports (`onChange` vs `onFilesChange`) — flipping the default would silently break any
+     * caller still on the single-file contract. The one remaining single-file upload is the
+     * admin User form's profile image, which is an avatar and does not use this control.
      */
     multiple?: boolean;
     /**
@@ -102,12 +105,43 @@ interface FileUploadProps {
      * the single-file case: the caller owns it, the control only renders it.
      */
     files?: UploadedFile[];
+    /**
+     * Takes over the eye button on EVERY chip in `multiple` mode — the list counterpart of
+     * `onView`, and needed for exactly the same reason.
+     *
+     * Without it a chip can only open its own `dataUrl`, which a freshly-picked file has and
+     * an already-STORED one does not: stored documents live behind `GET /files/{id}/download`
+     * and have to be fetched with the portal's bearer token. That was fine while `multiple`
+     * only ever held new picks, but the document slots (TRN, Trade Licence, Emirates ID) show
+     * previously-saved files in the same list, and those chips would have had a dead eye
+     * button. When this is absent the built-in `dataUrl` behaviour is kept, and a file with
+     * neither a handler nor a `dataUrl` simply shows no eye button rather than a broken one.
+     */
+    onViewFile?: (file: UploadedFile, index: number) => void;
+    /** Adds a download button to every chip in `multiple` mode. Same reasoning as `onViewFile`. */
+    onDownloadFile?: (file: UploadedFile, index: number) => void;
 }
 
 /** One picked file, in the shape the callers already keep in form state. */
 export interface UploadedFile {
+    /**
+     * `data:` URL of a file picked in this session. **Empty for an already-stored file** —
+     * those are identified by `id` and fetched through the portal's authenticated files API,
+     * so there are no bytes in the browser to hold here. Every consumer that turns a selection
+     * back into `File` objects already goes through a `dataUrlToFile` helper that returns null
+     * for anything that is not a `data:` URL, so a stored entry is skipped rather than
+     * re-uploaded — which is what an additive PUT needs.
+     */
     dataUrl: string;
     name: string;
+    /** Stored-file id, when this entry is a document the API already holds. */
+    id?: number | string;
+    /**
+     * Thumbnail for a stored image, resolved by the caller (`blob:`/`data:` — the control
+     * cannot fetch one itself). An image `dataUrl` is used when this is absent, so a freshly
+     * picked photo still previews with nothing extra passed.
+     */
+    previewUrl?: string;
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({
@@ -129,6 +163,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
     multiple = false,
     onFilesChange,
     files,
+    onViewFile,
+    onDownloadFile,
 }) => {
     /**
      * KP1-I161 — this component's own copy was four English string literals, so the Arabic
@@ -323,20 +359,38 @@ const FileUpload: React.FC<FileUploadProps> = ({
             {multiple
                 ? selected.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-2">
-                          {selected.map((file, index) => (
-                              <FileChip
-                                  key={`${file.name}-${index}`}
-                                  fileName={file.name}
-                                  previewUrl={file.dataUrl.startsWith('data:image/') ? file.dataUrl : undefined}
-                                  onView={() => openInNewTab(file.dataUrl)}
-                                  onRemove={
-                                      allowRemove
-                                          ? () => onFilesChange?.(selected.filter((_, i) => i !== index))
-                                          : undefined
-                                  }
-                                  busy={busy}
-                              />
-                          ))}
+                          {selected.map((file, index) => {
+                              // A stored file has no bytes here, so its own dataUrl can't open
+                              // it — the caller's handler is the only way. With neither, the
+                              // eye button is omitted rather than rendered dead.
+                              const localUrl = file.dataUrl || '';
+                              const onChipView = onViewFile
+                                  ? () => onViewFile(file, index)
+                                  : localUrl
+                                    ? () => openInNewTab(localUrl)
+                                    : undefined;
+
+                              return (
+                                  <FileChip
+                                      key={file.id != null ? `id-${file.id}` : `${file.name}-${index}`}
+                                      fileName={file.name}
+                                      previewUrl={
+                                          file.previewUrl ||
+                                          (localUrl.startsWith('data:image/') ? localUrl : undefined)
+                                      }
+                                      onView={onChipView}
+                                      onDownload={
+                                          onDownloadFile ? () => onDownloadFile(file, index) : undefined
+                                      }
+                                      onRemove={
+                                          allowRemove
+                                              ? () => onFilesChange?.(selected.filter((_, i) => i !== index))
+                                              : undefined
+                                      }
+                                      busy={busy}
+                                  />
+                              );
+                          })}
                       </div>
                   )
                 : Boolean(value) && (
