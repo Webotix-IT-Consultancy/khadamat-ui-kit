@@ -1,8 +1,12 @@
 import React from 'react';
-import { Autocomplete, TextField } from '@mui/material';
+import { Autocomplete, CircularProgress, TextField, createFilterOptions } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import '../FormField.css';
 import ValidationMessage from '../../ValidationMessage/ValidationMessage';
+import {
+    DEFAULT_OPTION_PAGE_SIZE,
+    type PaginatedOptionsSource,
+} from '../../../hooks/usePaginatedOptions';
 
 interface Option {
     label: string;
@@ -16,7 +20,22 @@ interface Option {
 }
 
 interface MUIAutocompleteProps {
-    options: Option[];
+    /**
+     * A fully-loaded list. It is NOT all rendered at once: the dropdown shows the first
+     * `pageSize` matches and extends by another `pageSize` each time the listbox is
+     * scrolled to the bottom (see `visibleCount`). Search still runs over the whole list.
+     *
+     * Optional only because `source` replaces it; give one or the other.
+     */
+    options?: Option[];
+    /**
+     * Server-paged alternative to `options`, from `usePaginatedOptions` — the first page
+     * comes from the API, scrolling asks for the next, and typing re-queries the API
+     * instead of filtering what happens to be loaded. Use it for every dropdown whose
+     * endpoint takes `PageNumber`/`PageSize`/`SearchTerm`; `options` stays right for the
+     * lookup endpoints that return one bare array.
+     */
+    source?: PaginatedOptionsSource<any>;
     value: string | number | null;
     onChange: (value: string | number | null) => void;
     label?: string;
@@ -27,6 +46,18 @@ interface MUIAutocompleteProps {
     className?: string;
     name?: string;
     /**
+     * How many rows to reveal at a time (both modes). 25 matches the API's page and the
+     * list screens.
+     */
+    pageSize?: number;
+    /**
+     * The saved selection, for `source` mode in EDIT screens: the record's value is set
+     * before the dropdown has fetched anything, and page 1 need not contain it. Without
+     * this the field would render blank until the user opened it and scrolled to their own
+     * row. Ignored once the value is present in the loaded options.
+     */
+    selectedOption?: Option | null;
+    /**
      * KP1-I91: what the dropdown says when the typed text matches nothing.
      *
      * Defaults to the shared "No matches found". Override only when a field can say
@@ -36,8 +67,17 @@ interface MUIAutocompleteProps {
     noOptionsText?: React.ReactNode;
 }
 
+/** Matches on the label AND the description, so typing a code finds its row. */
+const filterByLabelAndDescription = createFilterOptions<Option>({
+    stringify: (option) => `${option.label} ${option.description ?? ''}`,
+});
+
+/** How close to the bottom (px) counts as "scrolled to the end". */
+const SCROLL_THRESHOLD = 32;
+
 const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
-    options,
+    options = [],
+    source,
     value,
     onChange,
     className,
@@ -47,11 +87,103 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
     disabled = false,
     required = false,
     name,
+    pageSize = DEFAULT_OPTION_PAGE_SIZE,
+    selectedOption: selectedOptionProp,
     noOptionsText,
 }) => {
     const { t } = useTranslation(['common']);
-    const selectedOption = options.find((opt) => opt.value === value) || null;
-    const hasDescriptions = options.some((opt) => !!opt.description);
+
+    const listOptions = source ? source.options : options;
+
+    /**
+     * How many of the MATCHING rows are rendered. Reset whenever the list can change under
+     * the user (open, close, a new query), so a fresh search always starts at the top.
+     */
+    const [visibleCount, setVisibleCount] = React.useState(pageSize);
+    /** Set by `filterOptions` below — how many rows the current query matched in full. */
+    const matchCountRef = React.useRef(listOptions.length);
+
+    /**
+     * The last option the user picked, so the input keeps showing it after the option list
+     * moves on (a server search, or a page that no longer includes it). `source.pin` does
+     * the same for the list itself; this covers the input in plain `options` mode too.
+     */
+    const lastPickedRef = React.useRef<Option | null>(null);
+
+    const fromList = listOptions.find((opt) => opt.value === value);
+    const fallback =
+        selectedOptionProp && selectedOptionProp.value === value
+            ? selectedOptionProp
+            : lastPickedRef.current && lastPickedRef.current.value === value
+                ? lastPickedRef.current
+                : null;
+    const selectedOption = fromList ?? (value === null || value === '' ? null : fallback);
+
+    const hasDescriptions = listOptions.some((opt) => !!opt.description);
+
+    /**
+     * In edit mode the saved option is the only thing that can name the current value until
+     * the first page arrives; pinning it also keeps it selectable in the open list.
+     *
+     * Keyed on `source.pin` — which is stable — rather than on `source`, which is a fresh
+     * object on every render of the owning hook.
+     */
+    const pin = source?.pin;
+    React.useEffect(() => {
+        if (pin && selectedOptionProp && selectedOptionProp.value === value) pin(selectedOptionProp);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pin, selectedOptionProp?.value, selectedOptionProp?.label, value]);
+
+    const handleScroll = (event: React.UIEvent<HTMLElement>) => {
+        const list = event.currentTarget;
+        if (list.scrollTop + list.clientHeight < list.scrollHeight - SCROLL_THRESHOLD) return;
+        if (source) {
+            source.loadMore();
+            return;
+        }
+        setVisibleCount((current) => (current < matchCountRef.current ? current + pageSize : current));
+    };
+
+    const loadingMoreText = t('common:messages.loading', 'Loading...');
+
+    /**
+     * Server mode only: the same `ul` MUI renders, with a "Loading…" line under the last
+     * row while the next page is on its way — so an infinite scroll that pauses looks like
+     * work in progress rather than the end of the list.
+     *
+     * The footer carries no `role="option"` / `data-option-index`, so MUI's keyboard
+     * navigation ignores it.
+     *
+     * The component identity is fixed for the life of the field (`useMemo(…, [])`) and the
+     * footer's state is read from refs at render time. Deriving the component from
+     * `loadingMore` instead would give React a NEW component type the moment a page lands,
+     * which unmounts the list and scrolls it back to the top — precisely when the user is
+     * at the bottom reading the rows that just arrived. The refs are still live because the
+     * parent re-renders (new `children`) whenever `loadingMore` changes.
+     */
+    const loadingMoreRef = React.useRef(false);
+    loadingMoreRef.current = !!source?.loadingMore;
+    const loadingTextRef = React.useRef(loadingMoreText);
+    loadingTextRef.current = loadingMoreText;
+
+    const ListboxWithFooter = React.useMemo(
+        () =>
+            React.forwardRef<HTMLUListElement, React.HTMLAttributes<HTMLElement>>(
+                function ListboxWithFooter({ children, ...listboxProps }, ref) {
+                    return (
+                        <ul ref={ref} {...listboxProps}>
+                            {children}
+                            {loadingMoreRef.current && (
+                                <li className="mui-autocomplete-loading-more" aria-live="polite">
+                                    {loadingTextRef.current}
+                                </li>
+                            )}
+                        </ul>
+                    );
+                },
+            ),
+        [],
+    );
 
     /**
      * KP1-I91: MUI's own default is the bare "No options", which reads as though the
@@ -81,33 +213,60 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
             )}
             <Autocomplete
                 id={name}
-                options={options}
+                options={listOptions}
                 getOptionLabel={(option) => option.label}
                 // Options are usually rebuilt on each render, so identity comparison would
                 // drop the selection; and repeated labels make `value` the only safe key.
                 isOptionEqualToValue={(option, selected) => option.value === selected.value}
                 value={selectedOption}
                 onChange={(_, newValue) => {
+                    lastPickedRef.current = newValue;
+                    // Keeps the chosen row in the list after the query moves on; harmless
+                    // no-op in plain `options` mode.
+                    source?.pin(newValue);
                     onChange(newValue ? newValue.value : null);
+                }}
+                onOpen={() => {
+                    setVisibleCount(pageSize);
+                    source?.onOpen();
+                }}
+                onClose={() => {
+                    setVisibleCount(pageSize);
+                    source?.onClose();
+                }}
+                onInputChange={(_, text, reason) => {
+                    // 'input' is typing and 'clear' is the ✕ button — both change what the
+                    // user is asking for. 'reset' is MUI writing the selected label back into
+                    // the input; searching on that would re-query for their own selection.
+                    if (reason !== 'input' && reason !== 'clear') return;
+                    setVisibleCount(pageSize);
+                    source?.onSearch(reason === 'clear' ? '' : text);
+                }}
+                // The server already filtered and is still fetching the rest; filtering the
+                // loaded page again would hide rows that legitimately matched.
+                filterOptions={
+                    source
+                        ? (opts) => opts
+                        : (opts, state) => {
+                            const matches = hasDescriptions
+                                ? filterByLabelAndDescription(opts, state)
+                                : createFilterOptions<Option>()(opts, state);
+                            matchCountRef.current = matches.length;
+                            // Only `visibleCount` rows are handed to MUI — a 2 000-row
+                            // master list would otherwise mount 2 000 <li>s on open.
+                            return matches.slice(0, visibleCount);
+                        }
+                }
+                loading={!!source?.loading}
+                loadingText={loadingMoreText}
+                slots={source ? { listbox: ListboxWithFooter } : undefined}
+                slotProps={{
+                    listbox: {
+                        onScroll: handleScroll,
+                    },
                 }}
                 disabled={disabled}
                 noOptionsText={emptyText}
-                // Only overridden when descriptions are in play — with duplicate labels the
-                // code is what the user actually searches on. `undefined` keeps MUI's own
-                // filter (accent-insensitive) for every other dropdown.
-                filterOptions={
-                    hasDescriptions
-                        ? (opts, state) => {
-                            const query = state.inputValue.trim().toLowerCase();
-                            if (!query) return opts;
-                            return opts.filter(
-                                (o) =>
-                                    o.label.toLowerCase().includes(query) ||
-                                    (o.description ?? '').toLowerCase().includes(query),
-                            );
-                        }
-                        : undefined
-                }
                 renderOption={(props, option) => {
                     // MUI puts `key` inside the spread props; React warns unless it is passed
                     // separately, and repeated labels make `value` the only stable key.
@@ -135,6 +294,25 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
                         variant="outlined"
                         size="medium"
                         fullWidth
+                        slotProps={{
+                            input: {
+                                ...params.InputProps,
+                                // A search that goes to the server has latency the user has
+                                // to see; the spinner sits beside the chevron, which is why
+                                // the existing adornment is kept rather than replaced.
+                                endAdornment: (
+                                    <>
+                                        {source?.loading && (
+                                            <CircularProgress
+                                                size={16}
+                                                sx={{ color: 'hsl(var(--primary))', mr: 0.5 }}
+                                            />
+                                        )}
+                                        {params.InputProps.endAdornment}
+                                    </>
+                                ),
+                            },
+                        }}
                         sx={{
                             '& .MuiOutlinedInput-root': {
                                 // KP1-I107/I108: MUI sizes its own control (~56px at

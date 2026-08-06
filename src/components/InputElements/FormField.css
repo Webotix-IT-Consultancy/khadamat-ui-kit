@@ -69,3 +69,21 @@
     font-size: var(--small);
     font-weight: 400;
 }
+
+/*
+ * The "Loading…" line under the last row of a server-paged dropdown (MUIAutocomplete in
+ * `source` mode), shown while the next 25 rows are being fetched.
+ *
+ * It lives in the MUI Popper, i.e. outside `.form-field`, so it is styled by its own class
+ * rather than as a descendant. Muted and centred so it reads as status, not as an option —
+ * it carries no `role="option"` and cannot be highlighted or picked.
+ */
+.mui-autocomplete-loading-more {
+    padding: 8px 16px;
+    text-align: center;
+    font-size: var(--small);
+    /* `--muted-foreground` is a 78%-lightness grey here — too faint to read as a message
+       on the white popup, so the normal foreground at 70% is used instead. */
+    color: hsl(var(--foreground) / 0.7);
+    list-style: none;
+}
