@@ -37,7 +37,7 @@ type Tone =
   | 'warning' | 'warning-soft' | 'warning-light'
   | 'danger' | 'danger-soft' | 'danger-light'
   | 'info-soft' | 'violet-soft'
-  | 'progress' | 'neutral'
+  | 'progress' | 'neutral' | 'gold'
   | 'orange-light' | 'primary-light';
 
 interface StatusBadgeProps {
@@ -48,8 +48,23 @@ interface StatusBadgeProps {
 }
 
 const STATUS_TONE: Record<BadgeStatus, Tone> = {
+  /**
+   * Gold — an enquiry nobody has closed out yet.
+   *
+   * `active` and `secured` were BOTH `success`, i.e. the same green chip, so the two states
+   * an enquiry list exists to tell apart were indistinguishable at a glance. Green is right
+   * for `secured` — it is the good terminal outcome — so `active` is the one that moved.
+   *
+   * Gold rather than amber: "open, being worked" is not a warning, and `warning` already
+   * means "waiting on someone" for pending / scheduled / awaiting-payment.
+   *
+   * `active` is used ONLY by the enquiry module (both portals). Everything else that means
+   * "active" — RoleAccessTable, UserProfile, the system-settings screens — passes `success`
+   * directly, so none of them change.
+   */
+  'active': 'gold',
+
   // Green — a good terminal or healthy state.
-  'active': 'success',
   'secured': 'success',
   'paid': 'success',
   'success': 'success',

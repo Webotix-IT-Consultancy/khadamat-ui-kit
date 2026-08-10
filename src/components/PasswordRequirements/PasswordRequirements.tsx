@@ -2,7 +2,6 @@ import React from 'react';
 import { Check, Circle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
-    PASSWORD_MAX_LENGTH,
     PASSWORD_MIN_LENGTH,
     PASSWORD_RULES,
     passwordRuleState,
@@ -74,14 +73,12 @@ const PasswordRequirements: React.FC<PasswordRequirementsProps> = ({
                                     <Circle size={6} fill="currentColor" />
                                 )}
                             </span>
-                            {/* `count` is kept alongside min/max so a bundle still worded with
-                                the old `{{count}}` floor renders a number rather than a raw
-                                placeholder. New copy uses `{{min}}` / `{{max}}`. */}
+                            {/* Both `count` and `min` carry the minimum, so copy worded either
+                                way renders a number rather than a raw placeholder. */}
                             <span>
                                 {t(labelKey, {
                                     count: PASSWORD_MIN_LENGTH,
                                     min: PASSWORD_MIN_LENGTH,
-                                    max: PASSWORD_MAX_LENGTH,
                                 })}
                             </span>
                         </li>

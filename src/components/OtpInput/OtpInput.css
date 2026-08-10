@@ -13,6 +13,9 @@
  * The defaults below are the customer-portal values.
  */
 
+/* The row's direction is pinned with `dir="ltr"` in OtpInput.tsx — a code is a number, and
+   numbers run left-to-right even in Arabic. Do NOT add `direction: rtl` or a
+   `[dir='rtl'] .kw-otp` rule here; it would flip the boxes back. */
 .kw-otp {
   display: flex;
   justify-content: center;

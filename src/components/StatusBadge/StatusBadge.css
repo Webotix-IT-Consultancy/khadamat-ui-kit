@@ -62,6 +62,24 @@
   color: hsl(var(--grey-600));
 }
 
+/*
+ * The admin theme's primary gold, as a LITERAL — deliberately NOT `hsl(var(--primary))`.
+ *
+ * `--primary` is theme-scoped: it is this gold under `body.admin-theme`, but a deep green
+ * (156 98% 21%) in the customer portal's `:root`. A token here would therefore paint the
+ * enquiry Active chip green in the customer portal — putting it straight back beside
+ * `secured`, which is the collision this tone exists to resolve. The chip has to read the
+ * same in both portals, so the value is fixed rather than themed. This is the one place in
+ * the file where that is true, hence the note.
+ *
+ * Dark text, not the white that `--primary-foreground` pairs with gold elsewhere: white on
+ * this background is 2.6:1 and fails WCAG AA for 14px text. #3b2e0e is ~6:1.
+ */
+.status-badge-gold {
+  background: hsl(41 53% 52%);
+  color: #3b2e0e;
+}
+
 /* ── Soft tones ──────────────────────────────────────────────────────────── */
 
 .status-badge-success-soft {

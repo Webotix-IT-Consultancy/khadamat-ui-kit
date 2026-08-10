@@ -104,7 +104,27 @@ const OtpInput = forwardRef<OtpInputHandle, OtpInputProps>(({
     };
 
     return (
-        <div className={`kw-otp ${className}`} role="group" aria-label={ariaLabel}>
+        /**
+         * `dir="ltr"` — the boxes are filled LEFT TO RIGHT in Arabic too.
+         *
+         * A one-time code is a NUMBER, and numbers are a left-to-right run even inside
+         * right-to-left text: the Unicode bidirectional algorithm gives digits LTR
+         * directionality, so "1234" reads 1-2-3-4 in an Arabic sentence exactly as it does in
+         * an English one. Every OTP field people are used to — bank apps, iOS/Android SMS
+         * autofill — behaves this way.
+         *
+         * Without this the row inherits `dir="rtl"` from `<html>` (the customer portal sets it
+         * from the language switcher) and the flex row reverses: box index 0 renders at the
+         * FAR RIGHT. The code still SUBMITS correctly, because `value.join('')` follows the
+         * array and not the pixels — which is exactly what makes the bug easy to miss. What
+         * breaks is everything the user sees: the caret starts on the right, typing 1-2-3-4
+         * paints "4321" left-to-right, ArrowLeft moves the caret visually right, and a pasted
+         * code fills away from the box it started in.
+         *
+         * Only the row is pinned. The heading, the resend timer and the buttons around it stay
+         * RTL, which is correct — this is the same treatment the email inputs get (KP1-I159).
+         */
+        <div className={`kw-otp ${className}`} dir="ltr" role="group" aria-label={ariaLabel}>
             {value.map((digit, index) => (
                 <input
                     key={index}

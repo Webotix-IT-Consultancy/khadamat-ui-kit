@@ -6,6 +6,17 @@ interface CollapsibleSectionProps {
     title: string;
     /** Open on first render. Defaults to open so a view/create screen shows everything. */
     defaultOpen?: boolean;
+    /**
+     * Controlled open state. Pass it together with `onOpenChange` when something OUTSIDE the
+     * header button has to open or close the section — the Contract create screen starts POC
+     * Info and General Details collapsed and expands them once an enquiry is picked, which an
+     * uncontrolled `defaultOpen` cannot express (it is read only on the first render).
+     *
+     * Omit both and the section stays uncontrolled, exactly as before.
+     */
+    open?: boolean;
+    /** Called with the next state when the user clicks the header. Pair with `open`. */
+    onOpenChange?: (open: boolean) => void;
     children: React.ReactNode;
     className?: string;
 }
@@ -19,16 +30,28 @@ interface CollapsibleSectionProps {
 const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
     title,
     defaultOpen = true,
+    open: openProp,
+    onOpenChange,
     children,
     className = '',
 }) => {
-    const [open, setOpen] = useState(defaultOpen);
+    const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
+
+    // Controlled when `open` is supplied; otherwise the internal state, as before.
+    const isControlled = openProp !== undefined;
+    const open = isControlled ? openProp : uncontrolledOpen;
+
+    const toggle = () => {
+        const next = !open;
+        if (!isControlled) setUncontrolledOpen(next);
+        onOpenChange?.(next);
+    };
 
     return (
         <section className={`rounded-lg border border-[hsl(var(--border))] ${className}`}>
             <button
                 type="button"
-                onClick={() => setOpen((prev) => !prev)}
+                onClick={toggle}
                 aria-expanded={open}
                 className="flex w-full items-center justify-between gap-4 px-5 py-4 text-start"
             >

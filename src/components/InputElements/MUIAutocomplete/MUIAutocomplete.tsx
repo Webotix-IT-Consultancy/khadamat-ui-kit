@@ -134,56 +134,54 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pin, selectedOptionProp?.value, selectedOptionProp?.label, value]);
 
+    /** The open listbox, and where it was when the next page was asked for. */
+    const listboxRef = React.useRef<HTMLElement | null>(null);
+    const restoreScrollRef = React.useRef<number | null>(null);
+
     const handleScroll = (event: React.UIEvent<HTMLElement>) => {
         const list = event.currentTarget;
+        listboxRef.current = list;
         if (list.scrollTop + list.clientHeight < list.scrollHeight - SCROLL_THRESHOLD) return;
         if (source) {
+            // MUI resets the listbox scroll to the top whenever the option array changes and
+            // nothing is highlighted. For a page that arrives asynchronously that lands the
+            // user back at row 1 at the exact moment the rows they scrolled for appear, so
+            // where they were is remembered and restored below.
+            restoreScrollRef.current = list.scrollTop;
             source.loadMore();
             return;
         }
+        // Static lists grow in the same commit as the scroll, so MUI keeps the position.
         setVisibleCount((current) => (current < matchCountRef.current ? current + pageSize : current));
     };
 
-    const loadingMoreText = t('common:messages.loading', 'Loading...');
+    const sourceOptions = source?.options;
+    const sourceLoadingMore = source?.loadingMore;
+    React.useLayoutEffect(() => {
+        const list = listboxRef.current;
+        const restore = restoreScrollRef.current;
+        // Before paint, and only once the page has actually landed.
+        if (!source || sourceLoadingMore || !list || restore == null) return;
+        restoreScrollRef.current = null;
+        if (list.scrollTop < restore) list.scrollTop = restore;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sourceOptions, sourceLoadingMore]);
+
+    const loadingText = t('common:messages.loading', 'Loading...');
 
     /**
-     * Server mode only: the same `ul` MUI renders, with a "Loading…" line under the last
-     * row while the next page is on its way — so an infinite scroll that pauses looks like
-     * work in progress rather than the end of the list.
+     * Any fetch in flight — the first page or the next one. Both are shown the same way, as
+     * a spinner in the field (see `renderInput`).
      *
-     * The footer carries no `role="option"` / `data-option-index`, so MUI's keyboard
-     * navigation ignores it.
-     *
-     * The component identity is fixed for the life of the field (`useMemo(…, [])`) and the
-     * footer's state is read from refs at render time. Deriving the component from
-     * `loadingMore` instead would give React a NEW component type the moment a page lands,
-     * which unmounts the list and scrolls it back to the top — precisely when the user is
-     * at the bottom reading the rows that just arrived. The refs are still live because the
-     * parent re-renders (new `children`) whenever `loadingMore` changes.
+     * A "Loading…" row at the BOTTOM of the list would sit closer to where the user is
+     * looking mid-scroll, but it needs a custom `slots.listbox`, and MUI's listbox styling
+     * (`max-height`, `overflow: auto`, the option padding) lives on that slot's own emotion
+     * class — not on the `.MuiAutocomplete-listbox` marker class it hands to a replacement.
+     * Substituting a plain `ul` therefore silently dropped the scroll container and every
+     * option style: the popup grew to full height with unstyled rows. Not worth it for a
+     * status line.
      */
-    const loadingMoreRef = React.useRef(false);
-    loadingMoreRef.current = !!source?.loadingMore;
-    const loadingTextRef = React.useRef(loadingMoreText);
-    loadingTextRef.current = loadingMoreText;
-
-    const ListboxWithFooter = React.useMemo(
-        () =>
-            React.forwardRef<HTMLUListElement, React.HTMLAttributes<HTMLElement>>(
-                function ListboxWithFooter({ children, ...listboxProps }, ref) {
-                    return (
-                        <ul ref={ref} {...listboxProps}>
-                            {children}
-                            {loadingMoreRef.current && (
-                                <li className="mui-autocomplete-loading-more" aria-live="polite">
-                                    {loadingTextRef.current}
-                                </li>
-                            )}
-                        </ul>
-                    );
-                },
-            ),
-        [],
-    );
+    const busy = !!source && (source.loading || source.loadingMore);
 
     /**
      * KP1-I91: MUI's own default is the bare "No options", which reads as though the
@@ -228,10 +226,12 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
                 }}
                 onOpen={() => {
                     setVisibleCount(pageSize);
+                    restoreScrollRef.current = null;
                     source?.onOpen();
                 }}
                 onClose={() => {
                     setVisibleCount(pageSize);
+                    restoreScrollRef.current = null;
                     source?.onClose();
                 }}
                 onInputChange={(_, text, reason) => {
@@ -240,6 +240,8 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
                     // the input; searching on that would re-query for their own selection.
                     if (reason !== 'input' && reason !== 'clear') return;
                     setVisibleCount(pageSize);
+                    // A new query replaces the list; the old scroll position is meaningless.
+                    restoreScrollRef.current = null;
                     source?.onSearch(reason === 'clear' ? '' : text);
                 }}
                 // The server already filtered and is still fetching the rest; filtering the
@@ -258,8 +260,9 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
                         }
                 }
                 loading={!!source?.loading}
-                loadingText={loadingMoreText}
-                slots={source ? { listbox: ListboxWithFooter } : undefined}
+                loadingText={loadingText}
+                // Only `onScroll` is added — the listbox slot itself stays MUI's, so it keeps
+                // its scroll container and option styling.
                 slotProps={{
                     listbox: {
                         onScroll: handleScroll,
@@ -297,12 +300,13 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
                         slotProps={{
                             input: {
                                 ...params.InputProps,
-                                // A search that goes to the server has latency the user has
-                                // to see; the spinner sits beside the chevron, which is why
-                                // the existing adornment is kept rather than replaced.
+                                // A page that goes to the server has latency the user has to
+                                // see — the first page and every scrolled-to page alike. The
+                                // spinner sits beside the chevron, which is why MUI's own
+                                // adornment is kept rather than replaced.
                                 endAdornment: (
                                     <>
-                                        {source?.loading && (
+                                        {busy && (
                                             <CircularProgress
                                                 size={16}
                                                 sx={{ color: 'hsl(var(--primary))', mr: 0.5 }}
