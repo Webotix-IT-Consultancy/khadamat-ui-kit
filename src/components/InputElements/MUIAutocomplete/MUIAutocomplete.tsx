@@ -36,8 +36,29 @@ interface MUIAutocompleteProps {
      * lookup endpoints that return one bare array.
      */
     source?: PaginatedOptionsSource<any>;
-    value: string | number | null;
-    onChange: (value: string | number | null) => void;
+    /**
+     * The selection. A single value normally; an ARRAY of values in `multiple` mode, where
+     * `null` / `''` / a bare value are all read as "nothing / just this one" so a field can
+     * switch between the two modes without its stored value having to change shape first.
+     */
+    value: string | number | null | Array<string | number>;
+    /**
+     * Emits the new selection: a single value, or — in `multiple` mode — always an array
+     * (empty when the last chip is cleared), never `null`.
+     */
+    onChange: (value: string | number | null | Array<string | number>) => void;
+    /**
+     * Multi-select: picks render as removable chips, the list stays open while picking, and
+     * `value`/`onChange` speak arrays. Off by default, so every existing single-select call
+     * site is untouched.
+     */
+    multiple?: boolean;
+    /**
+     * `multiple` only — the most rows that may be picked. Once reached, the unpicked options
+     * are DISABLED rather than the extra click being silently swallowed, so the limit is
+     * visible in the list itself. Removing a chip re-enables them.
+     */
+    maxSelected?: number;
     label?: string;
     placeholder?: string;
     error?: string;
@@ -80,6 +101,8 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
     source,
     value,
     onChange,
+    multiple = false,
+    maxSelected,
     className,
     label,
     placeholder,
@@ -109,6 +132,25 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
      * the same for the list itself; this covers the input in plain `options` mode too.
      */
     const lastPickedRef = React.useRef<Option | null>(null);
+
+    /**
+     * `multiple` mode. The values are normalised out of whatever `value` holds (an array, a
+     * lone value, or nothing) and named from the loaded options — a value the list does not
+     * carry keeps its own text as the chip label rather than disappearing, which is the
+     * multi-select version of the blank-field problem `selectedOption` solves above.
+     */
+    const selectedValues: Array<string | number> = !multiple
+        ? []
+        : Array.isArray(value)
+            ? value
+            : value === null || value === undefined || value === ''
+                ? []
+                : [value];
+    const selectedOptions: Option[] = selectedValues.map(
+        (v) => listOptions.find((opt) => opt.value === v) ?? { label: String(v), value: v },
+    );
+    /** The cap is reached: every option NOT already picked is greyed out (see the prop). */
+    const atMax = multiple && maxSelected != null && selectedValues.length >= maxSelected;
 
     const fromList = listOptions.find((opt) => opt.value === value);
     const fallback =
@@ -216,13 +258,27 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
                 // Options are usually rebuilt on each render, so identity comparison would
                 // drop the selection; and repeated labels make `value` the only safe key.
                 isOptionEqualToValue={(option, selected) => option.value === selected.value}
-                value={selectedOption}
+                multiple={multiple}
+                // Picking 3 of 6 days should not shut the list twice on the way.
+                disableCloseOnSelect={multiple}
+                getOptionDisabled={atMax ? (option) => !selectedValues.includes(option.value) : undefined}
+                value={(multiple ? selectedOptions : selectedOption) as any}
                 onChange={(_, newValue) => {
-                    lastPickedRef.current = newValue;
+                    if (multiple) {
+                        const picked = (newValue as Option[]) ?? [];
+                        // `getOptionDisabled` already blocks the extra pick; the slice also
+                        // covers the keyboard path, which ignores a disabled option's state.
+                        const capped = maxSelected != null ? picked.slice(0, maxSelected) : picked;
+                        capped.forEach((opt) => source?.pin(opt));
+                        onChange(capped.map((opt) => opt.value));
+                        return;
+                    }
+                    const single = newValue as Option | null;
+                    lastPickedRef.current = single;
                     // Keeps the chosen row in the list after the query moves on; harmless
                     // no-op in plain `options` mode.
-                    source?.pin(newValue);
-                    onChange(newValue ? newValue.value : null);
+                    source?.pin(single);
+                    onChange(single ? single.value : null);
                 }}
                 onOpen={() => {
                     setVisibleCount(pageSize);
@@ -323,7 +379,14 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
                                 // size="medium"), so a dropdown stood taller than the
                                 // InputField and PhoneInput beside it in the same row. Same
                                 // token as `.input-wrapper` in InputField.css.
-                                height: 'var(--input-large-height)',
+                                //
+                                // A MULTI-select cannot take a fixed height: its chips wrap
+                                // onto a second row, and a hard height would clip them. The
+                                // token becomes the floor instead, so a one-chip control is
+                                // still exactly as tall as the fields beside it.
+                                ...(multiple
+                                    ? { minHeight: 'var(--input-large-height)', height: 'auto', paddingY: '6px' }
+                                    : { height: 'var(--input-large-height)' }),
                                 // KP1-I109: tokens, so the surface follows the theme; KP1-I128
                                 // makes the disabled grey THE shared token rather than a
                                 // literal copy of InputField.css's value.
@@ -401,7 +464,24 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
                                     color: 'hsl(var(--disabled-fg))',
                                     WebkitTextFillColor: 'hsl(var(--disabled-fg))',
                                 },
-                            }
+                            },
+                            /*
+                             * The chips a `multiple` selection renders. MUI's stock Chip is a
+                             * flat grey that belongs to no theme here, so they take the same
+                             * tokens as the rest of the control — which keeps them gold in the
+                             * admin portal and green in the customer one.
+                             */
+                            '& .MuiAutocomplete-tag': {
+                                backgroundColor: 'hsl(var(--primary-light))',
+                                color: 'hsl(var(--foreground))',
+                                fontFamily: "'Poppins', sans-serif",
+                                fontSize: 'var(--input-font-size)',
+                                borderRadius: 'var(--radius-r-10)',
+                                '& .MuiChip-deleteIcon': {
+                                    color: 'hsl(var(--primary))',
+                                    '&:hover': { color: 'hsl(var(--primary))' },
+                                },
+                            },
                         }}
                     />
                 )}
@@ -417,6 +497,16 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
                      */
                     '& .MuiAutocomplete-endAdornment': {
                         visibility: disabled ? 'hidden' : 'visible',
+                    },
+                    /*
+                     * Same rule as the chevron, for the chips: a ✕ on every chip advertises
+                     * "you can change this" on a view screen. The chips keep full opacity —
+                     * they are the VALUE here, and MUI's disabled fade would leave them
+                     * paler than the read-only text in the fields beside them.
+                     */
+                    '& .MuiChip-root.Mui-disabled': {
+                        opacity: 1,
+                        '& .MuiChip-deleteIcon': { display: 'none' },
                     },
                 }}
                 popupIcon={

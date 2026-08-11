@@ -126,7 +126,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: hsl(var(--muted-foreground));
+  color: hsl(var(--primary));
   /* Same scale as `.input-element` beside it (KP1-I99) — a prefix that stayed 16px next to
      14px input text would look like a different control. */
   font-size: var(--input-font-size);
