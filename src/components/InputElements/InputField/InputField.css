@@ -36,6 +36,24 @@
 
 .input-element {
   flex: 1;
+  /*
+   * KP1-I217 — without this the field cannot be narrower than ~194px.
+   *
+   * A flex item's `min-width` defaults to `auto`, i.e. its MIN-CONTENT width, and an
+   * `<input>`'s min-content width is its `size` attribute — 20 characters by default,
+   * about 194px at this font. `flex: 1` can therefore only ever GROW the input; it can
+   * never shrink it past that floor, so in any column narrower than ~194px the input
+   * pushes straight out through its own bordered `.input-wrapper`.
+   *
+   * That is the overflow the ticket reports on Contract Create, whose postal row is four
+   * fields across (City / Country / PIN / Telephone No.) and hands each one 137-252px.
+   * `min-width: 0` lets the input do what `flex: 1` already promised and track the column.
+   * Long text now scrolls inside the box, as a text input is supposed to.
+   *
+   * `PhoneInput` carries the same fix on its own number input (`min-w-0`) — it composes its
+   * own DOM and so does not pick this rule up.
+   */
+  min-width: 0;
   border: none;
   outline: none;
   color: hsl(var(--foreground));
@@ -51,7 +69,9 @@
 .input-element::placeholder {
   color: hsl(var(--muted-foreground));
 }
-
+textarea {
+ font-size: var(--input-font-size) !important;
+}
 .password-toggle {
   display: flex;
   align-items: center;

@@ -45,18 +45,52 @@ interface DashboardSidebarProps {
    * the customer sidebar.
    */
   showLanguageSwitcher?: boolean;
+  /**
+   * KP1-I177 — the phone number the customer sidebar's "Chat with us" card opens in WhatsApp.
+   *
+   * Any human format is accepted (`+971 293 4734 34`, `00971…`, digits): `toWhatsAppNumber`
+   * reduces it to the digits `wa.me` wants. Omit it and the shared support number below is
+   * used, which is the same one the (currently commented-out) Toll Free row dials — a portal
+   * that needs a different one passes it rather than editing this file.
+   */
+  supportWhatsAppNumber?: string;
 }
+
+/**
+ * The product's support line, as `common:sidebar.tollFree` states it: `Toll Free
+ * +971 293 4734 34`. Kept as digits here because `wa.me` takes no `+`, spaces or dashes —
+ * and NOT read out of the i18n bundle, which holds a translated *sentence* wrapped around
+ * the number, not the number itself.
+ */
+const DEFAULT_SUPPORT_WHATSAPP = '971293473434';
+
+/**
+ * `wa.me` accepts the full international number and nothing else — no `+`, no separators,
+ * no leading `00`. Anything that reduces to fewer than 8 digits is not a number we can
+ * dial, and yields `null` so the caller renders the card unlinked rather than sending the
+ * user to a WhatsApp error page.
+ */
+const toWhatsAppNumber = (raw?: string): string | null => {
+  const digits = (raw ?? '').replace(/\D/g, '').replace(/^00/, '');
+  return digits.length >= 8 ? digits : null;
+};
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   isMobile = false,
   menuItems: propsMenuItems,
   onLogout: handleLogout,
   userType,
-  showLanguageSwitcher = true
+  showLanguageSwitcher = true,
+  supportWhatsAppNumber
 }) => {
   const { t, i18n } = useTranslation('common');
   const location = useLocation();
   const isRTL = i18n.language === 'ar';
+
+  // KP1-I177: the card and its collapsed twin advertised a click (`cursor-pointer`) and had
+  // no handler and no href — clicking either did nothing at all. This is the target.
+  const whatsAppNumber = toWhatsAppNumber(supportWhatsAppNumber ?? DEFAULT_SUPPORT_WHATSAPP);
+  const whatsAppUrl = whatsAppNumber ? `https://wa.me/${whatsAppNumber}` : undefined;
 
   const {
     isCollapsed,
@@ -307,9 +341,30 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       )} */}
 
 
-      {/* Help/CTA Section - Hidden when collapsed */}
+      {/**
+        * Help/CTA — hidden when collapsed.
+        *
+        * KP1-I177: the WHOLE card is the link now, not a `cursor-pointer` div wrapped around
+        * an inert `<button>`. The card already looked clickable everywhere, so making only
+        * the small glyph work would have left most of its surface still dead. The glyph stays
+        * as the affordance, inside the anchor rather than beside it.
+        *
+        * `target="_blank"` + `rel="noopener noreferrer"`: wa.me is a third-party origin, and
+        * a customer mid-form should not lose the page to it.
+        */}
       {!actualCollapsed && (
-        <div className="mt-auto p-2.5 rounded-xl bg-primary flex items-center gap-2 mb-3 transition-all duration-300 overflow-hidden cursor-pointer">
+        <a
+          href={whatsAppUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`${t('sidebar.enquiry')} — ${t('sidebar.enquiryDesc')}`}
+          className={cn(
+            'mt-auto p-2.5 rounded-xl bg-primary flex items-center gap-2 mb-3 transition-all duration-300 overflow-hidden no-underline',
+            // No dialable number configured -> the card still shows, but it no longer claims
+            // to be clickable. Better than an href that opens a WhatsApp error page.
+            whatsAppUrl ? 'cursor-pointer hover:bg-primary/90' : 'cursor-default pointer-events-none'
+          )}
+        >
           <div className=" bg-primary-200 flex items-center justify-center rounded-lg w-10 h-10 shrink-0">
             <img width={38} height={38} src={enquiryAvatar} alt="Enquiry" />
           </div>
@@ -321,20 +376,29 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               {t('sidebar.enquiryDesc')}
             </p>
           </div>
-          <button className="h-8 w-8 rounded-lg bg-transparent border-none flex items-center justify-center hover:bg-white/10 shrink-0">
+          <span className="h-8 w-8 rounded-lg bg-transparent flex items-center justify-center hover:bg-white/10 shrink-0">
             <WhatsAppIcon />
-          </button>
-        </div>
+          </span>
+        </a>
       )}
 
-      {/* Compact CTA for collapsed state */}
+      {/* Compact CTA for collapsed state — same destination as the card above (KP1-I177). */}
       {actualCollapsed && (
         <TooltipProvider delayDuration={0}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button className="mt-auto mb-4 h-12 w-full rounded-lg bg-[#016937] flex items-center justify-center hover:bg-[#01522b] transition-colors">
+              <a
+                href={whatsAppUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={t('sidebar.callOnServiceRequest')}
+                className={cn(
+                  'mt-auto mb-4 h-12 w-full rounded-lg bg-[#016937] flex items-center justify-center hover:bg-[#01522b] transition-colors',
+                  whatsAppUrl ? 'cursor-pointer' : 'cursor-default pointer-events-none'
+                )}
+              >
                 <WhatsAppIcon />
-              </button>
+              </a>
             </TooltipTrigger>
             <TooltipContent side={isRTL ? "left" : "right"}>
               {t('sidebar.callOnServiceRequest')}

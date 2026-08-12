@@ -222,7 +222,16 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
                         placeholder={placeholder ?? countryPlaceholder}
                         disabled={disabled}
                         className={cn(
-                            "flex-1 h-full px-3 bg-transparent text-foreground placeholder:text-muted-foreground",
+                            // KP1-I217: `min-w-0` is load-bearing, not tidying. A flex item's
+                            // min-width defaults to its MIN-CONTENT width, and an <input>'s is
+                            // its `size` attribute — 20 characters, ~194px. Add the country
+                            // selector (~108px) and this control could not render narrower than
+                            // ~307px: below that the number was pushed out and then CLIPPED by
+                            // the `overflow-hidden` on the wrapper above, which is the defect
+                            // the ticket reports (Contract Create's postal row gives each field
+                            // 137-252px). Measured: 173px of overflow at the narrow end, 0 with
+                            // this class. `.input-element` in InputField.css carries the twin.
+                            "flex-1 min-w-0 h-full px-3 bg-transparent text-foreground placeholder:text-muted-foreground",
                             // KP1-I99: this input had no size of its own and inherited body
                             // copy, so it would have stayed 16px while the InputField next
                             // to it stepped down to 14px below `xl`.
