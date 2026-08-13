@@ -35,8 +35,8 @@ export interface StatusPopupProps {
 }
 
 /**
- * **The** alert popup (KP1-I124). A status icon, an optional highlighted reference, and
- * the outcome line — nothing else.
+ * **The** alert popup (KP1-I124). A status icon, the outcome line, and an optional
+ * highlighted reference beneath it — nothing else, and in that order.
  *
  * Every "saved / updated / failed" dialog in both portals used to be `SubmitStatus`, which
  * is really the wallet-recharge receipt: a 690px dialog with a horizontal divider and a
@@ -110,12 +110,36 @@ const StatusPopup: React.FC<StatusPopupProps> = ({
                     )}
                 </span>
 
-                {line(highlight, highlightLabel)}
-                {line(secondaryHighlight, secondaryHighlightLabel)}
-
+                {/**
+                 * The OUTCOME leads, then the references beneath it.
+                 *
+                 * These were the other way round — highlight, secondary highlight, then the
+                 * title — so a confirmation opened on "ENQ234 / John Smith" and only said what
+                 * had happened to them underneath. The sentence has to come first: the codes
+                 * mean nothing until the reader knows whether this is a save, an assignment or
+                 * a failure.
+                 *
+                 * KP1-I118 is unaffected. It moved the record's reference OUT of the title and
+                 * into a coloured block of its own, which is still exactly what happens; only
+                 * the vertical order of the two changed.
+                 */}
                 <h2 className="text-center text-xl font-medium text-foreground">{title}</h2>
                 {subtitle && (
                     <p className="text-center text-sm text-muted-foreground">{subtitle}</p>
+                )}
+
+                {/**
+                 * Both references share ONE line, side by side — "Enquiry No." next to
+                 * "Assigned to" — rather than stacking into a column that pushed the dialog
+                 * tall. `flex-wrap` drops the second under the first on a narrow viewport, and
+                 * with only one highlight (the Customer confirmations) this renders exactly as
+                 * a single centred block, unchanged.
+                 */}
+                {(highlight || secondaryHighlight) && (
+                    <div className="flex flex-wrap items-start justify-center gap-x-10 gap-y-4">
+                        {line(highlight, highlightLabel)}
+                        {line(secondaryHighlight, secondaryHighlightLabel)}
+                    </div>
                 )}
             </div>
         </PopupPrimary>

@@ -329,11 +329,45 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
                 renderOption={(props, option) => {
                     // MUI puts `key` inside the spread props; React warns unless it is passed
                     // separately, and repeated labels make `value` the only stable key.
-                    const { key: _key, ...liProps } = props as React.HTMLAttributes<HTMLLIElement> & {
-                        key?: React.Key;
+                    const {
+                        key: _key,
+                        onClick: muiOnClick,
+                        ...liProps
+                    } = props as React.HTMLAttributes<HTMLLIElement> & { key?: React.Key };
+
+                    /**
+                     * KP1-I179 — picking the option that is ALREADY selected must still notify
+                     * the caller.
+                     *
+                     * MUI's `useAutocomplete` short-circuits before `onChange` when the new
+                     * value is REFERENCE-equal to the current one:
+                     *
+                     *     } else if (value === newValue) { return; }
+                     *
+                     * and the `value` handed to `<Autocomplete>` above is `selectedOption`,
+                     * which is `listOptions.find(...)` — the very object MUI passes back as
+                     * `newValue`. So re-picking the current option fired nothing at all.
+                     *
+                     * That is invisible for a dropdown that only sets its own field, but wrong
+                     * for one whose selection DERIVES other fields: re-picking the same Parent
+                     * Account is how a user asks for that account's TRN back after editing it
+                     * by hand, and the request never reached the form.
+                     *
+                     * Single-select only. In `multiple` mode clicking a selected option
+                     * DEselects it, so the value genuinely changes and MUI fires `onChange`
+                     * itself — re-firing here would immediately re-add what was just removed.
+                     */
+                    const handleOptionClick = (event: React.MouseEvent<HTMLLIElement>) => {
+                        const isReselect = !multiple && selectedOption?.value === option.value;
+                        muiOnClick?.(event);
+                        if (!isReselect) return;
+                        lastPickedRef.current = option;
+                        source?.pin(option);
+                        onChange(option.value);
                     };
+
                     return (
-                        <li key={String(option.value)} {...liProps}>
+                        <li key={String(option.value)} {...liProps} onClick={handleOptionClick}>
                             {option.description ? (
                                 <span className="flex flex-col">
                                     <span>{option.label}</span>
