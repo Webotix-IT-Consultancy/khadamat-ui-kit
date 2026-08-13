@@ -30,6 +30,20 @@ export interface PageBackButtonProps {
     confirmLabel?: string;
     cancelLabel?: string;
     className?: string;
+    /**
+     * The screen's page-level controls — a status chip, action icons — pinned to the TOP RIGHT,
+     * on this same line, opposite the back arrow.
+     *
+     * They belong here rather than in the form body. Placed inside the first row of fields (as
+     * the contract, quotation, and both customer-portal view screens used to do) a status chip
+     * sits in a field's column, aligned to a field's baseline, and reads as that field's VALUE —
+     * testers took it for an input. On the back-arrow line there is no field for it to be
+     * mistaken for: that line is chrome, not content.
+     *
+     * Rendering is unchanged when this is omitted, so the existing call sites keep their exact
+     * layout — the flex row only appears when a screen actually has actions to place.
+     */
+    actions?: React.ReactNode;
 }
 
 /**
@@ -53,6 +67,7 @@ const PageBackButton: React.FC<PageBackButtonProps> = ({
     confirmLabel,
     cancelLabel,
     className,
+    actions,
 }) => {
     const { t, i18n } = useTranslation('common');
     const navigate = useNavigate();
@@ -71,23 +86,40 @@ const PageBackButton: React.FC<PageBackButtonProps> = ({
         navigate(-1);
     };
 
+    const button = (
+        <button
+            type="button"
+            onClick={() => (confirm ? setAsking(true) : leave())}
+            aria-label={text}
+            className={cn(
+                'inline-flex items-center gap-2 h-9 rounded-xl border-none cursor-pointer',
+                'bg-primary-light text-primary hover:bg-primary/25 transition-colors',
+                'font-poppins text-sm font-medium',
+                // Without `actions` the button owns the gap below it, exactly as before. With
+                // them, the row owns it — otherwise the margin would sit under the arrow only
+                // and the two sides of the row would not share a baseline.
+                actions ? '' : 'mb-3',
+                iconOnly ? 'w-9 justify-center px-0' : 'px-3',
+                className
+            )}
+        >
+            <Arrow size={18} />
+            {!iconOnly && <span>{text}</span>}
+        </button>
+    );
+
     return (
         <>
-            <button
-                type="button"
-                onClick={() => (confirm ? setAsking(true) : leave())}
-                aria-label={text}
-                className={cn(
-                    'inline-flex items-center gap-2 h-9 rounded-xl border-none cursor-pointer',
-                    'bg-primary-light text-primary hover:bg-primary/25 transition-colors',
-                    'font-poppins text-sm font-medium mb-3',
-                    iconOnly ? 'w-9 justify-center px-0' : 'px-3',
-                    className
-                )}
-            >
-                <Arrow size={18} />
-                {!iconOnly && <span>{text}</span>}
-            </button>
+            {actions ? (
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                    {button}
+                    {/* `ms-auto` keeps the actions hard right even if the button is hidden or the
+                        row wraps — `justify-between` alone would centre a lone child. */}
+                    <div className="ms-auto flex flex-wrap items-center gap-3">{actions}</div>
+                </div>
+            ) : (
+                button
+            )}
 
             {confirm && (
                 <ConfirmPopup
