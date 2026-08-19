@@ -86,13 +86,13 @@ const Tabs: React.FC<TabsProps> = ({
                                 "flex items-center gap-2 transition-colors cursor-pointer",
                                 isPill
                                     ? cn(
-                                        "rounded-xl border-2 border-primary px-5 py-1.5 text-sm font-medium",
+                                        "rounded-xl border-2 border-primary px-2 py-1.5 text-sm font-medium",
                                         isActive
                                             ? "bg-primary-100 text-black"
                                             : "bg-white text-black hover:bg-primary-100/40"
                                     )
                                     : cn(
-                                        "pb-3 text-base font-semibold border-b-4 mb-[-4px]",
+                                        "pb-3 text-sm font-medium border-b-4 mb-[-4px]",
                                         isActive
                                             ? "text-black border-b-primary!"
                                             : "border-transparent text-grey-400 hover:text-black"

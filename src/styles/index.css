@@ -251,6 +251,8 @@
   :root {
     --input-large-height: 44px;
     --input-font-size: 12px;
+    --text-sm:12px;
+    --small: 12px;
   }
 }
 
