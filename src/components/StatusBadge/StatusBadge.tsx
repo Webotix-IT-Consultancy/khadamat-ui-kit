@@ -130,7 +130,9 @@ const LABELS: Record<BadgeStatus, string> = {
   'contract-in-progress': 'In Progress',
   'approved': 'Approved',
   'awaiting-payment': 'Awaiting Payment',
-  'awaiting-signatures': 'Awaiting Signatures',
+  // KP1-I297: singular. The KEY stays plural (it is the portals' status-union member and
+  // the API's AWSG code); only the human-facing label is singular.
+  'awaiting-signatures': 'Awaiting Signature',
   'live': 'Live',
   'cancelled': 'Cancelled',
 };
