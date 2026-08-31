@@ -107,13 +107,13 @@
 /* Danger Button */
 /* ============================= */   
 .btn-danger {
-  background: hsl(var(--destructive));
-  color: hsl(var(--destructive-foreground));
+  background: hsl(var(--danger));
+  color: hsl(var(--danger-foreground));
 }
 .btn-danger:hover:not(:disabled) {
-  background: hsl(var(--destructive-600));
+  background: hsl(var(--danger-200));
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px hsla(var(--destructive), 0.2);
+  box-shadow: 0 4px 12px hsla(var(--danger ), 0.2);
 }
 .btn-danger:active:not(:disabled) {
   transform: translateY(0);

@@ -268,7 +268,7 @@ body.admin-theme {
   /* #BF9F54 */
   --primary-400: 42 46% 54%;
   /* #EDC56A */
-  --primary-600: 36 57% 25%;
+  --primary-600: 36 57% 45%;
   /* Dark Secondary */
   /* --primary-700: 36 57% 15%; */
   --primary-700: 41 58% 8%;
@@ -297,7 +297,10 @@ body.admin-theme {
   --quaternary: 44 59% 62%;
 
   --danger: 0 100% 60%;
+  --danger-foreground: 0 100% 100%;
   --danger-light: 0 100% 96%;
+  --danger-200: 0 100% 65%;
+  --danger-600: 0 100% 45%;
 
   /* Required Tailwind v4 Overrides to prevent :root dominance */
   --color-primary: hsl(var(--primary));
