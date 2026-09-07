@@ -1,6 +1,7 @@
 import React from 'react';
 import './NotificationPanel.css';
 import { format, isToday, isYesterday, isAfter, subDays, parseISO } from 'date-fns';
+import { X } from 'lucide-react';
 
 export interface NotificationPanelItem {
   id: string;
@@ -95,10 +96,8 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, onClose, 
     <div className="notification-panel-overlay" onClick={onClose}>
       <div className="notification-panel" onClick={(e) => e.stopPropagation()}>
         <div className="notification-panel-header">
-          <button className="close-button" onClick={onClose}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+          <button className="btn btn-primary" onClick={onClose}>
+            <X className="w-5 h-5" />
           </button>
         </div>
 
