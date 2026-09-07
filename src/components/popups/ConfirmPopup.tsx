@@ -57,7 +57,7 @@ const ConfirmPopup: React.FC<ConfirmPopupProps> = ({
                     <Info size={32} className=" sm:w-10 sm:h-10" strokeWidth={1.5} />
                 </div>
 
-                <h2 className="text-xl sm:text-2xl md:text-2xl font-poppins font-semibold text-black text-center mb-2 sm:mb-3">
+                <h2 className="text-xl sm:text-xl md:text-xl font-poppins font-semibold text-black text-center mb-2 sm:mb-3">
                     {title}
                 </h2>
 
