@@ -26,7 +26,7 @@ const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(({
                     {required && <span className="required-mark">*</span>}
                 </div>
             )}
-            <div className={`textarea-wrapper ${error ? 'textarea-wrapper-error' : ''}`}>
+            <div className={`textarea-wrapper ${error ? 'textarea-wrapper-error' : ''}  focus:outline-none focus-within:ring-4 focus-within:ring-primary-light focus-within:border-primary border-primary`}>
                 <textarea
                     {...props}
                     ref={ref}

@@ -26,21 +26,20 @@
     position: relative;
     display: flex;
     align-items: flex-start;
-    border: 1px solid #DEDEDE;
     border-radius: 8px;
-    background-color: #FFFFFF;
     transition: all 0.2s ease-in-out;
     padding: 12px;
+    border: 2px solid hsl(var(--primary));
 }
 
 /* KP1-I109: was the literal #016937 — `:root --primary`, the CUSTOMER portal's green — so
    focusing a Description box inside the admin portal's gold theme turned it green. The
    1px/8px geometry above is left as-is (a TextArea is always full-width, so it shares no
    row); only the theme leak is corrected here. */
-.textarea-wrapper:focus-within {
+/* .textarea-wrapper:has(textarea:focus-within) {
     border-color: hsl(var(--primary));
     box-shadow: 0 0 0 2px hsl(var(--primary) / 0.1);
-}
+} */
 
 .textarea-wrapper-error {
     border-color: #FF3232;

@@ -113,12 +113,30 @@
  * scrolling columns run underneath it. Header keeps a higher z-index than the body
  * cells so it still wins where the two sticky axes meet.
  */
+/*
+ * KP1-I50 — the Action column is pinned to the trailing edge so a row action is reachable
+ * without scrolling a wide table sideways.
+ *
+ * `inset-inline-end`, NOT `right`: the customer portal renders Arabic under `dir="rtl"`, where
+ * the last column is drawn on the LEFT. A physical `right: 0` would pin it to the far side of
+ * the table from where it is drawn — the column would detach and float over the data. The
+ * logical property resolves to `right` in LTR and `left` in RTL, so one rule serves both. The
+ * `right: 0` above it is the fallback for anything that does not know the logical property; in
+ * LTR the two agree, and where both are understood the logical one wins by order.
+ */
 .table-primary-sticky-last th.table-primary-header-cell:last-child,
 .table-primary-sticky-last td.table-primary-cell:last-child {
     position: sticky;
     right: 0;
+    inset-inline-end: 0;
     background-color: hsl(var(--white));
+    /* The shadow marks the edge the content scrolls UNDER, so it flips with the column. */
     box-shadow: -6px 0 6px -6px rgba(0, 0, 0, 0.18);
+}
+
+[dir='rtl'] .table-primary-sticky-last th.table-primary-header-cell:last-child,
+[dir='rtl'] .table-primary-sticky-last td.table-primary-cell:last-child {
+    box-shadow: 6px 0 6px -6px rgba(0, 0, 0, 0.18);
 }
 
 .table-primary-sticky-last th.table-primary-header-cell:last-child {
