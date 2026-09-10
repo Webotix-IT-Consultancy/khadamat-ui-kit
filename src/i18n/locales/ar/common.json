@@ -16,7 +16,8 @@
         "rechargeNow": "اشحن الآن",
         "filter": "تصفية",
         "clear": "مسح",
-        "apply": "تطبيق"
+        "apply": "تطبيق",
+        "exportToExcel": "تصدير إلى إكسل"
     },
     "tabs": {
         "all": "الكل",

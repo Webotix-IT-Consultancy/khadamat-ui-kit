@@ -198,7 +198,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                             />
                         ) : (
                             <span
-                                className="font-poppins text-base md:text-lg font-semibold leading-none select-none"
+                                className="font-poppins text-base md:text-[14px] font-semibold leading-none select-none"
                                 aria-hidden="true"
                             >
                                 {toInitial(displayName)}
@@ -207,7 +207,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                     </div>
 
                     <div className="flex flex-col items-start">
-                        <div className="text-sm md:text-[16px] font-semibold text-black font-poppins">
+                        <div className="text-sm md:text-[14px] font-semibold text-black font-poppins">
                             {displayName}
                         </div>
                         {/*

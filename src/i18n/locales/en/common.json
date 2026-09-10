@@ -16,7 +16,8 @@
         "rechargeNow": "Recharge Now",
         "filter": "Filter",
         "clear": "Clear",
-        "apply": "Apply"
+        "apply": "Apply",
+        "exportToExcel": "Export to Excel"
     },
     "tabs": {
         "all": "All",

@@ -222,12 +222,24 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       actualCollapsed ? "w-[80px]" : "w-[306px]",
       "p-3 md:p-4"
     )}>
-      {/* Desktop Collapse Toggle */}
+      {/*
+        * Desktop Collapse Toggle.
+        *
+        * KP1-I206: in RTL it sits INSIDE the sidebar's edge rather than hanging over the
+        * content. `-left-3` put two thirds of the button outside the panel, on top of the
+        * page — and RTL content starts at that edge, so it landed over the first thing the
+        * reader looks at (a card corner, a table's first column) rather than over margin.
+        * `left-1` keeps the same control in the same place on the same edge, just clear of
+        * the content.
+        *
+        * LTR is deliberately unchanged: the mock draws the button overhanging there, no one
+        * has reported it, and this component is shared with the (LTR-only) admin portal.
+        */}
       <button
         onClick={toggleCollapse}
         className={cn(
           "absolute -right-3 top-[69px] z-50 hidden md:flex h-8 w-8 shadow-sm items-center justify-center rounded-sm bg-primary-light-200 text-primary transition-transform hover:bg-primary-light",
-          isRTL ? "right-auto -left-3 rotate-180" : ""
+          isRTL ? "right-auto left-1 rotate-180" : ""
         )}
         aria-label={actualCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
       >

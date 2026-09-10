@@ -37,7 +37,7 @@
 
 .table-primary-header-cell {
     font-family: 'Poppins', sans-serif !important;
-    font-size: 13px !important;
+    font-size: 12px !important;
     font-weight: 600 !important;
     color: hsl(var(--black)) !important;
     /* border-bottom: none !important; */
@@ -45,9 +45,19 @@
     white-space: nowrap !important;
 }
 
+/*
+ * KP1-I207: the sort label INHERITS the header cell's size.
+ *
+ * A sortable header renders its text inside MUI's `TableSortLabel`; a non-sortable one —
+ * Action, always — renders the bare label in the cell. This rule used to pin the label to
+ * 12px while the cell itself is 13px (and larger again at `sm`/`lg` via the responsive
+ * classes on the cell), so the Action header was visibly bigger than every header beside
+ * it. One size for both paths, set in one place: the cell's.
+ */
 .table-primary-sort-label {
     color: hsl(var(--black)) !important;
-    font-size: 12px;
+    font-size: 13px !important;
+    font-weight: inherit;
 }
 
 .table-primary-sort-label:hover {

@@ -167,14 +167,38 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
      * In edit mode the saved option is the only thing that can name the current value until
      * the first page arrives; pinning it also keeps it selectable in the open list.
      *
-     * Keyed on `source.pin` — which is stable — rather than on `source`, which is a fresh
-     * object on every render of the owning hook.
+     * **The pin is RELEASED when the selection it stands for goes.** A pin used to be
+     * permanent, which is wrong for a SCOPED list: choose a contract for account A, switch to
+     * account B, and A's contract was still prepended to B's page — an option belonging to
+     * another account, still selectable, even though the form had already cleared the value.
+     * The pinned value is remembered here and unpinned as soon as `selectedOption`/`value`
+     * names something else or nothing at all.
+     *
+     * Keyed on `source.pin` / `source.unpin` — both stable — rather than on `source`, which is
+     * a fresh object on every render of the owning hook.
      */
     const pin = source?.pin;
+    const unpin = source?.unpin;
+    /** The value this component currently holds a pin for, so it can release exactly that one. */
+    const pinnedValueRef = React.useRef<string | number | null>(null);
     React.useEffect(() => {
-        if (pin && selectedOptionProp && selectedOptionProp.value === value) pin(selectedOptionProp);
+        /*
+         * `fallback` is the option that NAMES the current value when the loaded page does not:
+         * the caller's `selectedOption` on an edit screen, or the row the user just picked.
+         * Both deserve the pin; anything else means the value they stood for is gone.
+         */
+        const next = fallback;
+        const previous = pinnedValueRef.current;
+        if (previous != null && (!next || next.value !== previous)) {
+            unpin?.(previous);
+            pinnedValueRef.current = null;
+        }
+        if (pin && next) {
+            pin(next);
+            pinnedValueRef.current = next.value;
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [pin, selectedOptionProp?.value, selectedOptionProp?.label, value]);
+    }, [pin, unpin, fallback?.value, fallback?.label, value]);
 
     /** The open listbox, and where it was when the next page was asked for. */
     const listboxRef = React.useRef<HTMLElement | null>(null);
@@ -276,7 +300,8 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
                     const single = newValue as Option | null;
                     lastPickedRef.current = single;
                     // Keeps the chosen row in the list after the query moves on; harmless
-                    // no-op in plain `options` mode.
+                    // no-op in plain `options` mode. Releasing the PREVIOUS pin is left to the
+                    // effect above, which sees this pick through `fallback` on the next render.
                     source?.pin(single);
                     onChange(single ? single.value : null);
                 }}

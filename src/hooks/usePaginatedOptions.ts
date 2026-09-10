@@ -100,6 +100,18 @@ export interface PaginatedOptionsSource<TRow = unknown> {
      * value in edit mode, or the user's own choice after they type a new search.
      */
     pin: (option: PaginatedOption | null | undefined) => void;
+    /**
+     * Drop a pinned option again.
+     *
+     * A pin used to be permanent, which is wrong the moment the list is SCOPED: pick a
+     * contract for account A, switch to account B, and A's contract was still prepended to
+     * B's page — an option belonging to someone else, selectable. `MUIAutocomplete` unpins the
+     * option it pinned as "the current selection" as soon as that selection changes or is
+     * cleared, so the pin lives exactly as long as what it stands for.
+     */
+    unpin: (value: string | number | null | undefined) => void;
+    /** Drop every pin — for a caller that re-scopes the whole list itself. */
+    clearPins: () => void;
     /** Drop everything loaded and re-run page 1 (pins survive). */
     reload: () => void;
 }
@@ -311,6 +323,18 @@ export function usePaginatedOptions<TRow = unknown>(
         setPinTick((n) => n + 1);
     }, []);
 
+    const unpin = useCallback((value: string | number | null | undefined) => {
+        if (value === '' || value == null) return;
+        if (!pinnedRef.current.delete(keyOf(value))) return;
+        setPinTick((n) => n + 1);
+    }, []);
+
+    const clearPins = useCallback(() => {
+        if (!pinnedRef.current.size) return;
+        pinnedRef.current.clear();
+        setPinTick((n) => n + 1);
+    }, []);
+
     const getRow = useCallback(
         (value: string | number | null | undefined) =>
             value == null || value === '' ? undefined : rowsRef.current.get(keyOf(value)),
@@ -347,6 +371,8 @@ export function usePaginatedOptions<TRow = unknown>(
         onSearch,
         loadMore,
         pin,
+        unpin,
+        clearPins,
         reload,
     };
 }
