@@ -177,6 +177,33 @@
   height: auto;
 }
 
+.resend-link {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    opacity: 0.5;
+    cursor: default;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.resend-link.active {
+    opacity: 1;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.back-to-login {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #C59D45;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
 
 /* Admin theme */
 /* ============================= */
