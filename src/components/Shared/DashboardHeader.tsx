@@ -110,7 +110,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 {title ? (
                     <div className="hidden md:flex flex-col">
                         {breadcrumbs.length > 0 && (
-                            <div className="flex items-center gap-1 text-[13px] text-gray-500 font-poppins mb-0.5">
+                            /* KP1-I79: 2px between a 13px trail and a 23px heading read as
+                               one crowded block. 6px is the same caption-to-heading step the
+                               form labels use (`.form-field` gap is 4px at 14px/16px), scaled
+                               for this type size. */
+                            <div className="flex items-center gap-1 text-[13px] text-gray-500 font-poppins mb-1.5">
                                 {breadcrumbs.map((bc, index) => (
                                     <React.Fragment key={index}>
                                         {bc.path ? (

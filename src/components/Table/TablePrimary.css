@@ -35,6 +35,26 @@
     border-bottom: 1px solid hsl(var(--primary));
 }
 
+/*
+ * KP1-I195 — the whole table aligns by the DOCUMENT direction.
+ *
+ * MUI's `.MuiTableCell-root` hardcodes `text-align: left`, and this portal pair does NOT
+ * wrap MUI in a `direction: 'rtl'` theme (see `lib/statusSelectSx.ts`, which says so for
+ * the same reason). So under Arabic every header and every value stayed pinned to the
+ * LEFT edge of a right-to-left page — the "values are misaligned under their respective
+ * column headers" the ticket reports. It shows up worst on Phone Number, which is an
+ * `dir="ltr"` island and so reads left-aligned inside a left-aligned cell inside an RTL
+ * page, and on Description, whose `maxWidth` ellipsis was truncating the wrong end.
+ *
+ * `start` resolves to `left` in LTR and `right` in RTL, so English is untouched and Arabic
+ * becomes correct — one rule, both languages, no `[dir]` branch to keep in step. The
+ * Action column is unaffected: it is a flex row of buttons, not text.
+ */
+.table-primary-header-cell,
+.table-primary-cell {
+    text-align: start !important;
+}
+
 .table-primary-header-cell {
     font-family: 'Poppins', sans-serif !important;
     font-size: 12px !important;
@@ -115,6 +135,18 @@
 }
 
 /*
+ * KP1-I121 — the opt-in wrapping column.
+ *
+ * The rule above is `!important`, which an inline `style` CANNOT beat, so the column
+ * option needs a class of its own rather than just setting `whiteSpace` on the cell.
+ * `TablePrimary` adds this class for a column declared `wrap: true`.
+ */
+.table-primary-cell-wrap {
+    white-space: normal !important;
+    overflow-wrap: break-word;
+}
+
+/*
  * KP1-I50 — pinned action column (opt-in via TablePrimary's `stickyLastColumn`).
  *
  * A wide listing pushes the row actions off-screen, so View/Edit are only reachable
@@ -173,12 +205,26 @@
     border-top: 1px solid hsl(var(--grey-200));
 }
 
+/*
+ * KP1-I193 — "Total Records: 3 | Showing 1-3" sat on the wrong side in Arabic.
+ *
+ * The container is `justify-content: flex-end`, so this auto margin is what pushes the
+ * summary away from the pager and out to the opposite edge. `margin-right` is PHYSICAL:
+ * under `dir="rtl"` the flex line already runs the other way, so the margin pushed the
+ * summary the same way the pager was going and the two ended up crowded on one side.
+ *
+ * `margin-inline-end` mirrors with the direction — the same logical-property fix as the
+ * sticky Action column below. `margin-right` stays first as the fallback for anything
+ * that does not understand it; in LTR the two agree, and where both are understood the
+ * logical one wins by order.
+ */
 .table-primary-pagination-info {
     font-family: 'Poppins', sans-serif !important;
     font-size: 14px !important;
     font-weight: 500 !important;
     color: hsl(var(--grey-600)) !important;
     margin-right: auto;
+    margin-inline-end: auto;
 }
 
 .table-primary-numeric-pagination .MuiPaginationItem-root {

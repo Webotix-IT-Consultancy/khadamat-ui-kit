@@ -20,6 +20,24 @@ export interface ColumnDefinition<T> {
     label: string;
     sortable?: boolean;
     maxWidth?: string;
+    /**
+     * KP1-I121 — let a long value WRAP onto a second line instead of being clipped.
+     *
+     * Every cell is `white-space: nowrap` by default, which is right for the codes, dates
+     * and statuses that make up most of a row: wrapping those would make the table ragged
+     * for no gain. It is wrong for a NAME. A long account or parent name has nowhere to
+     * go, so with a `maxWidth` it is cut off mid-word behind an ellipsis and with none it
+     * pushes the row wider and the columns out of alignment — which is the ticket.
+     *
+     * Opt in per column, and **always with a `maxWidth`**: wrapping is only meaningful
+     * once there is a width to wrap against. The cell then keeps its column alignment and
+     * the row grows taller, which is what the tester asked for ("the remaining names
+     * should continue on the next line").
+     *
+     * `break-word` rather than plain wrapping, so a single unbroken string — a pasted
+     * reference, an email — still yields instead of overflowing the column it is in.
+     */
+    wrap?: boolean;
     format?: (value: any, row: T, index: number) => React.ReactNode;
 }
 
@@ -141,12 +159,24 @@ const TablePrimary = <T extends Record<string, any>>({
                                     return (
                                         <TableCell
                                             key={column.key as string}
-                                            className="table-primary-cell text-xs! sm:text-sm! lg:text-sm!"
+                                            className={`table-primary-cell text-xs! sm:text-sm! lg:text-sm!${
+                                                column.wrap ? ' table-primary-cell-wrap' : ''
+                                            }`}
                                             style={{
                                                 maxWidth: column.maxWidth,
-                                                overflow: column.maxWidth ? 'hidden' : 'visible',
-                                                textOverflow: column.maxWidth ? 'ellipsis' : 'clip',
-                                                whiteSpace: 'nowrap',
+                                                /*
+                                                 * KP1-I121 — a wrapping column keeps its
+                                                 * width but drops the clip: an ellipsis and
+                                                 * a second line are alternatives, and
+                                                 * `overflow: hidden` would cut the wrapped
+                                                 * lines off at the cell height instead.
+                                                 */
+                                                overflow:
+                                                    column.maxWidth && !column.wrap ? 'hidden' : 'visible',
+                                                textOverflow:
+                                                    column.maxWidth && !column.wrap ? 'ellipsis' : 'clip',
+                                                whiteSpace: column.wrap ? 'normal' : 'nowrap',
+                                                overflowWrap: column.wrap ? 'break-word' : undefined,
                                             }}
                                         >
                                             {isBlank(content) ? emptyPlaceholder : content}

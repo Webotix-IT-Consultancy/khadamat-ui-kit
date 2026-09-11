@@ -28,8 +28,21 @@
   }
 }
 
+/*
+ * KP1-I196 — the search box grew to fill whatever the toolbar had left.
+ *
+ * `flex: 1` alone means the box takes every pixel the other controls do not, so on a
+ * toolbar with few of them — the customer Enquiries list has only Rows-per-page and
+ * Filter — it stretched most of the way across the page and the row looked unbalanced.
+ * A cap lets it still SHRINK on a narrow screen (that is what `flex: 1` with a
+ * `min-width` is for) while refusing to keep growing past a sensible reading width.
+ *
+ * Reported against the Arabic list, but it was never language-specific: the same toolbar
+ * does it in English. Arabic labels are shorter, so there was simply more room left over.
+ */
 .mui-search-field {
   flex: 1;
+  max-width: 420px;
 }
 
 .mui-search-field .MuiOutlinedInput-root {
