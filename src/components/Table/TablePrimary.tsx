@@ -72,6 +72,43 @@ interface TablePrimaryProps<T> {
 const isBlank = (value: React.ReactNode) =>
     value === null || value === undefined || (typeof value === 'string' && value.trim() === '');
 
+/**
+ * KP1-I195 — a cell that holds WORDS reads in its own direction, not the page's.
+ *
+ * `text-align: start` (see the CSS) put every value back under its Arabic header, which is
+ * most of that ticket. What it cannot fix is a cell whose text is ENGLISH: under the page's
+ * `dir="rtl"` that run is still laid out right-to-left, so a `maxWidth` column truncates it
+ * at the wrong end — the Arabic Enquiries list showed `…f Skips: 1 | Skip Size: 8 CBM`, the
+ * BEGINNING of the sentence hidden behind the ellipsis, which is the "Description values are
+ * misaligned" half of the report.
+ *
+ * `unicode-bidi: plaintext` takes the paragraph direction from the cell's own first strong
+ * character, so English reads (and truncates) left-to-right and Arabic reads right-to-left —
+ * one rule, both languages, nothing for a call site to opt into.
+ *
+ * **Why not `dir="auto"`**, which resolves the same way: it also changes the computed
+ * `direction`, and `direction` is what `inset-inline-end` pins the sticky Action column by
+ * (KP1-I50) and what orders the flex row of row-action buttons. `plaintext` re-bases only the
+ * text and leaves `direction` alone, so neither of those moves.
+ *
+ * Applied to a CONSTRAINED cell whose rendered content is plain text containing a LETTER.
+ * Each of those three narrowings is load-bearing:
+ *
+ * - **Constrained (`maxWidth` / `wrap`) only.** An unclipped run of English is ALREADY laid
+ *   out left-to-right inside the RTL row — Latin letters are strong, the bidi algorithm gets
+ *   them right, and re-basing the paragraph would change nothing but the alignment. That is
+ *   a straight loss: it walks a name out from under its own Arabic header, which is the
+ *   complaint this ticket opens with. Only a cell with a width to overflow reads wrong.
+ * - **No letter, nothing to decide.** A `-` placeholder, a serial number, `+971 52...`,
+ *   `25.13, 55.23` are digits and bidi-NEUTRALS; UAX #9 P3 would default them to LTR and drag
+ *   a column of dashes to the far side of its own header for no gain. Their reading order is
+ *   already handled where it actually matters, by `dir="ltr"` on the value (KP1-I238).
+ * - **JSX is not text.** A status badge, or an actions cell, keeps the row's direction.
+ */
+const CONTAINS_LETTER = /\p{L}/u;
+const readsOwnDirection = (content: React.ReactNode, constrained: boolean) =>
+    constrained && typeof content === 'string' && CONTAINS_LETTER.test(content);
+
 const TablePrimary = <T extends Record<string, any>>({
     columns,
     data,
@@ -155,12 +192,22 @@ const TablePrimary = <T extends Record<string, any>>({
                                 {columns.map((column) => {
                                     const raw = row[column.key];
                                     const content = column.format ? column.format(raw, row, index) : raw;
+                                    // KP1-I195 — decided on what is actually RENDERED, so the
+                                    // `-` placeholder is judged too, not the raw value it stood in for.
+                                    const rendered = isBlank(content) ? emptyPlaceholder : content;
 
                                     return (
                                         <TableCell
                                             key={column.key as string}
                                             className={`table-primary-cell text-xs! sm:text-sm! lg:text-sm!${
                                                 column.wrap ? ' table-primary-cell-wrap' : ''
+                                            }${
+                                                readsOwnDirection(
+                                                    rendered,
+                                                    Boolean(column.maxWidth || column.wrap)
+                                                )
+                                                    ? ' table-primary-cell-auto-bidi'
+                                                    : ''
                                             }`}
                                             style={{
                                                 maxWidth: column.maxWidth,
@@ -179,7 +226,7 @@ const TablePrimary = <T extends Record<string, any>>({
                                                 overflowWrap: column.wrap ? 'break-word' : undefined,
                                             }}
                                         >
-                                            {isBlank(content) ? emptyPlaceholder : content}
+                                            {rendered}
                                         </TableCell>
                                     );
                                 })}

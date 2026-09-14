@@ -55,6 +55,25 @@
     text-align: start !important;
 }
 
+/*
+ * KP1-I195, second half — a cell of WORDS reads in its own direction, not the page's.
+ *
+ * Alignment alone is not enough: an ENGLISH description inside an `dir="rtl"` cell is still
+ * laid out right-to-left, so its `maxWidth` ellipsis eats the START of the sentence
+ * (`…f Skips: 1 | Skip Size: 8 CBM`). `plaintext` re-bases the paragraph on the cell's own
+ * first strong character — English left-to-right, Arabic right-to-left — WITHOUT touching
+ * the computed `direction`, which the sticky Action column (`inset-inline-end`) and the
+ * row-action flex row both depend on. `dir="auto"` would resolve the same and break those.
+ *
+ * The class is added by `TablePrimary.tsx` only to a WIDTH-CONSTRAINED cell whose rendered
+ * content is plain text containing a letter — an unclipped English run already reads
+ * left-to-right on its own, so re-basing it would move it out from under its header and buy
+ * nothing. The reasoning for each narrowing lives beside the helper there.
+ */
+.table-primary-cell-auto-bidi {
+    unicode-bidi: plaintext;
+}
+
 .table-primary-header-cell {
     font-family: 'Poppins', sans-serif !important;
     font-size: 12px !important;
@@ -223,7 +242,7 @@
     font-size: 14px !important;
     font-weight: 500 !important;
     color: hsl(var(--grey-600)) !important;
-    margin-right: auto;
+    /* margin-right: auto; */
     margin-inline-end: auto;
 }
 

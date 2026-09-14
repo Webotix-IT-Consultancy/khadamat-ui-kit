@@ -42,7 +42,9 @@
  */
 .mui-search-field {
   flex: 1;
-  max-width: 420px;
+  max-width: 100%;
+
+  /* max-width: 420px; */
 }
 
 .mui-search-field .MuiOutlinedInput-root {
