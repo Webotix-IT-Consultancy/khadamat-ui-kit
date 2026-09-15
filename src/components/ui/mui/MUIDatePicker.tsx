@@ -7,6 +7,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import { Calendar } from 'lucide-react';
 import ValidationMessage from '../../ValidationMessage/ValidationMessage';
 import useExclusivePicker from '../../../hooks/useExclusivePicker';
+import usePickerLocale from '../../../hooks/usePickerLocale';
 
 interface MUIDatePickerProps {
     value: string | null;
@@ -30,9 +31,12 @@ const MUIDatePicker: React.FC<MUIDatePickerProps> = ({
     helperText
 }) => {
     const picker = useExclusivePicker();
+    // KP1-I198: the calendar's month names come from the ADAPTER, not from a `t()` key.
+    const pickerLocale = usePickerLocale();
+
 
     return (
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={pickerLocale}>
             <div className={`form-field ${error ? 'has-error' : ''}`}>
                 {label && (
                     <div className="field-label">

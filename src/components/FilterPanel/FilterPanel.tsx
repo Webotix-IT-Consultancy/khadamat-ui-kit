@@ -16,6 +16,7 @@ import './FilterPanel.css';
 import Button from '../Button/Button';
 import { useTranslation } from 'react-i18next';
 import useExclusivePicker from '../../hooks/useExclusivePicker';
+import usePickerLocale from '../../hooks/usePickerLocale';
 
 // Extend dayjs to support custom formats like DD/MM/YYYY
 dayjs.extend(customParseFormat);
@@ -244,6 +245,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
    * called unconditionally because that mode is chosen at render time.
    */
   const fromPicker = useExclusivePicker();
+  // KP1-I198: the calendar's month names come from the ADAPTER, not from a `t()` key.
+  const pickerLocale = usePickerLocale();
+
   const toPicker = useExclusivePicker();
   const preferredDatePicker = useExclusivePicker();
   const preferredTimePicker = useExclusivePicker();
@@ -414,8 +418,31 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   ];
 
   return (
-    <Box className="filter-panel">
-      <LocalizationProvider dateAdapter={AdapterDayjs}>
+    <>
+      {/*
+        * KP1-I203's sibling, KP1-I205 — the page behind the drawer is DIMMED.
+        *
+        * `.filter-panel` is `position: fixed` and slides over the list, but nothing separated
+        * the two: the table stayed at full contrast behind it, so the panel read as part of
+        * the page rather than as a thing that had opened over it, and it was not obvious that
+        * the list underneath was no longer what you were interacting with.
+        *
+        * It lives HERE rather than in each caller because every listing screen in both portals
+        * mounts this same component, and a backdrop that half the screens had would be worse
+        * than none. Callers mount `FilterPanel` only while it is open, so its presence IS the
+        * open state — there is no `open` prop to gate this on.
+        *
+        * Clicking it closes, which is the same discard the ✕ already performs: filters are
+        * committed by Apply, so dismissing an unapplied panel loses nothing that was not
+        * already lost by ✕. `aria-hidden` because it is decorative — the ✕ is the accessible
+        * way out, and a screen-reader user should not meet a second nameless control.
+        *
+        * z-index 998 sits directly under the panel's 999 and well under MUI's portalled
+        * poppers (1300), so the date pickers this panel opens still render above both.
+        */}
+      <div className="filter-panel-backdrop" onClick={onClose} aria-hidden="true" />
+      <Box className="filter-panel">
+      <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={pickerLocale}>
         <div className="filter-panel-header">
           <button className="close-button" onClick={onClose}>
             <X size={24} />
@@ -779,7 +806,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           <Button variant="primary" className="apply-button" onClick={handleApply}>{t('common:buttons.apply')}</Button>
         </div>
       </LocalizationProvider>
-    </Box >
+      </Box >
+    </>
   );
 };
 

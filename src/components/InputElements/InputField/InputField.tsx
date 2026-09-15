@@ -85,6 +85,29 @@ const InputField = React.forwardRef(({
           onChange={onChange}
           onBlur={onBlur}
           required={required}
+          /*
+           * KP1-I200 — the FIELD reads in the direction of what is typed into it.
+           *
+           * Both portals take Arabic from users (an enquiry description, an address, a name)
+           * and the admin portal is `dir="ltr"` throughout, so without this an Arabic value sat
+           * left-aligned with its punctuation flung to the wrong end and the caret jumping —
+           * the same defect as the truncated table cell, on the surface where it is typed.
+           *
+           * `dir="auto"` rather than the dominant-script rule the table uses (`utils/bidi`),
+           * and the difference is deliberate: a table cell holds a FINISHED value, so counting
+           * its letters is both possible and stable, while a field is re-evaluated on every
+           * keystroke and a direction that flipped once the Arabic outweighed the Latin would
+           * move the caret out from under the user mid-word. `dir="auto"` settles on the first
+           * strong character typed and then holds still, which is what every RTL-aware editor
+           * does.
+           *
+           * It also must NOT be the mark-prepending trick: that injects a character into the
+           * value, and here the value is submitted.
+           *
+           * Before `{...props}` on purpose — a field that must stay one direction whatever it
+           * holds (an IBAN, a code) passes its own `dir` and wins.
+           */
+          dir="auto"
           {...props}
           ref={ref}
           className="input-element"

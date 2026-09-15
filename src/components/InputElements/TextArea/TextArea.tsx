@@ -27,7 +27,12 @@ const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(({
                 </div>
             )}
             <div className={`textarea-wrapper ${error ? 'textarea-wrapper-error' : ''}  focus:outline-none focus-within:ring-4 focus-within:ring-primary-light focus-within:border-primary border-primary`}>
+                {/* KP1-I200 — the textarea reads in the direction of what is typed. Same
+                    reasoning, and the same `dir="auto"`-not-dominant-script choice, as
+                    InputField: the enquiry Description is a textarea, and it is where this
+                    was reported. `dir` sits before the spread so a caller can pin one. */}
                 <textarea
+                    dir="auto"
                     {...props}
                     ref={ref}
                     className="textarea-element"

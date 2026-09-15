@@ -7,6 +7,7 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { Clock } from 'lucide-react';
 import ValidationMessage from '../../ValidationMessage/ValidationMessage';
 import useExclusivePicker from '../../../hooks/useExclusivePicker';
+import usePickerLocale from '../../../hooks/usePickerLocale';
 
 dayjs.extend(customParseFormat);
 
@@ -33,9 +34,12 @@ const MUITimePicker: React.FC<MUITimePickerProps> = ({
     const timeValue = value ? dayjs(value, 'HH:mm') : null;
 
     const picker = useExclusivePicker();
+    // KP1-I198: the clock's meridiem and labels come from the ADAPTER, not from a `t()` key.
+    const pickerLocale = usePickerLocale();
+
 
     return (
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={pickerLocale}>
             <div className={`form-field ${error ? 'has-error' : ''}`}>
                 {label && (
                     <div className="field-label">

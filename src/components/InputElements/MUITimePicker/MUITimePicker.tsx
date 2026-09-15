@@ -8,6 +8,7 @@ import { Clock } from 'lucide-react';
 import '../FormField.css';
 import ValidationMessage from '../../ValidationMessage/ValidationMessage';
 import useExclusivePicker from '../../../hooks/useExclusivePicker';
+import usePickerLocale from '../../../hooks/usePickerLocale';
 import pickerFieldSx from '../pickerFieldSx';
 
 dayjs.extend(customParseFormat);
@@ -37,9 +38,12 @@ const MUITimePicker: React.FC<MUITimePickerProps> = ({
     // KP1-I77: shares the slot with the date pickers — a clock popup and a calendar popup
     // are the same defect when both are on screen (On-Call Request has them side by side).
     const picker = useExclusivePicker();
+    // KP1-I198: the clock's meridiem and labels come from the ADAPTER, not from a `t()` key.
+    const pickerLocale = usePickerLocale();
+
 
     return (
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={pickerLocale}>
             <div className={`form-field ${error ? 'has-error' : ''}`}>
                 {label && (
                     <div className="field-label">

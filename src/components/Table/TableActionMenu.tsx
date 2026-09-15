@@ -90,6 +90,10 @@ const TableActionMenu: React.FC<TableActionMenuProps> = ({
                 className="mui-search-field flex-1 min-w-[200px]!"
                 value={searchQuery}
                 onChange={handleSearchChange}
+                /* KP1-I200 — the box reads in the direction of what is typed. A list is
+                   searched by the same Arabic the rows hold, and MUI renders its own
+                   <input>, so `dir` has to be handed down through inputProps. */
+                inputProps={{ dir: 'auto' }}
                 InputProps={{
                     startAdornment: (
                         <InputAdornment position="start">

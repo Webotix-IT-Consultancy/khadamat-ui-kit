@@ -412,6 +412,11 @@ const MUIAutocomplete: React.FC<MUIAutocompleteProps> = ({
                         variant="outlined"
                         size="medium"
                         fullWidth
+                        /* KP1-I200 — the typed search term reads in its own direction. Merged
+                           onto MUI's own `inputProps` rather than replacing them: they carry
+                           the Autocomplete's a11y wiring, and dropping those breaks the
+                           listbox. */
+                        inputProps={{ ...params.inputProps, dir: 'auto' }}
                         slotProps={{
                             input: {
                                 ...params.InputProps,

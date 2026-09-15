@@ -7,6 +7,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import { Calendar } from 'lucide-react';
 import ValidationMessage from '../../ValidationMessage/ValidationMessage';
 import useExclusivePicker from '../../../hooks/useExclusivePicker';
+import usePickerLocale from '../../../hooks/usePickerLocale';
 import pickerFieldSx from '../pickerFieldSx';
 
 interface MUIDatePickerProps {
@@ -33,9 +34,12 @@ const MUIDatePicker: React.FC<MUIDatePickerProps> = ({
     // KP1-I77: one picker popup on screen at a time — see the hook for why MUI's own
     // click-away cannot be relied on for this.
     const picker = useExclusivePicker();
+    // KP1-I198: the calendar's month names come from the ADAPTER, not from a `t()` key.
+    const pickerLocale = usePickerLocale();
+
 
     return (
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={pickerLocale}>
             <div className={`form-field ${error ? 'has-error' : ''}`}>
                 {label && (
                     // `input-label` alongside `field-label` (KP1-I107/I108): both are styled

@@ -6,6 +6,29 @@
  * fourth field) or a short/zoomed viewport pushed Clear and Apply below the fold with
  * nothing to scroll. Same root cause the tester hit at 100% zoom.
  */
+/*
+ * KP1-I205 — the page behind the filter drawer is dimmed.
+ *
+ * Rendered by FilterPanel itself, which callers mount only while the panel is open, so there
+ * is no open/closed state to express here.
+ *
+ * `z-index: 998` is deliberate and sits in a three-level stack: the backdrop, the panel at
+ * 999, and MUI's portalled poppers at 1300. The panel's own date pickers therefore still open
+ * ABOVE both, which is what KP1-I57 spent its effort on — a backdrop that covered them would
+ * undo it.
+ *
+ * No transition: the drawer itself does not animate in, and dimming on a fade while the panel
+ * appears instantly reads as a lag rather than a polish. If the drawer ever gains a slide,
+ * give this the same duration.
+ */
+.filter-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.50);
+  z-index: 998;
+  margin: 0;
+}
+
 .filter-panel {
   display: flex;
   flex-direction: column;

@@ -303,3 +303,21 @@
         font-size: 12px !important;
     }
 }
+/*
+ * KP1-I203 — the "no records found" row.
+ *
+ * Deliberately NOT `.table-primary-cell`: that class is what `stickyLastColumn` pins
+ * (`td.table-primary-cell:last-child`), and this cell spans the entire row, so inheriting it
+ * would float the message over the table as it scrolls sideways. It also has no business
+ * carrying that class's `white-space: nowrap` — a message is prose, not a value.
+ *
+ * Sized to read as a state rather than a row: the vertical padding is what stops it looking
+ * like a single blank record, which is the confusion the ticket reports.
+ */
+.table-primary-empty-cell {
+    padding: 3rem 1rem !important;
+    text-align: center !important;
+    color: hsl(var(--muted-foreground)) !important;
+    font-size: 0.875rem !important;
+    border-bottom: none !important;
+}
