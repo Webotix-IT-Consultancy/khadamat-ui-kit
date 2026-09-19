@@ -2,7 +2,7 @@ import React from 'react';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { Clock } from 'lucide-react';
 import '../FormField.css';
@@ -21,6 +21,17 @@ interface MUITimePickerProps {
     disabled?: boolean;
     required?: boolean;
     helperText?: string;
+    /**
+     * The earliest time this picker will accept (KP1-I489).
+     *
+     * Passed straight to MUI's `TimePicker`, which greys the hours and minutes before it rather
+     * than letting them be chosen and refused afterwards. The caller decides when it applies —
+     * on a "preferred date and time" pair it is only meaningful when the chosen DATE is today,
+     * so passing `undefined` on any other day is the correct use, not a missing bound.
+     */
+    minTime?: Dayjs;
+    /** The latest time, same contract. Unused today; here so the pair is not half a control. */
+    maxTime?: Dayjs;
 }
 
 const MUITimePicker: React.FC<MUITimePickerProps> = ({
@@ -30,7 +41,9 @@ const MUITimePicker: React.FC<MUITimePickerProps> = ({
     error,
     disabled = false,
     required = false,
-    helperText
+    helperText,
+    minTime,
+    maxTime
 }) => {
     // Handle time value string "HH:mm" to Dayjs object
     const timeValue = value ? dayjs(value, 'HH:mm') : null;
@@ -54,6 +67,8 @@ const MUITimePicker: React.FC<MUITimePickerProps> = ({
                 <TimePicker
                     value={timeValue}
                     onChange={(newValue) => onChange(newValue ? newValue.format('HH:mm') : null)}
+                    minTime={minTime}
+                    maxTime={maxTime}
                     open={picker.open}
                     onOpen={picker.onOpen}
                     onClose={picker.onClose}

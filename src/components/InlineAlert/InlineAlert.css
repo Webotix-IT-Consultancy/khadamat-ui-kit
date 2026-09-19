@@ -1,0 +1,70 @@
+/*
+ * The static alert. Plain CSS on design tokens, co-located with the component — a portal
+ * stylesheet cannot reach a shared component rendered in the other portal.
+ *
+ * Every tone draws its border and background from its OWN colour at low alpha rather than from
+ * `--border`, which `body.admin-theme` overrides (green in the customer portal, gold in admin).
+ * A danger alert outlined in gold on one portal and green on the other is the drift this
+ * component exists to end.
+ */
+.inline-alert {
+    display: flex;
+    align-items: flex-start;
+    /* `gap` is direction-agnostic, so the icon leads the text in LTR and trails it in the
+       customer portal's Arabic with no logical-property juggling. */
+    gap: 0.625rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.45;
+    /* The message is prose and may be long; it wraps rather than stretching the container. */
+    overflow-wrap: anywhere;
+}
+
+.inline-alert-icon {
+    flex-shrink: 0;
+    /* Optically centres an 18px icon on the first line of 0.875rem/1.45 text. */
+    margin-top: 0.0625rem;
+    line-height: 0;
+}
+
+.inline-alert-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+}
+
+.inline-alert-title {
+    font-weight: 700;
+}
+
+/* --- tones -------------------------------------------------------------------------------
+   `--destructive`, `--warning-*` and `--success*` are defined once in `:root` and are NOT
+   overridden by `body.admin-theme`, so these four blocks render identically in both portals. */
+
+.inline-alert-danger {
+    color: hsl(var(--destructive));
+    border-color: hsl(var(--destructive));
+    background-color: hsl(var(--destructive) / 0.1);
+}
+
+.inline-alert-warning {
+    color: hsl(var(--warning-banner-text));
+    border-color: hsl(var(--warning-banner-text) / 0.45);
+    background-color: hsl(var(--warning-bg));
+}
+
+.inline-alert-success {
+    color: hsl(var(--success));
+    border-color: hsl(var(--success) / 0.45);
+    background-color: hsl(var(--success-light));
+}
+
+.inline-alert-info {
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--foreground) / 0.2);
+    background-color: hsl(var(--muted));
+}
