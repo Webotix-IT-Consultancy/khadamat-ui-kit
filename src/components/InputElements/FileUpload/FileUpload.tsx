@@ -6,6 +6,94 @@ import '../FormField.css';
 import ValidationMessage from '../../ValidationMessage/ValidationMessage';
 
 /**
+ * KP1-I496 — what counts as an acceptable file.
+ *
+ * This used to be `acceptedTypes.includes(file.type)`: one exact string match against the MIME
+ * type the BROWSER guessed, which refuses a valid file in three ordinary situations.
+ *
+ * 1. **`file.type` is often `''`.** The browser derives it from the OS file-association
+ *    registry, so a machine with no PDF reader installed — or a file dragged off a network
+ *    share, or one whose extension is not registered — hands us an EMPTY type. An exact match
+ *    against `''` fails every time, and the user is told their PDF is "an unsupported file
+ *    format" while looking at a file named `.pdf`.
+ * 2. **Non-standard aliases exist.** Some Windows configurations and older Android browsers
+ *    report `image/jpg` (not a registered type — the real one is `image/jpeg`) and
+ *    `image/pjpeg`. Both are JPEGs and both were refused.
+ * 3. **`accept` syntax was only half supported.** The HTML `accept` attribute — which this
+ *    same string is handed to on the `<input>` below — takes extensions (`.pdf`) and wildcards
+ *    (`image/*`) as well as MIME types. `file.type` is never literally `image/*`, so any
+ *    caller using the attribute's own documented syntax had its file dialog filter correctly
+ *    and then reject everything the user picked.
+ *
+ * So the type is NORMALISED, falls back to the **extension** when the browser gave us nothing,
+ * and the accept list understands all three forms. This is the same lesson KP1-I129 taught
+ * `isImageFile`, which grew a file-name fallback for exactly this reason — one copy of the
+ * rule missed it and every stored photo fell through to a document icon.
+ *
+ * **It only ever widens.** Every file accepted before is still accepted; the extension is
+ * consulted only when the MIME type is absent or unrecognised, so this cannot start admitting
+ * a type a caller excluded. The SERVER still inspects the uploaded bytes and is the real gate
+ * — `/files/categories` says so outright — and a client-side check that refuses valid work is
+ * strictly worse than one that lets a doomed upload reach the endpoint that can judge it.
+ */
+const MIME_ALIASES: Record<string, string> = {
+    'image/jpg': 'image/jpeg',
+    'image/pjpeg': 'image/jpeg',
+    'application/x-pdf': 'application/pdf',
+    'application/acrobat': 'application/pdf',
+};
+
+/** The extensions worth naming — every format these portals actually upload. */
+const EXTENSION_MIME: Record<string, string> = {
+    pdf: 'application/pdf',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    gif: 'image/gif',
+    webp: 'image/webp',
+    heic: 'image/heic',
+    heif: 'image/heif',
+    doc: 'application/msword',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    xls: 'application/vnd.ms-excel',
+    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    csv: 'text/csv',
+    txt: 'text/plain',
+};
+
+const extensionOf = (name: string): string => {
+    const parts = (name || '').toLowerCase().split('.');
+    return parts.length > 1 ? parts.pop() ?? '' : '';
+};
+
+const normaliseMime = (type: string): string => {
+    const lower = (type || '').toLowerCase().trim();
+    return MIME_ALIASES[lower] ?? lower;
+};
+
+/**
+ * Does this file match one of the `accept` entries?
+ *
+ * An empty accept list means "anything" — the same as omitting the attribute.
+ */
+export const fileMatchesAccept = (file: File, accepted: string[]): boolean => {
+    const entries = accepted.filter(Boolean);
+    if (!entries.length) return true;
+
+    const extension = extensionOf(file.name);
+    /* The browser first; the extension only when it said nothing useful. */
+    const mime = normaliseMime(file.type) || EXTENSION_MIME[extension] || '';
+
+    return entries.some((entry) => {
+        const rule = entry.toLowerCase().trim();
+        if (rule.startsWith('.')) return rule.slice(1) === extension;
+        if (rule.endsWith('/*')) return !!mime && mime.startsWith(rule.slice(0, -1));
+        return normaliseMime(rule) === mime;
+    });
+};
+
+
+/**
  * Opens an uploaded file in a new tab.
  *
  * Files picked here are held as `data:` URLs (FileReader), and Chrome refuses
@@ -197,7 +285,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
     /** `''` when the file is acceptable, otherwise the reason. */
     const reject = (file: File): string => {
-        if (!acceptedTypes.includes(file.type)) {
+        // KP1-I496: matches by MIME, by wildcard, or by extension — see `fileMatchesAccept`.
+        if (!fileMatchesAccept(file, acceptedTypes)) {
             return t('fileUpload.errors.format', { defaultValue: 'Unsupported file format' });
         }
         if (file.size > maxSizeMB * 1024 * 1024) {
