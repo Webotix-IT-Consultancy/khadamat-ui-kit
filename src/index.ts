@@ -16,7 +16,18 @@ export { useSidebarStore } from './store/useSidebarStore';
 
 export { usePageTitle } from './hooks/usePageTitle';
 
+export { usePaginatedOptions, DEFAULT_OPTION_PAGE_SIZE } from './hooks/usePaginatedOptions';
+export type {
+    PaginatedOption,
+    PaginatedOptionsSource,
+    OptionPage,
+    OptionPageFetcher,
+    OptionQuery,
+    UsePaginatedOptionsConfig,
+} from './hooks/usePaginatedOptions';
+
 export { cn } from './lib/utils';
 
 export * from './utils/exportTable';
 export * from './utils/receiptGenerator';
+export * from './utils/phone';

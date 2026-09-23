@@ -25,7 +25,7 @@ const PopupPrimary: React.FC<PopupPrimaryProps> = ({
             maxWidth={width}
             fullWidth
             PaperProps={{
-                className: 'rounded-2xl! bg-white p-0 relative overflow-hidden', // Tailwind classes for Paper
+                className: 'rounded-2xl! bg-white p-0 relative overflow-hidden! ', // Tailwind classes for Paper
                 elevation: 0,
             }}
             slotProps={{

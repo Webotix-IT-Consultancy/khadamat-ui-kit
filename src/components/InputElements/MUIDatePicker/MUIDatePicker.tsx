@@ -2,17 +2,19 @@ import React from 'react';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { TextField } from '@mui/material';
+import '../FormField.css';
 import dayjs, { Dayjs } from 'dayjs';
 import { Calendar } from 'lucide-react';
 import ValidationMessage from '../../ValidationMessage/ValidationMessage';
-<<<<<<< Updated upstream
-=======
+
 import useExclusivePicker from '../../../hooks/useExclusivePicker';
 import usePickerLocale from '../../../hooks/usePickerLocale';
 import pickerFieldSx from '../pickerFieldSx';
 import pickerCalendarSx, { pickerPopperProps } from '../pickerCalendarSx';
->>>>>>> Stashed changes
+
+import useExclusivePicker from '../../../hooks/useExclusivePicker';
+import usePickerLocale from '../../../hooks/usePickerLocale';
+import pickerFieldSx from '../pickerFieldSx';
 
 interface MUIDatePickerProps {
     value: string | null;
@@ -35,20 +37,29 @@ const MUIDatePicker: React.FC<MUIDatePickerProps> = ({
     minDate,
     helperText
 }) => {
+    // KP1-I77: one picker popup on screen at a time — see the hook for why MUI's own
+    // click-away cannot be relied on for this.
+    const picker = useExclusivePicker();
+    // KP1-I198: the calendar's month names come from the ADAPTER, not from a `t()` key.
+    const pickerLocale = usePickerLocale();
+
+
     return (
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={pickerLocale}>
             <div className={`form-field ${error ? 'has-error' : ''}`}>
                 {label && (
-                    <div className="field-label">
+                    // `input-label` alongside `field-label` (KP1-I107/I108): both are styled
+                    // identically now, but carrying the pair keeps this label matching
+                    // MUIAutocomplete's markup exactly.
+                    <div className="field-label input-label">
                         <label>{label}</label>
-                        {required && <span className="required-indicator">*</span>}
+                        {required && <span className="required-mark">*</span>}
                     </div>
                 )}
                 <DatePicker
                     value={value ? dayjs(value) : null}
                     onChange={(newValue) => onChange(newValue ? newValue.format('YYYY-MM-DD') : null)}
-<<<<<<< Updated upstream
-=======
+
                     // KP1-I95: without `format`, MUI X takes its display pattern from the
                     // adapter's locale — and AdapterDayjs with no `adapterLocale` is dayjs's
                     // default `en`, i.e. MM/DD/YYYY. Every date field in both portals rendered
@@ -70,11 +81,13 @@ const MUIDatePicker: React.FC<MUIDatePickerProps> = ({
                      * so the box popper measures is the box the user sees.
                      */
                     reduceAnimations
->>>>>>> Stashed changes
                     disabled={disabled}
                     minDate={minDate}
                     slots={{
-                        openPickerIcon: () => <Calendar size={20} color="#016937" />,
+                        // KP1-I109: was the literal #016937 — `:root --primary`, i.e. the
+                        // CUSTOMER portal's green — so this icon stayed green inside the
+                        // admin portal's gold theme. Same token InputField's icons use.
+                        openPickerIcon: () => <Calendar size={20} color="hsl(var(--primary))" />,
                     }}
                     slotProps={{
                         /*
@@ -96,30 +109,21 @@ const MUIDatePicker: React.FC<MUIDatePickerProps> = ({
                         textField: {
                             fullWidth: true,
                             error: !!error,
-                            placeholder: 'DD/MM/YYYY',
-                            sx: {
-                                '& .MuiOutlinedInput-root': {
-                                    borderRadius: '10px',
-                                    backgroundColor: disabled ? '#ECECEC' : '#fff',
-                                    '& fieldset': {
-                                        borderColor: error ? '#FF3232' : '#CCC9C4',
-                                        borderWidth: '2px',
-                                    },
-                                    '&:hover:not(.Mui-disabled) fieldset': {
-                                        borderColor: error ? '#FF3232' : '#016937 !important',
-                                        borderWidth: '2px',
-                                    },
-                                    '&.Mui-focused fieldset': {
-                                        borderColor: '#016937 !important',
-                                        borderWidth: '2px',
-                                    },
-                                },
-                                '& .MuiInputBase-input': {
-                                    fontSize: '16px',
-                                    fontFamily: "'Poppins', sans-serif",
-                                    color: '#000',
-                                }
-                            }
+                            /**
+                             * KP1-I152: this block used to spell out the whole look against
+                             * `.MuiOutlinedInput-root` / `.MuiInputBase-input` — classes
+                             * `@mui/x-date-pickers` v8 no longer renders, so none of it
+                             * applied and the field fell back to MUI's stock 56px/4px/Roboto
+                             * outline. It now shares one definition with MUITimePicker;
+                             * `pickerFieldSx` documents the DOM change and mirrors
+                             * `.input-wrapper` in InputField.css (KP1-I99, I107/I108, I109).
+                             *
+                             * The old `placeholder: 'DD/MM/YYYY'` went with it: the accessible
+                             * field has no <input> to carry a placeholder, and the empty
+                             * sections already render the `format` above — DD/MM/YYYY — which
+                             * is what was actually on screen the whole time.
+                             */
+                            sx: pickerFieldSx({ error: !!error, disabled }),
                         },
                     }}
                 />

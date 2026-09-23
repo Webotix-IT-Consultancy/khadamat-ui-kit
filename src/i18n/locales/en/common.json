@@ -1,5 +1,5 @@
 {
-<<<<<<< Updated upstream
+
     "buttons": {
         "login": "Login",
         "submit": "Submit",
@@ -95,7 +95,7 @@
     },
     "currency": "AED"
 }
-=======
+
   "buttons": {
     "login": "Login",
     "submit": "Submit",
@@ -220,4 +220,4 @@
     }
   }
 }
->>>>>>> Stashed changes
+

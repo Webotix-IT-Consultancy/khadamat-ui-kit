@@ -1,5 +1,5 @@
 {
-<<<<<<< Updated upstream
+
     "buttons": {
         "login": "تسجيل الدخول",
         "submit": "إرسال",
@@ -94,7 +94,7 @@
     },
     "currency": "درهم"
 }
-=======
+
   "buttons": {
     "login": "تسجيل الدخول",
     "submit": "إرسال",
@@ -217,4 +217,4 @@
     }
   }
 }
->>>>>>> Stashed changes
+

@@ -64,16 +64,7 @@
  * redden.
  */
 
-/*
- * KP1-I532: the helper line under a control — the rule a field obeys, said BEFORE
- * the user runs into it (the On Hold preferred date, which may not be in the past).
- *
- * `MUIDatePicker` and `MUITimePicker` have rendered `<p class="helper-text">` since
- * they were written and nothing ever styled it, so the first call site to pass
- * `helperText` would have got a browser-default paragraph — 16px with 1em margins —
- * shoving the field out of its row. It mirrors `.validation-message`, which occupies
- * the same slot and never shows at the same time.
- */
+
 .helper-text {
     color: hsl(var(--muted-foreground));
     font-size: 12px;

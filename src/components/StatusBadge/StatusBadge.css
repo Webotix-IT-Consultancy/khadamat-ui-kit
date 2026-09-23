@@ -1,3 +1,22 @@
+/*
+ * A FIXED TONE PALETTE — no status name appears in this file.
+ *
+ * This file used to carry one rule per status (`.status-badge-secured`,
+ * `.status-badge-awaiting-signatures`, …), which meant every new status needed new CSS
+ * and left near-duplicates behind: `lost` and `cancelled` were byte-identical, `paid`
+ * and `success` shared a rule, and three greens differed by a shade nobody could see.
+ *
+ * Now StatusBadge.tsx maps a status onto one of the tones below. Adding a status is one
+ * line in that map and ZERO css. Adding a tone here should be rare — if a new status
+ * needs a colour that is not already in this list, that is a design question, not a
+ * styling one.
+ *
+ * Weights: a bare tone is the solid fill (light text); `-soft` is the tinted fill with
+ * strong text; `-light` is the token-driven pair used by `variant="light"`, which is
+ * theme-aware (the two portals resolve those tokens differently) and therefore cannot
+ * be folded into `-soft`.
+ */
+
 .status-badge {
   display: inline-flex;
   padding: 0.125rem 0.5625rem;
@@ -5,81 +24,116 @@
   align-items: center;
   border-radius: 12px;
   font-family: Poppins, -apple-system, sans-serif;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 400;
   white-space: nowrap;
 }
 
-.status-badge-in-progress {
-  background: #06e880;
-  color: #016937;
-}
+/* ── Solid tones ─────────────────────────────────────────────────────────── */
 
-.status-badge-scheduled {
-  background: #fff1c2;
-  color: #947b3f;
-}
-
-.status-badge-completed {
-  background: #ebffee;
-  color: #016937;
-}
-
-.status-badge-paid,
+/* KP1-I59: #049351 is the literal Figma green, sampled from the Enquiry export. */
 .status-badge-success {
-  background: hsl(152, 96%, 38%);
+  background: #049351;
   color: #fff;
-
 }
 
-.status-badge-pending {
+.status-badge-warning {
   background: hsl(var(--tertiary));
   color: hsl(var(--white));
 }
 
-.status-badge-failed {
+.status-badge-danger {
   background: hsl(var(--danger));
   color: hsl(var(--white));
 }
 
-.status-badge-active {
-  background: #009951;
-  color: #fff;
+/*
+ * "Work underway" — deliberately NOT the same as the lifecycle in-progress below.
+ * The FRD gives both states the name "In Progress"; they are different things
+ * (on-call work has started vs. a contract has not left the first stage yet).
+ */
+.status-badge-progress {
+  background: #06e880;
+  color: #016937;
 }
 
-.status-badge-secured {
-  background: #bf9f54;
-  color: #fff;
+.status-badge-neutral {
+  background: hsl(var(--grey-100));
+  color: hsl(var(--grey-600));
 }
 
-.status-badge-lost {
+/*
+ * The admin theme's primary gold, as a LITERAL — deliberately NOT `hsl(var(--primary))`.
+ *
+ * `--primary` is theme-scoped: it is this gold under `body.admin-theme`, but a deep green
+ * (156 98% 21%) in the customer portal's `:root`. A token here would therefore paint the
+ * enquiry Active chip green in the customer portal — putting it straight back beside
+ * `secured`, which is the collision this tone exists to resolve. The chip has to read the
+ * same in both portals, so the value is fixed rather than themed. This is the one place in
+ * the file where that is true, hence the note.
+ *
+ * Dark text, not the white that `--primary-foreground` pairs with gold elsewhere: white on
+ * this background is 2.6:1 and fails WCAG AA for 14px text. #3b2e0e is ~6:1.
+ */
+.status-badge-gold {
+  background: hsl(41 53% 52%);
+  color: #3b2e0e;
+}
+
+/* ── Soft tones ──────────────────────────────────────────────────────────── */
+
+.status-badge-success-soft {
+  background: #ebffee;
+  color: #016937;
+}
+
+.status-badge-warning-soft {
+  background: #fff1c2;
+  color: #947b3f;
+}
+
+.status-badge-danger-soft {
   background: #fee9e7;
   color: #ff3232;
 }
 
+.status-badge-info-soft {
+  background: #e7f0ff;
+  color: #1666d8;
+}
 
-/* Light status badge */
-.status-badge-light.status-badge-success {
+.status-badge-violet-soft {
+  background: #f1e9fe;
+  color: #7a3ec8;
+}
+
+/* ── Light tones (variant="light"; token-driven, so they follow the portal theme) ── */
+
+.status-badge-success-light {
   background: hsl(var(--success-light));
   color: hsl(var(--success));
 }
-.status-badge-light.status-badge-pending {
+
+.status-badge-warning-light {
   background: hsl(var(--tertiary-light));
   color: hsl(var(--tertiary));
 }
-.status-badge-light.status-badge-failed {
+
+.status-badge-danger-light {
   background: hsl(var(--danger-light));
   color: hsl(var(--danger));
 }
-.status-badge-light.status-badge-orange {
+
+.status-badge-orange-light {
   background: hsl(var(--orange-light));
   color: hsl(var(--orange));
 }
 
-.status-badge-light.status-badge-primary {
+.status-badge-primary-light {
   background: hsl(var(--primary-light));
   color: hsl(var(--primary-600));
 }
+
 @media (max-width: 640px) {
   .status-badge {
     font-size: 12px;

@@ -16,6 +16,8 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import './FilterPanel.css';
 import Button from '../Button/Button';
 import { useTranslation } from 'react-i18next';
+import useExclusivePicker from '../../hooks/useExclusivePicker';
+import usePickerLocale from '../../hooks/usePickerLocale';
 
 // Extend dayjs to support custom formats like DD/MM/YYYY
 dayjs.extend(customParseFormat);
@@ -27,10 +29,31 @@ export interface FilterOption {
   value: string;
 }
 
+/**
+ * A caller-defined filter dropdown. Use these via the `fields` prop when a module's
+ * filters should be driven by its own table columns rather than by one of the
+ * hardcoded `mode` layouts below.
+ */
+export interface FilterFieldConfig {
+  /** Key written into the applied FilterValues, e.g. 'status'. */
+  key: string;
+  label: string;
+  /** Column values to offer. Include an "All" entry with value '' if you want one. */
+  options: FilterOption[];
+  placeholder?: string;
+}
+
 interface FilterPanelProps {
   onClose: () => void;
   onApply: (filters: FilterValues) => void;
   mode?: FilterMode;
+  /**
+   * Caller-defined dropdowns, rendered under the From/To date range instead of a
+   * `mode` layout. Prefer this for new modules: `mode` hardcodes each module's
+   * options inside this package, which does not scale and cannot reflect live data.
+   * When `fields` is set, `mode` is ignored.
+   */
+  fields?: FilterFieldConfig[];
   /**
    * Supervisor choices for `mode="enquiry"`. Sourced from the Employee Master by
    * the caller, since this package has no data layer. An "Unassigned" entry is
@@ -39,9 +62,23 @@ interface FilterPanelProps {
   supervisorOptions?: FilterOption[];
   /** Seeds the form so a reopened panel shows the filters already in effect. */
   initialValues?: Partial<FilterValues>;
+  /** Overrides the From/To date labels, e.g. "Start Date From". */
+  dateLabels?: { from?: string; to?: string };
+  /**
+   * KP1-I78: the From/To range filters records that ALREADY EXIST, so by default
+   * nothing after today can be picked — a future range can only ever return an empty
+   * table.
+   *
+   * Opt out when the range targets a date that legitimately looks forward. Today that
+   * is exactly one caller: the admin Contract list filters on `startDate`, and a
+   * contract can be created now to start next month.
+   */
+  allowFutureDates?: boolean;
 }
 
 export interface FilterValues {
+  /** Keys supplied via `fields` land here alongside the built-in ones. */
+  [key: string]: string | undefined;
   fromDate: string;
   toDate: string;
   projectService?: string;
@@ -62,13 +99,15 @@ export interface FilterValues {
   enquiryType?: string;
 }
 
-// Styled MUI components to match the project's theme
+// Styled MUI components to match the project's theme.
+// KP1-I75: 52px/16px fields made the panel taller than the viewport; 44px/14px keeps
+// them readable while the whole set fits without stretching.
 const StyledTextField = styled(TextField)({
   '& .MuiOutlinedInput-root': {
-    height: '52px',
+    height: '44px',
     borderRadius: '10px',
     fontFamily: "'Poppins', sans-serif",
-    fontSize: '16px',
+    fontSize: '14px',
     backgroundColor: '#FFF',
     '& fieldset': {
       borderColor: 'hsl(var(--primary))',
@@ -87,11 +126,11 @@ const StyledTextField = styled(TextField)({
   },
 });
 
-const StyledAutocomplete = styled(Autocomplete)({
+const AutocompleteBase = styled(Autocomplete)({
   width: '100%',
   '& .MuiOutlinedInput-root': {
     padding: '0 12px', // Adjust padding for Autocomplete
-    height: '52px',
+    height: '44px',
     borderRadius: '10px',
     backgroundColor: '#FFF',
     border: 'none', // Remove native border to use fieldset border
@@ -108,10 +147,62 @@ const StyledAutocomplete = styled(Autocomplete)({
   },
   '& .MuiAutocomplete-input': {
     fontFamily: "'Poppins', sans-serif",
-    fontSize: '16px',
+    fontSize: '14px',
     color: '#000',
   }
 });
+
+/**
+ * KP1-I57: an Autocomplete's option list is portaled to <body> and positioned against
+ * the viewport, so nothing about this panel's own layout stopped it from opening
+ * straight over the Clear/Apply bar that KP1-I75 pinned to the bottom.
+ *
+ * Two constraints make that impossible, and they belong on the base component rather
+ * than on each call site so any dropdown added here later inherits them:
+ *  - `preventOverflow` on the alt (vertical) axis, whose default boundary is the
+ *    reference's clipping parents — i.e. `.filter-panel-content`, the scrolling field
+ *    area whose bottom edge is exactly where the action bar starts. The list is kept
+ *    inside it instead of running past it.
+ *  - a height cap, so a long list still fits ABOVE the field when `flip` sends it
+ *    there rather than being clamped on top of its own input.
+ */
+const OPTION_LIST_MAX_HEIGHT = 176; // ~4.5 rows; short enough to fit either side of a field
+
+/**
+ * A component, not a string: `StyledAutocomplete` is defined at module scope where
+ * `useTranslation` cannot be called, and the panel's own `t` is scoped inside the
+ * FilterPanel function below (KP1-I91).
+ */
+const NoMatchesText: React.FC = () => {
+  const { t } = useTranslation(['common']);
+  return <>{t('common:emptyStates.noMatches', 'No matches found')}</>;
+};
+
+const StyledAutocomplete: React.FC<any> = (props) => (
+  <AutocompleteBase
+    /**
+     * KP1-I91: "No matches found" rather than MUI's bare "No options", for every dropdown
+     * in this panel at once — the ticket asks for it on any field searched with data that
+     * matches nothing, not just the Enquiry form's Area Name.
+     *
+     * Set here on the base rather than per call site so a filter added later inherits it,
+     * and overridable by a caller that passes its own. The default sits in the shared
+     * `common` namespace; the literal is i18next's defaultValue so a missing key can never
+     * render as raw text (KP1-I56).
+     */
+    noOptionsText={props.noOptionsText ?? <NoMatchesText />}
+    slotProps={{
+      listbox: { sx: { maxHeight: `${OPTION_LIST_MAX_HEIGHT}px` } },
+      popper: {
+        modifiers: [
+          { name: 'flip', enabled: true, options: { padding: 8 } },
+          { name: 'preventOverflow', enabled: true, options: { padding: 8, altAxis: true } },
+        ],
+      },
+    }}
+    {...props}
+  />
+);
 
 /** Every field empty — an empty string means "All" for a given filter. */
 const EMPTY_FILTERS: FilterValues = {
@@ -135,12 +226,64 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   onClose,
   onApply,
   mode = 'transaction',
+  fields,
   supervisorOptions = [],
-  initialValues
+  initialValues,
+  dateLabels,
+  allowFutureDates = false
 }) => {
   const { t } = useTranslation(['transactions', 'invoice', 'common', 'adminEnquiries']);
 
   const [filters, setFilters] = useState<FilterValues>({ ...EMPTY_FILTERS, ...initialValues });
+
+  /**
+   * KP1-I77: the panel's pickers are the pair a tester is most likely to have open at
+   * once — From and To sit one above the other. Each drives MUI's controlled `open`
+   * through the shared registry, so opening one closes the other (and any picker
+   * elsewhere on the page) without depending on a click reaching `document`.
+   *
+   * The `request` mode's Preferred Date/Time pickers join the same slot; the hooks are
+   * called unconditionally because that mode is chosen at render time.
+   */
+  const fromPicker = useExclusivePicker();
+  // KP1-I198: the calendar's month names come from the ADAPTER, not from a `t()` key.
+  const pickerLocale = usePickerLocale();
+
+  const toPicker = useExclusivePicker();
+  const preferredDatePicker = useExclusivePicker();
+  const preferredTimePicker = useExclusivePicker();
+
+  /**
+   * Reopening the panel must show the filters currently in effect — including any the
+   * caller changed elsewhere (e.g. list tabs that write the same keys), which is why
+   * this re-seeds rather than relying on the initial useState value.
+   */
+  React.useEffect(() => {
+    setFilters({ ...EMPTY_FILTERS, ...initialValues });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(initialValues)]);
+
+  /** `fields` replaces the hardcoded `mode` layouts entirely. */
+  const useCustomFields = Array.isArray(fields) && fields.length > 0;
+
+  /**
+   * KP1-I56: a `fields` dropdown fell back to `field.label` for its placeholder, so
+   * every one of them printed its own label twice — "Customer Type" above the box and
+   * "Customer Type" inside it. The `mode` layouts below already say "Select"; this is
+   * the same default for the path that replaced them.
+   *
+   * The literal is passed as i18next's defaultValue rather than relying on the key
+   * existing: a missing key in this package fails silently as visible raw text, and a
+   * placeholder reading `common:placeholders.select` would be worse than the bug.
+   */
+  const selectPlaceholder = t('common:placeholders.select', 'Select');
+
+  const handleClearCustom = () => {
+    // Keep the caller's keys present but empty, so "All" resolves rather than undefined.
+    const cleared: FilterValues = { ...EMPTY_FILTERS };
+    (fields ?? []).forEach((field) => { cleared[field.key] = ''; });
+    setFilters(cleared);
+  };
 
   const handleInputChange = (field: keyof FilterValues, value: string) => {
     setFilters(prev => ({
@@ -167,6 +310,10 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
 
   const handleClear = () => {
+    if (useCustomFields) {
+      handleClearCustom();
+      return;
+    }
     setFilters(EMPTY_FILTERS);
   };
 
@@ -174,6 +321,28 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     // Clean up filters based on mode if needed, or just send everything
     onApply(filters);
   };
+
+  /**
+   * The range ends as dayjs, parsed with the panel's own DD/MM/YYYY dialect (the APIs
+   * use YYYY-MM-DD; conversion happens at the caller's boundary). One source for both
+   * the To picker's value and the bounds each picker puts on the other (KP1-I65).
+   */
+  const fromDateValue = filters.fromDate ? dayjs(filters.fromDate, 'DD/MM/YYYY') : null;
+  const toDateValue = filters.toDate ? dayjs(filters.toDate, 'DD/MM/YYYY') : null;
+
+  /**
+   * KP1-I78: the range filters records that already exist, so both ends stop at today
+   * unless the caller opted out (`allowFutureDates`). Computed per render rather than
+   * memoised, so a panel left open across midnight still bounds correctly.
+   *
+   * This stacks with KP1-I65's cross-bounds instead of replacing them: `From` is capped
+   * by whichever comes FIRST — a chosen `To`, or today.
+   */
+  const latestSelectable = allowFutureDates ? null : dayjs().endOf('day');
+  const earlier = (a: Dayjs | null, b: Dayjs | null) =>
+    a && b ? (a.isBefore(b) ? a : b) : (a ?? b);
+
+  const fromMaxDate = earlier(toDateValue, latestSelectable);
 
   // Options as objects for stability and localization
   const projectOptions = [
@@ -250,28 +419,64 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   ];
 
   return (
-    <Box className="filter-panel">
-      <LocalizationProvider dateAdapter={AdapterDayjs}>
+    <>
+      {/*
+        * KP1-I203's sibling, KP1-I205 — the page behind the drawer is DIMMED.
+        *
+        * `.filter-panel` is `position: fixed` and slides over the list, but nothing separated
+        * the two: the table stayed at full contrast behind it, so the panel read as part of
+        * the page rather than as a thing that had opened over it, and it was not obvious that
+        * the list underneath was no longer what you were interacting with.
+        *
+        * It lives HERE rather than in each caller because every listing screen in both portals
+        * mounts this same component, and a backdrop that half the screens had would be worse
+        * than none. Callers mount `FilterPanel` only while it is open, so its presence IS the
+        * open state — there is no `open` prop to gate this on.
+        *
+        * Clicking it closes, which is the same discard the ✕ already performs: filters are
+        * committed by Apply, so dismissing an unapplied panel loses nothing that was not
+        * already lost by ✕. `aria-hidden` because it is decorative — the ✕ is the accessible
+        * way out, and a screen-reader user should not meet a second nameless control.
+        *
+        * z-index 998 sits directly under the panel's 999 and well under MUI's portalled
+        * poppers (1300), so the date pickers this panel opens still render above both.
+        */}
+      <div className="filter-panel-backdrop" onClick={onClose} aria-hidden="true" />
+      <Box className="filter-panel">
+      <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={pickerLocale}>
         <div className="filter-panel-header">
           <button className="close-button" onClick={onClose}>
             <X size={24} />
           </button>
         </div>
 
+        {/*
+          * KP1-I55: one Clear only. This row used to carry an underlined "Clear"
+          * link next to the heading that did exactly what the Clear button in
+          * `filter-panel-actions` does — two controls, one behaviour.
+          */}
         <div className="filter-panel-title">
           <h3>{t('transactions:filters.title')}</h3>
-          <button className="clear-all-button" onClick={handleClear}>
-            {t('common:buttons.clear')}
-          </button>
         </div>
 
         <div className="filter-panel-content">
+          {/*
+            * KP1-I65: the range can only be built forwards. `To` cannot go before a chosen
+            * `From`, and `From` cannot go past a chosen `To` — the second half matters
+            * because picking To first would otherwise leave an inverted range reachable,
+            * which is the same defect from the other end. Both bounds are undefined until
+            * their counterpart is set, so an empty panel still offers every date.
+            */}
           <div className="filter-group">
-            <label>{t('transactions:filters.fromDate')}</label>
+            <label>{dateLabels?.from ?? t('transactions:filters.fromDate')}</label>
             <DatePicker
-              value={filters.fromDate ? dayjs(filters.fromDate, 'DD/MM/YYYY') : null}
+              value={fromDateValue}
               onChange={(date) => handleDateChange('fromDate', date)}
               format="DD/MM/YYYY"
+              open={fromPicker.open}
+              onOpen={fromPicker.onOpen}
+              onClose={fromPicker.onClose}
+              maxDate={fromMaxDate ?? undefined}
               enableAccessibleFieldDOMStructure={false}
               /*
                * KP1-I532 — this is NOT a taste decision, it is what makes the popper rule work.
@@ -303,11 +508,16 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           </div>
 
           <div className="filter-group">
-            <label>{t('transactions:filters.toDate')}</label>
+            <label>{dateLabels?.to ?? t('transactions:filters.toDate')}</label>
             <DatePicker
-              value={filters.toDate ? dayjs(filters.toDate, 'DD/MM/YYYY') : null}
+              value={toDateValue}
               onChange={(date) => handleDateChange('toDate', date)}
               format="DD/MM/YYYY"
+              open={toPicker.open}
+              onOpen={toPicker.onOpen}
+              onClose={toPicker.onClose}
+              minDate={fromDateValue ?? undefined}
+              maxDate={latestSelectable ?? undefined}
               enableAccessibleFieldDOMStructure={false}
               /*
                * KP1-I532 — this is NOT a taste decision, it is what makes the popper rule work.
@@ -338,7 +548,27 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             />
           </div>
 
-          {mode === 'transaction' && (
+          {/* Caller-defined dropdowns, driven by the module's own table columns. */}
+          {useCustomFields && fields!.map((field) => (
+            <div className="filter-group" key={field.key}>
+              <label>{field.label}</label>
+              <StyledAutocomplete
+                options={field.options}
+                getOptionLabel={(option: any) => option.label || ''}
+                isOptionEqualToValue={(option: any, value: any) => {
+                  if (typeof value === 'string') return option.value === value;
+                  return option.value === value.value;
+                }}
+                value={field.options.find(opt => opt.value === (filters[field.key] ?? '')) || null}
+                onChange={(_, newValue: any) => handleInputChange(field.key, newValue?.value ?? '')}
+                renderInput={(params) => (
+                  <StyledTextField {...params} placeholder={field.placeholder ?? selectPlaceholder} />
+                )}
+              />
+            </div>
+          ))}
+
+          {!useCustomFields && mode === 'transaction' && (
             <>
               <div className="filter-group">
                 <label>{t('transactions:filters.projectService')}</label>
@@ -354,7 +584,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder={t('transactions:filters.projectService')} />
                   )}
-                  disablePortal
                 />
               </div>
 
@@ -372,7 +601,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder={t('transactions:filters.transactionType')} />
                   )}
-                  disablePortal
                 />
               </div>
 
@@ -390,13 +618,12 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder={t('transactions:filters.paymentMode')} />
                   )}
-                  disablePortal
                 />
               </div>
             </>
           )}
 
-          {mode === 'request' && (
+          {!useCustomFields && mode === 'request' && (
             <>
               <div className="filter-group">
                 <label>{t('invoice:filters.status')}</label>
@@ -412,7 +639,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder={t('invoice:filters.status')} />
                   )}
-                  disablePortal
                 />
               </div>
 
@@ -430,7 +656,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder={t('transactions:filters.contract')} />
                   )}
-                  disablePortal
                 />
               </div>
 
@@ -440,6 +665,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   value={filters.preferredDate ? dayjs(filters.preferredDate, 'DD/MM/YYYY') : null}
                   onChange={(date) => handleDateChange('preferredDate', date)}
                   format="DD/MM/YYYY"
+                  open={preferredDatePicker.open}
+                  onOpen={preferredDatePicker.onOpen}
+                  onClose={preferredDatePicker.onClose}
                   enableAccessibleFieldDOMStructure={false}
                   /*
                    * KP1-I532 — this is NOT a taste decision, it is what makes the popper rule work.
@@ -475,6 +703,9 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                 <TimePicker
                   value={filters.preferredTime ? dayjs(filters.preferredTime, 'HH:mm') : null}
                   onChange={(time) => handleTimeChange(time)}
+                  open={preferredTimePicker.open}
+                  onOpen={preferredTimePicker.onOpen}
+                  onClose={preferredTimePicker.onClose}
                   enableAccessibleFieldDOMStructure={false}
                   /*
                    * KP1-I532 — this is NOT a taste decision, it is what makes the popper rule work.
@@ -501,7 +732,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             </>
           )}
 
-          {mode === 'customer' && (
+          {!useCustomFields && mode === 'customer' && (
             <>
               <div className="filter-group">
                 <label>Customer Type</label>
@@ -517,7 +748,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder="Select" />
                   )}
-                  disablePortal
                 />
               </div>
 
@@ -535,13 +765,12 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder="Select" />
                   )}
-                  disablePortal
                 />
               </div>
             </>
           )}
 
-          {mode === 'enquiry' && (
+          {!useCustomFields && mode === 'enquiry' && (
             <>
               <div className="filter-group">
                 <label>{t('adminEnquiries:list.filters.status')}</label>
@@ -557,7 +786,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder={t('adminEnquiries:form.placeholders.select')} />
                   )}
-                  disablePortal
                 />
               </div>
 
@@ -575,7 +803,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder={t('adminEnquiries:form.placeholders.select')} />
                   )}
-                  disablePortal
                 />
               </div>
 
@@ -593,13 +820,12 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder={t('adminEnquiries:form.placeholders.select')} />
                   )}
-                  disablePortal
                 />
               </div>
             </>
           )}
 
-          {mode === 'feedback' && (
+          {!useCustomFields && mode === 'feedback' && (
             <>
               <div className="filter-group">
                 <label>Customer Type</label>
@@ -615,7 +841,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder="Select" />
                   )}
-                  disablePortal
                 />
               </div>
 
@@ -633,7 +858,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   renderInput={(params) => (
                     <StyledTextField {...params} placeholder="Select" />
                   )}
-                  disablePortal
                 />
               </div>
             </>
@@ -645,7 +869,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           <Button variant="primary" className="apply-button" onClick={handleApply}>{t('common:buttons.apply')}</Button>
         </div>
       </LocalizationProvider>
-    </Box >
+      </Box >
+    </>
   );
 };
 

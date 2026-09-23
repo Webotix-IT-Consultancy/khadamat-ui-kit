@@ -1,0 +1,217 @@
+/*
+ * The Track timeline — one shape for every dispatch, mobilisation, demobilisation and on-call
+ * screen in both portals.
+ *
+ * Plain CSS with tokens (`hsl(var(--secondary))`), co-located with the component, per the
+ * workspace rule: the two portals resolve these tokens through their own palettes, so the
+ * timeline is gold-on-cream in admin and the customer portal's own colours there, with no
+ * per-portal stylesheet.
+ *
+ * **Every horizontal offset is LOGICAL** (`inset-inline-start`, `text-align: end`). The
+ * customer portal mirrors the whole page in Arabic; a hardcoded `left` would leave the
+ * connector line detached from the nodes it joins, which is the defect this file exists to
+ * prevent recurring.
+ */
+
+.track-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.track-step {
+  position: relative;
+  display: flex;
+  gap: 1rem;
+  padding-bottom: 2rem;
+}
+
+.track-step:last-child {
+  padding-bottom: 0;
+}
+
+/* The connector, drawn from this node down to the next one. */
+.track-step-connector {
+  position: absolute;
+  inset-inline-start: 15px;
+  top: 2rem;
+  bottom: 0;
+  width: 1px;
+  background: hsl(var(--foreground) / 30%);
+}
+
+.track-step-node {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  height: 2rem;
+  width: 2rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: hsl(var(--secondary));
+  color: hsl(var(--white, 0 0% 100%));
+}
+
+/* A refusal — the one step that is not a green tick. */
+.track-step-node-danger {
+  background: hsl(var(--destructive));
+}
+
+.track-step-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .track-step-body {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}
+
+.track-step-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.track-step-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+.track-step-note,
+.track-step-message {
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.track-step-message {
+  max-width: 24rem;
+}
+
+.track-step-message-danger {
+  color: hsl(var(--destructive));
+}
+
+/* Driver / truck / done-by: a caption with the value in a pill. */
+.track-step-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 1rem;
+  font-size: 0.875rem;
+   color: hsl(var(--grey-600));
+}
+
+.track-step-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/*
+ * #f3f4f6 — Tailwind's `bg-gray-100`, which is what all five hand-rolled copies used. Kept
+ * literal rather than moved to `--muted` (a warm cream): promoting a component should not
+ * retint it, or the refactor arrives looking like a design change nobody asked for.
+ */
+.track-step-chip-value {
+  border-radius: 9999px;
+  background: #f3f4f6;
+  padding: 0.25rem 0.75rem;
+  color: hsl(var(--foreground));
+}
+
+/*
+ * The timestamp. #7F7D7A rather than `--muted-foreground`: this is a VALUE the reader takes
+ * off the timeline, not a caption, and the muted token is too light against the white card.
+ * Sampled from the dispatch design and kept identical in both portals.
+ */
+.track-step-time {
+  flex-shrink: 0;
+  font-size: 0.875rem;
+  color: hsl(var(--grey-600));
+}
+
+@media (min-width: 640px) {
+  .track-step-time {
+    text-align: end;
+  }
+}
+
+/* ── The card a timeline sits in, and the per-job grouping ───────────────── */
+
+.track-panel {
+  border-radius: 0.75rem;
+  border: 1px solid hsl(var(--primary));
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .track-panel {
+    padding: 1.5rem;
+  }
+}
+
+.track-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  /* A request can fan out into many jobs; the popup scrolls rather than growing past the
+     viewport, and the header band and Cancel stay put. */
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-inline-end: 0.25rem;
+}
+
+.track-group-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid hsl(var(--primary) / 30%);
+}
+
+.track-group-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+/* A small tag beside the title — the dispatch board a job belongs to, for instance. */
+.track-group-tag {
+  border-radius: 9999px;
+  background: hsl(var(--primary-light));
+  padding: 0.125rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: hsl(var(--primary));
+}
+
+.track-empty {
+  padding: 1.5rem 0;
+  text-align: center;
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.track-loading {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 0;
+}

@@ -1,4 +1,5 @@
 import React from 'react';
+import '../FormField.css';
 import './TextArea.css';
 import ValidationMessage from '../../ValidationMessage/ValidationMessage';
 
@@ -19,12 +20,19 @@ const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(({
         <div className={`textarea-field ${className || ''}`}>
             {label && (
                 <div className="textarea-label">
-                    <label className={error ? 'label-error' : ''}>{label}</label>
+                    {/* KP1-I82: default label colour on error; the wrapper border and the
+                        ValidationMessage carry it. */}
+                    <label>{label}</label>
                     {required && <span className="required-mark">*</span>}
                 </div>
             )}
-            <div className={`textarea-wrapper ${error ? 'textarea-wrapper-error' : ''}`}>
+            <div className={`textarea-wrapper ${error ? 'textarea-wrapper-error' : ''}  focus:outline-none focus-within:ring-4 focus-within:ring-primary-light focus-within:border-primary border-primary`}>
+                {/* KP1-I200 — the textarea reads in the direction of what is typed. Same
+                    reasoning, and the same `dir="auto"`-not-dominant-script choice, as
+                    InputField: the enquiry Description is a textarea, and it is where this
+                    was reported. `dir` sits before the spread so a caller can pin one. */}
                 <textarea
+                    dir="auto"
                     {...props}
                     ref={ref}
                     className="textarea-element"
