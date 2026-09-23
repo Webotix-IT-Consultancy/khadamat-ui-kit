@@ -64,6 +64,13 @@
  * redden.
  */
 
+
+.helper-text {
+    color: hsl(var(--muted-foreground));
+    font-size: 12px;
+    margin-top: 4px;
+}
+
 .required-mark {
     color: hsl(var(--destructive));
     font-size: var(--small);
