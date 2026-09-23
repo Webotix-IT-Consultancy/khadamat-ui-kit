@@ -6,6 +6,13 @@ import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { Clock } from 'lucide-react';
 import ValidationMessage from '../../ValidationMessage/ValidationMessage';
+<<<<<<< Updated upstream
+=======
+import useExclusivePicker from '../../../hooks/useExclusivePicker';
+import usePickerLocale from '../../../hooks/usePickerLocale';
+import pickerFieldSx from '../pickerFieldSx';
+import pickerCalendarSx, { pickerPopperProps } from '../pickerCalendarSx';
+>>>>>>> Stashed changes
 
 dayjs.extend(customParseFormat);
 
@@ -47,7 +54,26 @@ const MUITimePicker: React.FC<MUITimePickerProps> = ({
                     slots={{
                         openPickerIcon: () => <Clock size={20} color="#000" />,
                     }}
+                    /*
+                     * KP1-I532 — this is NOT a taste decision, it is what makes the rule above work.
+                     *
+                     * MUI X opens the popup with a Grow transition, i.e. a CSS `scale` that starts near
+                     * zero. Popper.js positions the popup on the frame it opens, measures it MID-SCALE
+                     * (189px against a real 336px here), finds no overflow, and never runs again — so the
+                     * full-size calendar ends up hanging off the bottom of the screen with its correction
+                     * already skipped. `reduceAnimations` swaps Grow for Fade: opacity only, no transform,
+                     * so the box popper measures is the box the user sees.
+                     */
+                    reduceAnimations
                     slotProps={{
+                        /*
+                         * KP1-I532: the clock list is tall too, and it sits in the same
+                         * dialogs and filter drawers the calendar does. Same rule, one
+                         * definition — see `pickerPopperProps`.
+                         */
+                        popper: pickerPopperProps,
+                        desktopPaper: { sx: pickerCalendarSx },
+                        mobilePaper: { sx: pickerCalendarSx },
                         textField: {
                             fullWidth: true,
                             error: !!error,

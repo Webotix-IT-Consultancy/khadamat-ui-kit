@@ -7,6 +7,7 @@ import {
   styled
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import pickerCalendarSx, { pickerPopperProps } from '../InputElements/pickerCalendarSx';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -272,6 +273,23 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               onChange={(date) => handleDateChange('fromDate', date)}
               format="DD/MM/YYYY"
               enableAccessibleFieldDOMStructure={false}
+              /*
+               * KP1-I532 — this is NOT a taste decision, it is what makes the popper rule work.
+               *
+               * MUI X opens the popup with a Grow transition, i.e. a CSS `scale` that starts near
+               * zero. Popper.js positions the popup on the frame it opens, measures it MID-SCALE
+               * (189px against a real 336px here), finds no overflow to correct, and never runs
+               * again — so the full-size calendar ends up hanging off the bottom of the screen with
+               * its correction already skipped. `reduceAnimations` swaps Grow for Fade: opacity
+               * only, no transform, so the box popper measures is the box the user sees.
+               */
+              reduceAnimations
+              /* KP1-I532 — one calendar palette, on the tokens. See pickerCalendarSx. */
+              slotProps={{
+                popper: pickerPopperProps,
+                desktopPaper: { sx: pickerCalendarSx },
+                mobilePaper: { sx: pickerCalendarSx },
+              }}
               slots={{
                 textField: (params) => (
                   <StyledTextField
@@ -291,6 +309,23 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
               onChange={(date) => handleDateChange('toDate', date)}
               format="DD/MM/YYYY"
               enableAccessibleFieldDOMStructure={false}
+              /*
+               * KP1-I532 — this is NOT a taste decision, it is what makes the popper rule work.
+               *
+               * MUI X opens the popup with a Grow transition, i.e. a CSS `scale` that starts near
+               * zero. Popper.js positions the popup on the frame it opens, measures it MID-SCALE
+               * (189px against a real 336px here), finds no overflow to correct, and never runs
+               * again — so the full-size calendar ends up hanging off the bottom of the screen with
+               * its correction already skipped. `reduceAnimations` swaps Grow for Fade: opacity
+               * only, no transform, so the box popper measures is the box the user sees.
+               */
+              reduceAnimations
+              /* KP1-I532 — one calendar palette, on the tokens. See pickerCalendarSx. */
+              slotProps={{
+                popper: pickerPopperProps,
+                desktopPaper: { sx: pickerCalendarSx },
+                mobilePaper: { sx: pickerCalendarSx },
+              }}
               slots={{
                 textField: (params) => (
                   <StyledTextField
@@ -406,6 +441,23 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   onChange={(date) => handleDateChange('preferredDate', date)}
                   format="DD/MM/YYYY"
                   enableAccessibleFieldDOMStructure={false}
+                  /*
+                   * KP1-I532 — this is NOT a taste decision, it is what makes the popper rule work.
+                   *
+                   * MUI X opens the popup with a Grow transition, i.e. a CSS `scale` that starts near
+                   * zero. Popper.js positions the popup on the frame it opens, measures it MID-SCALE
+                   * (189px against a real 336px here), finds no overflow to correct, and never runs
+                   * again — so the full-size calendar ends up hanging off the bottom of the screen with
+                   * its correction already skipped. `reduceAnimations` swaps Grow for Fade: opacity
+                   * only, no transform, so the box popper measures is the box the user sees.
+                   */
+                  reduceAnimations
+                  /* KP1-I532 — one calendar palette, on the tokens. See pickerCalendarSx. */
+                  slotProps={{
+                    popper: pickerPopperProps,
+                    desktopPaper: { sx: pickerCalendarSx },
+                    mobilePaper: { sx: pickerCalendarSx },
+                  }}
                   slots={{
                     textField: (params) => (
                       <StyledTextField
@@ -424,6 +476,17 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                   value={filters.preferredTime ? dayjs(filters.preferredTime, 'HH:mm') : null}
                   onChange={(time) => handleTimeChange(time)}
                   enableAccessibleFieldDOMStructure={false}
+                  /*
+                   * KP1-I532 — this is NOT a taste decision, it is what makes the popper rule work.
+                   *
+                   * MUI X opens the popup with a Grow transition, i.e. a CSS `scale` that starts near
+                   * zero. Popper.js positions the popup on the frame it opens, measures it MID-SCALE
+                   * (189px against a real 336px here), finds no overflow to correct, and never runs
+                   * again — so the full-size calendar ends up hanging off the bottom of the screen with
+                   * its correction already skipped. `reduceAnimations` swaps Grow for Fade: opacity
+                   * only, no transform, so the box popper measures is the box the user sees.
+                   */
+                  reduceAnimations
                   slots={{
                     textField: (params) => (
                       <StyledTextField

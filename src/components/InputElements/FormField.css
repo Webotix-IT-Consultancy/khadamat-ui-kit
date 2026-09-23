@@ -1,0 +1,87 @@
+/**
+ * The shared shell every form control renders: label row, control, message.
+ *
+ * KP1-I107 / KP1-I108 — "fields in the same row are not uniformly sized".
+ *
+ * Four controls sit side by side in a form row (InputField, PhoneInput, MUIAutocomplete,
+ * MUIDatePicker) and each had invented its own shell, so a row mixing them was never
+ * aligned:
+ *
+ *   - `.form-field` and `.field-label` — the classes MUIAutocomplete and MUIDatePicker
+ *     wrap themselves in — were **defined nowhere at all**. Those two controls had no
+ *     column layout, no gap, and (for the date picker, whose label carries only
+ *     `.field-label`) a browser-default 16px label next to everyone else's 14px.
+ *   - `.required-mark` lived in InputField.css, so the red asterisk was styled only on
+ *     screens that happened to also render an InputField.
+ *   - PhoneInput hand-rolled `text-sm mb-1.5` in Tailwind: same font size, 6px gap
+ *     instead of 4px, and no `capitalize`.
+ *
+ * Everything is defined ONCE here, under both class names, and every control imports this
+ * file. A new control gets the row's alignment by using `.form-field` + `.field-label`,
+ * and cannot drift by forgetting a rule.
+ *
+ * Control HEIGHT is the other half of the alignment and cannot live in CSS for the MUI
+ * controls (they compose their own DOM) — each pins `var(--input-large-height)` in its
+ * `sx`. Keep those in step with `.input-wrapper` in InputField.css.
+ */
+
+.input-field,
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+}
+
+.input-label,
+.field-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.input-label label,
+.field-label label {
+    color: hsl(var(--foreground));
+    font-size: var(--small);
+    font-weight: 400;
+    text-transform: capitalize;
+}
+
+/*
+ * KP1-I82: `.label-error` (label → destructive on error) is GONE, not disabled.
+ *
+ * A failed field is signalled by its control border and its ValidationMessage; the label
+ * keeps `hsl(var(--foreground))` so the form still reads as a form when several fields
+ * fail at once. MUIAutocomplete, MUIDatePicker and MUITimePicker never reddened their
+ * labels, so the Create Enquiry screen highlighted some labels and not others depending
+ * on which control the field happened to use — the inconsistency the tester saw.
+ *
+ * The class name is not resurrected in a component's own CSS either: a second copy of a
+ * shared class name overrides it for EVERY control on any page that renders that one
+ * component (KP1-I109 — TextArea.css did exactly this). Checkbox keeps a red label under
+ * its OWN name, `.checkbox-label-error`, because a native checkbox has no border to
+ * redden.
+ */
+
+/*
+ * KP1-I532: the helper line under a control — the rule a field obeys, said BEFORE
+ * the user runs into it (the On Hold preferred date, which may not be in the past).
+ *
+ * `MUIDatePicker` and `MUITimePicker` have rendered `<p class="helper-text">` since
+ * they were written and nothing ever styled it, so the first call site to pass
+ * `helperText` would have got a browser-default paragraph — 16px with 1em margins —
+ * shoving the field out of its row. It mirrors `.validation-message`, which occupies
+ * the same slot and never shows at the same time.
+ */
+.helper-text {
+    color: hsl(var(--muted-foreground));
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.required-mark {
+    color: hsl(var(--destructive));
+    font-size: var(--small);
+    font-weight: 400;
+}
