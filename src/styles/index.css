@@ -448,3 +448,7 @@ button,a{
 [dir='rtl'] .rtl-mirror {
   transform: scaleX(-1);
 }
+
+.text-md,.md\:text-md,.lg\:text-md,.xl\:text-md{
+  font-size: var(--medium);
+}
