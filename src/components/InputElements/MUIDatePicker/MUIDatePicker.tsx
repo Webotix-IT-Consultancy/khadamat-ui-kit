@@ -12,9 +12,6 @@ import usePickerLocale from '../../../hooks/usePickerLocale';
 import pickerFieldSx from '../pickerFieldSx';
 import pickerCalendarSx, { pickerPopperProps } from '../pickerCalendarSx';
 
-import useExclusivePicker from '../../../hooks/useExclusivePicker';
-import usePickerLocale from '../../../hooks/usePickerLocale';
-import pickerFieldSx from '../pickerFieldSx';
 
 interface MUIDatePickerProps {
     value: string | null;
