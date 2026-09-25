@@ -91,7 +91,7 @@
 .track-step-note,
 .track-step-message {
   font-size: 0.875rem;
-  color: hsl(var(--muted-foreground));
+  color: hsl(var(--grey-800));
 }
 
 .track-step-message {
@@ -153,6 +153,19 @@
   border-radius: 0.75rem;
   border: 1px solid hsl(var(--primary));
   padding: 1rem;
+}
+
+/*
+ * The record's status chip, above the panel on the TRAILING edge.
+ *
+ * `justify-content: flex-end` follows the flex direction, which follows the page's own
+ * `dir` — so the chip sits right in admin and left in the customer portal's Arabic,
+ * which is the same rule every offset in this file obeys. Never `right`.
+ */
+.track-badge-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
 }
 
 @media (min-width: 640px) {
