@@ -67,6 +67,19 @@ export interface TrackProps {
     steps?: TrackStep[];
     /** One timeline per job. Takes precedence over `steps`. */
     groups?: TrackGroup[];
+    /**
+     * A node drawn ABOVE the panel, on the trailing edge — the record's status chip.
+     *
+     * A `StatusBadge` from the caller, exactly like `TrackGroup.badge`, because the
+     * status->tone map belongs to the module: two boards spell the same status with
+     * different words and the same word with different colours.
+     *
+     * **`steps` only.** A grouped timeline carries one badge PER GROUP, since each job of
+     * a request is at its own status; a single chip above several of them would claim one
+     * status for all. Passing both is a call-site mistake, so it is ignored rather than
+     * drawn somewhere it cannot be true.
+     */
+    badge?: React.ReactNode;
     /** Shows the spinner instead of the timeline. */
     loading?: boolean;
     /** What an empty timeline says. Required in practice — there is no English default here. */
@@ -187,6 +200,7 @@ const StepList: React.FC<{ steps: TrackStep[] }> = ({ steps }) => (
 const Track: React.FC<TrackProps> = ({
     steps,
     groups,
+    badge,
     loading,
     emptyMessage,
     panel = true,
@@ -230,7 +244,25 @@ const Track: React.FC<TrackProps> = ({
         <p className="track-empty">{emptyMessage}</p>
     );
 
-    return panel ? <div className={cn('track-panel', className)}>{body}</div> : <div className={className}>{body}</div>;
+    const timeline = panel ? (
+        <div className={cn('track-panel', badge ? undefined : className)}>{body}</div>
+    ) : (
+        <div className={badge ? undefined : className}>{body}</div>
+    );
+
+    /*
+     * Above the panel rather than inside it: the chip is the state of the RECORD, while
+     * everything inside the border is the history of how it got there. Sitting it on the
+     * first step would read as that step's own label, which is the misreading that moved
+     * status chips out of field rows onto the back-arrow line (admin CLAUDE.md).
+     */
+    if (!badge) return timeline;
+    return (
+        <div className={className}>
+            <div className="track-badge-row">{badge}</div>
+            {timeline}
+        </div>
+    );
 };
 
 export default Track;
