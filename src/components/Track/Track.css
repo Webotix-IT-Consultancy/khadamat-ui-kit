@@ -59,6 +59,18 @@
   background: hsl(var(--destructive));
 }
 
+/*
+ * A job parked rather than finished — the Pending Pool step.
+ *
+ * `--warning` and not `--primary`: the accent is the BRAND (gold in admin, green in the
+ * customer portal), so a node drawn from it would mean two different things in the two
+ * portals and, in admin, would be indistinguishable from the panel border around it.
+ * Severity is portal-independent, exactly as `InlineAlert` has it.
+ */
+.track-step-node-pending {
+  background: hsl(var(--warning-banner-text));
+}
+
 .track-step-body {
   display: flex;
   flex: 1;

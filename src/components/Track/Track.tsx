@@ -1,11 +1,21 @@
 import React from 'react';
-import { Check, X } from 'lucide-react';
+import { Check, Minus, X } from 'lucide-react';
 import Loader from '../Loader/Loader';
 import { cn } from '../../lib/utils';
 import './Track.css';
 
-/** A step's node: a green tick, or a red ✕ for a refusal. */
-export type TrackTone = 'default' | 'danger';
+/**
+ * A step's node.
+ *
+ *  - `default` — a green tick: the step happened and the job moved on.
+ *  - `danger`  — a red ✕: a refusal.
+ *  - `pending` — an amber dash: the job STOPPED here. It is neither an achievement nor a
+ *    refusal, which is exactly why it needs its own node: a job parked in the Pending
+ *    Pool drew a green tick, reading as "Pending: done".
+ *
+ * Colour alone does not carry meaning (WCAG 1.4.1), so each tone changes the ICON too.
+ */
+export type TrackTone = 'default' | 'danger' | 'pending';
 
 /** A caption with its value in a pill — "Driver · Sivaprasad", "Truck · DXB 12345". */
 export interface TrackChip {
@@ -38,7 +48,12 @@ export interface TrackStep {
     chips?: TrackChip[];
     /** Free text the step carries — a driver's reason on a refusal. */
     message?: string;
-    /** `danger` prints the message in the destructive colour. Defaults to the step's `tone`. */
+    /**
+     * `danger` prints the message in the destructive colour. Defaults to the step's `tone`.
+     *
+     * `pending` is deliberately NOT tinted: an amber paragraph of body text fails contrast
+     * where a filled amber node does not. The node carries the tone; the words stay legible.
+     */
     messageTone?: TrackTone;
 }
 
@@ -95,6 +110,7 @@ export interface TrackProps {
 
 const TrackStepRow: React.FC<{ step: TrackStep; isLast: boolean }> = ({ step, isLast }) => {
     const isDanger = step.tone === 'danger';
+    const isPending = step.tone === 'pending';
     const messageTone = step.messageTone ?? step.tone;
 
     return (
@@ -102,8 +118,20 @@ const TrackStepRow: React.FC<{ step: TrackStep; isLast: boolean }> = ({ step, is
             {/* The connector, drawn from this node down to the next one. */}
             {!isLast && <span aria-hidden className="track-step-connector" />}
 
-            <span className={cn('track-step-node', isDanger && 'track-step-node-danger')}>
-                {isDanger ? <X size={18} strokeWidth={3} /> : <Check size={18} strokeWidth={3} />}
+            <span
+                className={cn(
+                    'track-step-node',
+                    isDanger && 'track-step-node-danger',
+                    isPending && 'track-step-node-pending',
+                )}
+            >
+                {isDanger ? (
+                    <X size={18} strokeWidth={3} />
+                ) : isPending ? (
+                    <Minus size={18} strokeWidth={3} />
+                ) : (
+                    <Check size={18} strokeWidth={3} />
+                )}
             </span>
 
             <div className="track-step-body">
