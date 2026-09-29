@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
+    Checkbox,
     Table,
     TableBody,
     TableCell,
@@ -123,6 +124,33 @@ interface TablePrimaryProps<T> {
      */
     stickyLastColumn?: boolean;
     /**
+     * A leading checkbox column — opt-in, and absent unless this prop is passed.
+     *
+     * Off by default because a tick column is only meaningful where the screen has a BULK
+     * action to spend the selection on; every other list in both portals passes nothing and
+     * is unchanged.
+     *
+     * It cannot be expressed as a `ColumnDefinition`: `label` is a `string`, and the header
+     * cell of this column is itself a control (select-all / clear-all).
+     *
+     * **The ids are the caller's own `rowKey`s**, so the parent compares like with like and
+     * this component never has to know which field identifies a row.
+     */
+    selection?: {
+        /** Row keys currently ticked. */
+        selectedIds: Array<string | number>;
+        /** One row toggled. */
+        onToggleRow: (id: string | number) => void;
+        /**
+         * The header box. `next` is what it is asking for: true = tick every row ON THIS
+         * PAGE, false = clear them. Whether that means "all pages" is the caller's policy,
+         * not this component's.
+         */
+        onToggleAll: (next: boolean) => void;
+        /** Accessible names. Required — this portal ships no English defaults here. */
+        labels: { selectRow: string; selectAll: string };
+    };
+    /**
      * KP1-I203 — what a table says when it has no rows.
      *
      * Defaults to `common:table.noRecords` ("No records found" / "لا توجد سجلات"). Pass a node
@@ -221,6 +249,7 @@ const TablePrimary = <T extends Record<string, any>>({
     emptyPlaceholder = '-',
     stickyLastColumn = false,
     emptyMessage,
+    selection,
 }: TablePrimaryProps<T>) => {
     const { t } = useTranslation('common');
 
@@ -249,6 +278,21 @@ const TablePrimary = <T extends Record<string, any>>({
         onSort(key);
     };
 
+    /*
+     * The header box reflects THIS PAGE, not the whole selection.
+     *
+     * A parent may legitimately hold ticks for rows that are not on screen — page 2, or a
+     * row the current filter hides — and a header box driven by the total would then read
+     * as "all selected" over a page where nothing is ticked.
+     */
+    const selectedIdSet = useMemo(
+        () => new Set(selection?.selectedIds ?? []),
+        [selection?.selectedIds],
+    );
+    const selectedOnPage = data.filter((row) => selectedIdSet.has(rowKey(row))).length;
+    const allOnPageSelected = data.length > 0 && selectedOnPage === data.length;
+    const someOnPageSelected = selectedOnPage > 0;
+
     return (
         <Box className="table-primary-container">
             <TableContainer component={Paper} className="table-primary-wrapper">
@@ -258,6 +302,29 @@ const TablePrimary = <T extends Record<string, any>>({
                 >
                     <TableHead className="table-primary-head">
                         <TableRow>
+                            {selection && (
+                                <TableCell
+                                    padding="checkbox"
+                                    className="table-primary-header-cell table-primary-select-cell"
+                                >
+                                    {/*
+                                      * Indeterminate when SOME of the page is ticked, so the
+                                      * box distinguishes "none", "some" and "all" — a plain
+                                      * checked/unchecked box claims the whole page is selected
+                                      * the moment one row is.
+                                      */}
+                                    <Checkbox
+                                        size="small"
+                                        checked={allOnPageSelected}
+                                        indeterminate={someOnPageSelected && !allOnPageSelected}
+                                        onChange={(event) =>
+                                            selection.onToggleAll(event.target.checked)
+                                        }
+                                        inputProps={{ 'aria-label': selection.labels.selectAll }}
+                                        className="table-primary-checkbox"
+                                    />
+                                </TableCell>
+                            )}
                             {columns.map((column) => (
                                 <TableCell
                                     key={column.key as string}
@@ -298,7 +365,7 @@ const TablePrimary = <T extends Record<string, any>>({
                         {data.length === 0 ? (
                             <TableRow className="table-primary-row">
                                 <TableCell
-                                    colSpan={columns.length}
+                                    colSpan={columns.length + (selection ? 1 : 0)}
                                     className="table-primary-empty-cell"
                                 >
                                     {emptyMessage ?? t('table.noRecords')}
@@ -311,6 +378,17 @@ const TablePrimary = <T extends Record<string, any>>({
                                 key={rowKey(row)}
                                 className={`table-primary-row ${index % 2 === 1 ? 'table-primary-row-alternate' : ''}`}
                             >
+                                {selection && (
+                                    <TableCell padding="checkbox" className="table-primary-cell table-primary-select-cell">
+                                        <Checkbox
+                                            size="small"
+                                            checked={selectedIdSet.has(rowKey(row))}
+                                            onChange={() => selection.onToggleRow(rowKey(row))}
+                                            inputProps={{ 'aria-label': selection.labels.selectRow }}
+                                            className="table-primary-checkbox"
+                                        />
+                                    </TableCell>
+                                )}
                                 {columns.map((column) => {
                                     const raw = row[column.key];
                                     const content = column.format ? column.format(raw, row, index) : raw;

@@ -314,6 +314,27 @@
  * Sized to read as a state rather than a row: the vertical padding is what stops it looking
  * like a single blank record, which is the confusion the ticket reports.
  */
+/*
+ * The optional selection column.
+ *
+ * `--primary` is the brand accent, which each portal resolves through its own palette —
+ * gold in admin, green in the customer portal — so the tick matches the screen it is on
+ * without either portal styling this component.
+ */
+.table-primary-select-cell {
+  width: 48px;
+  padding-inline: 0.5rem;
+}
+
+.table-primary-checkbox.MuiCheckbox-root {
+  color: hsl(var(--primary));
+}
+
+.table-primary-checkbox.MuiCheckbox-root.Mui-checked,
+.table-primary-checkbox.MuiCheckbox-root.MuiCheckbox-indeterminate {
+  color: hsl(var(--primary));
+}
+
 .table-primary-empty-cell {
     padding: 3rem 1rem !important;
     text-align: center !important;

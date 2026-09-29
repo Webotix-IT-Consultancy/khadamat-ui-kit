@@ -66,5 +66,5 @@
 .inline-alert-info {
     color: hsl(var(--foreground));
     border-color: hsl(var(--foreground) / 0.2);
-    background-color: hsl(var(--muted));
+    background-color: hsl(var(--primary-light) );
 }
