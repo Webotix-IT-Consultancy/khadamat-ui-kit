@@ -100,6 +100,33 @@ export const fileMatchesAccept = (file: File, accepted: string[]): boolean => {
  * top-level navigation to `data:` URLs — so they're converted to a blob URL
  * first. Remote URLs are opened directly.
  */
+/**
+ * **Can a browser actually DISPLAY this, or would "view" just download it?** (KP1-I574)
+ *
+ * `openInNewTab` hands the file to the browser and lets it decide. For an image or a
+ * PDF it renders; for a spreadsheet, a Word document or a CSV there is no viewer, so the
+ * tab downloads the file and closes. The eye and the download button then do the same
+ * thing, and the eye is the one that lied — which is the ticket, reported against an
+ * Excel upload: "clicking the Eye (View/Preview) icon downloads the Excel file instead
+ * of displaying the file".
+ *
+ * So the eye is only offered for what can be shown. `FileChip` already documents
+ * `onView` as "Omit to hide the eye button" — this is the caller finally honouring it.
+ *
+ * **Images and PDFs only**, deliberately narrow: those two render in every browser these
+ * portals support. `text/plain` and `text/csv` are inconsistent (Chrome renders one and
+ * downloads the other depending on the response headers), and a maybe-viewer is the
+ * same defect in a quieter form.
+ *
+ * Falls back to the EXTENSION when the browser gives no MIME type, for the reason set
+ * out at the top of this file: `file.type` is routinely `''`.
+ */
+const isViewableInBrowser = (fileName?: string, dataUrl?: string): boolean => {
+    const fromUrl = (dataUrl || '').slice(5, 64).split(';')[0].toLowerCase();
+    const type = normaliseMime(fromUrl) || EXTENSION_MIME[extensionOf(fileName || '')] || '';
+    return type.startsWith('image/') || type === 'application/pdf';
+};
+
 const openInNewTab = (url: string) => {
     if (!url || url === '#') return;
 
@@ -453,9 +480,12 @@ const FileUpload: React.FC<FileUploadProps> = ({
                               // it — the caller's handler is the only way. With neither, the
                               // eye button is omitted rather than rendered dead.
                               const localUrl = file.dataUrl || '';
+                              /* KP1-I574 — as above: the caller's own viewer wins,
+                                 otherwise the eye appears only for a file a browser
+                                 can render rather than download. */
                               const onChipView = onViewFile
                                   ? () => onViewFile(file, index)
-                                  : localUrl
+                                  : localUrl && isViewableInBrowser(file.name, localUrl)
                                     ? () => openInNewTab(localUrl)
                                     : undefined;
 
@@ -490,7 +520,15 @@ const FileUpload: React.FC<FileUploadProps> = ({
                           <FileChip
                               fileName={fileName}
                               previewUrl={previewUrl}
-                              onView={handleView}
+                              /* KP1-I574 — no eye on a file the browser would merely
+                                 download. An explicit `onView` from the caller always
+                                 wins: it means the file is fetched and shown some other
+                                 way, so this component cannot judge it. */
+                              onView={
+                                  onView || isViewableInBrowser(fileName, value)
+                                      ? handleView
+                                      : undefined
+                              }
                               onDownload={onDownload ? handleDownload : undefined}
                               onRemove={allowRemove ? handleRemove : undefined}
                               busy={busy}
