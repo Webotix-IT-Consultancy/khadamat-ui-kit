@@ -6,6 +6,9 @@ import {
 } from "react-international-phone";
 
 import { cn } from "../../../lib/utils";
+import "../../InputElements/FormField.css";
+import ValidationMessage from "../../ValidationMessage/ValidationMessage";
+import { UAE_MOBILE_EXAMPLE } from "../../../utils/phone";
 import {
     Popover,
     PopoverContent,
@@ -53,8 +56,59 @@ const parsePhoneNumber = (phoneValue: string, countries: typeof defaultCountries
     return { countryIso2: null, localNumber: cleanValue };
 };
 
+/**
+ * A real national number per country, used to fill the placeholder mask below. Only
+ * countries we actually validate need an entry — everything else falls back to the
+ * mask's own shape, which is still honest about length and grouping.
+ */
+const EXAMPLE_NATIONAL: Record<string, string> = {
+    ae: UAE_MOBILE_EXAMPLE,
+};
+
+/**
+ * The country's display format from react-international-phone's own country data, e.g.
+ * UAE `.. ... ....`. Newer entries carry an object keyed by prefix regex plus a
+ * `default`; older ones are a bare string.
+ */
+const countryMask = (iso2: CountryIso2): string | undefined => {
+    const format = defaultCountries.find((c) => c[1] === iso2)?.[3] as
+        | string
+        | { default?: string }
+        | undefined;
+
+    if (!format) return undefined;
+    return typeof format === "string" ? format : format.default;
+};
+
+/**
+ * KP1-I85: the placeholder was a hardcoded `ex.5663 3723 323` — eleven digits and no
+ * country — displayed next to a selector reading +971, and contradicting the 9-digit
+ * rule `utils/phone.ts` enforces on the very same value.
+ *
+ * It is derived from the selected country now, so it cannot drift from the dial code
+ * again: the shape comes from the country data this file already imports, and the
+ * digits from a real example where we hold one (UAE -> `eg. 50 123 4567`).
+ */
+const examplePlaceholder = (iso2: CountryIso2): string => {
+    const mask = countryMask(iso2);
+    const digits = EXAMPLE_NATIONAL[iso2] ?? "";
+
+    if (!mask) return digits ? `eg. ${digits}` : "";
+
+    let i = 0;
+    const filled = mask.replace(/\./g, () => {
+        // Past the end of a known example (or with none at all) keep counting 1-9, so
+        // the length and grouping still read correctly for that country.
+        const digit = digits[i] ?? String((i % 9) + 1);
+        i += 1;
+        return digit;
+    });
+
+    return `eg. ${filled}`;
+};
+
 const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
-    ({ className, onChange, value, label, required, error, defaultCountry = "ae", placeholder = "ex.5663 3723 323", ...props }, ref) => {
+    ({ className, onChange, value, label, required, error, disabled, defaultCountry = "ae", placeholder, ...props }, ref) => {
 
         // Parse the initial value to extract country and local number
         const parsedValue = React.useMemo(() => {
@@ -91,6 +145,12 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
 
         const selectedCountry = options.find((opt) => opt.value === currentCountry);
 
+        // Follows the country selector, including after the user changes it.
+        const countryPlaceholder = React.useMemo(
+            () => examplePlaceholder(currentCountry),
+            [currentCountry]
+        );
+
         // Handle phone input change
         const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             const newLocalPhone = e.target.value;
@@ -113,19 +173,31 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
 
 
 
+        // KP1-I107/I108: this shared none of the form shell — a bare `w-full` div and a
+        // Tailwind label with a 6px gap where every other control uses 4px, and no
+        // `capitalize`. So a Tel No. sat a couple of pixels off the text field beside it in
+        // the same row. Same classes as InputField now (../FormField.css).
         return (
-            <div className="w-full">
+            <div className="input-field">
                 {label && (
-                    <label className="block text-sm text-foreground mb-1.5">
-                        {label}
-                        {required && <span className="text-destructive ml-1">*</span>}
-                    </label>
+                    <div className="input-label">
+                        {/* KP1-I82: default label colour on error; the field border and the
+                            ValidationMessage carry it. */}
+                        <label>{label}</label>
+                        {required && <span className="required-mark">*</span>}
+                    </div>
                 )}
                 <div
                     className={cn(
                         "flex items-center rounded-10 border-2 border-primary bg-background h-[var(--input-large-height)] overflow-hidden",
                         "focus-within:ring-4 focus-within:ring-primary-light focus-within:border-primary",
                         error && "border-destructive focus-within:border-destructive focus-within:ring-destructive/30",
+                        // Match InputField's read-only surface, so a disabled phone field reads as
+                        // disabled next to the text fields on a view screen instead of looking
+                        // editable. `disabled` used to reach only the inner <input> through
+                        // `...props`, and every visible style lives out here.
+                        // KP1-I128: `bg-disabled` is the shared token; it was a literal #EEEEEE.
+                        disabled && "bg-disabled border-transparent focus-within:ring-0 focus-within:border-transparent",
                         className
                     )}
                 >
@@ -134,27 +206,52 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
                         onChange={handleCountryChange}
                         options={options}
                         selectedDialCode={selectedCountry?.dialCode || ""}
+                        // Without this the flag/dial-code dropdown stayed live on a disabled
+                        // field, so callers had to smother it with `pointer-events-none`.
+                        disabled={disabled}
                     />
 
                     {/* Vertical Separator */}
-                    <div className="h-6 w-px bg-gray-300 shrink-0" />
+                    <div className={cn("h-6 w-px bg-gray-300 shrink-0", disabled && "bg-gray-400/40")} />
 
                     <input
                         ref={inputRef}
                         type="tel"
                         value={localPhone}
                         onChange={handlePhoneChange}
-                        placeholder={placeholder}
+                        placeholder={placeholder ?? countryPlaceholder}
+                        disabled={disabled}
                         className={cn(
-                            "flex-1 h-full px-3 bg-transparent text-foreground placeholder:text-muted-foreground",
-                            "outline-none border-0 focus:ring-0"
+                            // KP1-I217: `min-w-0` is load-bearing, not tidying. A flex item's
+                            // min-width defaults to its MIN-CONTENT width, and an <input>'s is
+                            // its `size` attribute — 20 characters, ~194px. Add the country
+                            // selector (~108px) and this control could not render narrower than
+                            // ~307px: below that the number was pushed out and then CLIPPED by
+                            // the `overflow-hidden` on the wrapper above, which is the defect
+                            // the ticket reports (Contract Create's postal row gives each field
+                            // 137-252px). Measured: 173px of overflow at the narrow end, 0 with
+                            // this class. `.input-element` in InputField.css carries the twin.
+                            "flex-1 min-w-0 h-full px-3 bg-transparent text-foreground placeholder:text-muted-foreground",
+                            // KP1-I99: this input had no size of its own and inherited body
+                            // copy, so it would have stayed 16px while the InputField next
+                            // to it stepped down to 14px below `xl`.
+                            "text-[length:var(--input-font-size)]",
+                            "outline-none border-0 focus:ring-0",
+                            // KP1-I128: the same pinned read-only text colour every other
+                            // control uses, so the number doesn't sit darker than the fields
+                            // beside it. `[-webkit-text-fill-color]` because Safari/iOS
+                            // ignore `color` on a disabled input.
+                            disabled &&
+                                "cursor-default text-disabled-foreground [-webkit-text-fill-color:hsl(var(--disabled-fg))] opacity-100"
                         )}
                         {...props}
                     />
                 </div>
-                {error && (
-                    <p className="mt-1.5 text-xs text-destructive">{error}</p>
-                )}
+                {/* The shared message slot, like every other control (KP1-I107/I108). The
+                    hand-rolled `<p className="mt-1.5 text-xs text-destructive">` this
+                    replaces sat 6px below the control where ValidationMessage sits 4px, so
+                    an errored phone field pushed its row taller than an errored text field. */}
+                <ValidationMessage error={error} />
             </div>
         );
     }
@@ -219,7 +316,9 @@ const CountrySelect = ({
                     className={cn(
                         "flex gap-1.5 items-center px-3 h-full",
                         "disabled:cursor-not-allowed disabled:opacity-50",
-                        "hover:bg-accent/50 transition-colors outline-none focus:outline-none"
+                        // `enabled:` — a disabled button still matches :hover in some browsers,
+                        // and a hover highlight on a dead control reads as clickable.
+                        "enabled:hover:bg-accent/50 transition-colors outline-none focus:outline-none"
                     )}
                     disabled={disabled}
                 >

@@ -1,37 +1,12 @@
-.input-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 100%;
-}
-
-.input-label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.input-label label {
-  color: hsl(var(--foreground));
-  font-size: var(--small);
-  font-weight: 400;
-  text-transform: capitalize;
-}
-
-.label-error {
-  color: hsl(var(--destructive)) !important;
-}
-
-.required-mark {
-  color: hsl(var(--destructive));
-  font-size: var(--extra-small);
-  font-weight: 400;
-}
+/* `.input-field`, `.input-label` and `.required-mark` moved to the shared ../FormField.css
+   (KP1-I107 / KP1-I108) — they are the row's alignment contract, and every control in a row
+   needs them, not just this one. Imported from InputField.tsx.
+   (`.label-error` was there too until KP1-I82 removed red labels altogether.) */
 
 .input-wrapper {
   display: flex;
   height: var(--input-large-height);
-  padding: 15px 17px;
+  padding: 12px 10px;
   align-items: center;
   gap: 5px;
   border-radius: var(--radius-r-10);
@@ -61,11 +36,31 @@
 
 .input-element {
   flex: 1;
+  /*
+   * KP1-I217 — without this the field cannot be narrower than ~194px.
+   *
+   * A flex item's `min-width` defaults to `auto`, i.e. its MIN-CONTENT width, and an
+   * `<input>`'s min-content width is its `size` attribute — 20 characters by default,
+   * about 194px at this font. `flex: 1` can therefore only ever GROW the input; it can
+   * never shrink it past that floor, so in any column narrower than ~194px the input
+   * pushes straight out through its own bordered `.input-wrapper`.
+   *
+   * That is the overflow the ticket reports on Contract Create, whose postal row is four
+   * fields across (City / Country / PIN / Telephone No.) and hands each one 137-252px.
+   * `min-width: 0` lets the input do what `flex: 1` already promised and track the column.
+   * Long text now scrolls inside the box, as a text input is supposed to.
+   *
+   * `PhoneInput` carries the same fix on its own number input (`min-w-0`) — it composes its
+   * own DOM and so does not pick this rule up.
+   */
+  min-width: 0;
   border: none;
   outline: none;
   color: hsl(var(--foreground));
   font-family: 'Poppins', sans-serif;
-  font-size: var(--p);
+  /* KP1-I99: the control scale, not body copy — it steps down below `xl`, where the
+     dashboard's 306px sidebar leaves the columns too narrow for 16px text. */
+  font-size: var(--input-font-size);
   font-weight: 400;
   background: transparent;
   padding: 0 9px;
@@ -74,7 +69,9 @@
 .input-element::placeholder {
   color: hsl(var(--muted-foreground));
 }
-
+textarea {
+ font-size: var(--input-font-size) !important;
+}
 .password-toggle {
   display: flex;
   align-items: center;
@@ -85,10 +82,54 @@
   padding: 0;
   flex-shrink: 0;
   transition: opacity 0.2s ease;
+  /*
+   * KP1-I154 — "the eye icons appear slightly close to the right border".
+   *
+   * The BOX was never misaligned: this button, `.input-icon-left` and `.input-suffix` all
+   * sit 12px in (10px wrapper padding + 2px border). What differs is the ink inside it.
+   * Measured from the rendered paths, both icons draw into a 24-unit viewBox at 20px:
+   *
+   *   lock  x 3 → 21   =>  2.50px of slack each side  =>  optical inset 14.5px
+   *   eye   x 1 → 23   =>  0.83px of slack each side  =>  optical inset 12.8px
+   *
+   * So the eye genuinely reads ~1.7px tighter than every other icon in the app even though
+   * the boxes agree — the tester was seeing the ink, not the box. 2px of margin lands it at
+   * 14.8px, which matches the lock.
+   *
+   * LOGICAL, not `margin-right`: the toggle flips to the other side under `dir="rtl"` in the
+   * customer portal's Arabic, and a physical margin would push it INTO the border there.
+   */
+  margin-inline-end: 2px;
 }
 
 .password-toggle:hover {
   opacity: 0.7;
+}
+
+/*
+ * KP1-I7: Edge draws its OWN reveal button inside every <input type="password">, so a
+ * field that also renders `.password-toggle` showed two eye icons. Chrome, Firefox and
+ * Safari draw nothing, which is why it only reproduced in Edge.
+ *
+ * Suppressing the native control (rather than dropping ours) keeps one behaviour in
+ * every browser, and ours is the one that must stay: it is a real <button> with
+ * aria-label/aria-pressed, and it drives the same `showPassword` state the field reads.
+ *
+ * `:has(.password-toggle)` scopes this to fields that actually have our toggle — a
+ * password field added later WITHOUT one keeps the browser's reveal rather than losing
+ * every way to unmask. (`:has` is already load-bearing in this file, see the read-only
+ * rule at the bottom.)
+ *
+ * Kept as two rules, not one selector list: an unknown selector invalidates the WHOLE
+ * list, so grouping these with a -webkit- pseudo later would silently kill both.
+ */
+.input-wrapper:has(.password-toggle) .input-element::-ms-reveal {
+  display: none;
+}
+
+/* Edge's X-clear, the same class of duplicate chrome on a field we already decorate. */
+.input-element::-ms-clear {
+  display: none;
 }
 
 .input-error-message {
@@ -105,8 +146,10 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: hsl(var(--muted-foreground));
-  font-size: var(--p);
+  color: hsl(var(--primary));
+  /* Same scale as `.input-element` beside it (KP1-I99) — a prefix that stayed 16px next to
+     14px input text would look like a different control. */
+  font-size: var(--input-font-size);
   font-weight: 500;
 }
 
@@ -140,8 +183,38 @@
   box-shadow: none;
 }
 
-/* Read-only style */
+/* Read-only style. KP1-I128: the surface is `--disabled-bg`, not a literal — see the token's
+   comment in styles/index.css for why three greys existed and which one won. */
 .input-wrapper:has(.input-element:read-only) {
-  background-color: #EEEEEE;
+  background-color: hsl(var(--disabled-bg));
   border-color: transparent;
+}
+
+/*
+ * KP1-I128 — a DISABLED field must look disabled too.
+ *
+ * View screens pass `disabled={isView}`, which reaches the <input> through `...props`, so
+ * the field genuinely could not be typed into. But only the `:read-only` rule above
+ * repainted the surface, so a disabled field kept the white background and the 2px gold
+ * border — it read as editable, and testers reported the view screen as editable because
+ * it looked it. Every other control already had a disabled surface (MUIAutocomplete,
+ * MUIDatePicker, PhoneInput, all #EEEEEE/#ECECEC), which made these the odd ones out.
+ *
+ * Deliberately a SEPARATE rule rather than a selector list with the one above: an unknown
+ * selector invalidates a whole `:has()` list, which would silently kill both — the same
+ * caution the password-toggle comment above records.
+ */
+.input-wrapper:has(.input-element:disabled) {
+  background-color: hsl(var(--disabled-bg));
+  border-color: transparent;
+}
+
+/* The browser greys disabled text by default and the shade varies; pin it to the same
+   colour the read-only fields use so the two states are indistinguishable. */
+.input-element:disabled {
+  color: hsl(var(--disabled-fg));
+  /* Safari/iOS ignore `color` on a disabled input. */
+  -webkit-text-fill-color: hsl(var(--disabled-fg));
+  opacity: 1;
+  cursor: default;
 }

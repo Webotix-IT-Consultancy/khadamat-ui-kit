@@ -65,7 +65,25 @@
   margin: 0;
 }
 
-.clear-button {
+/*
+ * Renamed from the bare `.clear-button`.
+ *
+ * That class name is FilterPanel's (FilterPanel.css) — an OUTLINED button — and this file
+ * redefined it as an underlined text link. The dashboard layout mounts NotificationPanel on
+ * every page, so this stylesheet is always loaded and its declarations reached the
+ * FilterPanel's Clear button too.
+ *
+ * `text-decoration: underline` is the one that always won, whatever the load order:
+ * FilterPanel.css sets border, colour and background, so those were re-established when it
+ * loaded, but it declares no `text-decoration` at all — leaving nothing to override the
+ * underline. Hence an outlined Clear button with a stray underline under the word, on every
+ * filter panel in both portals.
+ *
+ * Same trap TextArea.css records under KP1-I109: a second copy of a shared class name
+ * silently restyles that control on every page rendering this component. Scoping the name is
+ * the fix — `.clear-button` now belongs to FilterPanel alone.
+ */
+.notification-clear-button {
   color: #000;
   font-family: Poppins, -apple-system, sans-serif;
   font-size: 16px;
@@ -77,8 +95,10 @@
   transition: color 0.2s;
 }
 
-.clear-button:hover {
-  color: #016937;
+.notification-clear-button:hover {
+  /* Was the literal #016937 — `:root --primary`, i.e. the CUSTOMER portal's green — so this
+     hover went green inside the admin portal's gold theme. Token, like the rest of the kit. */
+  color: hsl(var(--primary));
 }
 
 .notification-section {

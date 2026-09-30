@@ -6,6 +6,7 @@ import { Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import TablePrimary, { ColumnDefinition } from '../Table/TablePrimary';
 import TableActionMenu from '../Table/TableActionMenu';
+import Button from '../Button/Button';
 import StatusBadge from '../StatusBadge/StatusBadge';
 import { ExportType } from '../../utils/exportTable';
 import ActionButton from '../Shared/ActionButton';
@@ -75,9 +76,18 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   };
 
 
-  const handleExportToExcel = (type: ExportType) => {
+  /**
+   * Export to Excel.
+   *
+   * **One button, one format.** This used to be `TableActionMenu`'s excel/pdf/csv
+   * dropdown, but the fallback below only ever wrote a workbook — picking PDF or CSV
+   * downloaded an .xlsx anyway. Both portals have since settled on a single Export to
+   * Excel button (Mobilisation set the shape), which is what the toolbar now renders,
+   * so the format argument is gone and the name is no longer a half-truth.
+   */
+  const handleExportToExcel = () => {
     if (onExport) {
-      onExport(type);
+      onExport('excel');
       return;
     }
 
@@ -150,8 +160,17 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           searchQuery={searchQuery}
           onSearchChange={onSearchChange}
           onFilterClick={onFilterClick}
-          onExport={handleExportToExcel}
-          showExport={true}
+          // The excel/pdf/csv dropdown is replaced by the dedicated button — the
+          // house shape in both portals.
+          showExport={false}
+          actionChildren={
+            /* Icon AFTER the label — the Figma puts it on the trailing edge, as
+               Filter does beside it. */
+            <Button onClick={handleExportToExcel} variant="primary" size="small">
+              {t('common:buttons.exportToExcel')}
+              <Download size={18} />
+            </Button>
+          }
         />
       </Box>
 

@@ -38,17 +38,59 @@ interface DashboardSidebarProps {
   menuItems?: MenuItem[];
   onLogout: () => void;
   userType: 'customer' | 'admin';
+  /**
+   * Render the Language row + `LanguageSwitcher`. Defaults to `true` so the customer
+   * portal (bilingual EN/AR) is unaffected; the admin portal is English-only and passes
+   * `false`. Keep the default `true` — flipping it would silently drop the toggle from
+   * the customer sidebar.
+   */
+  showLanguageSwitcher?: boolean;
+  /**
+   * KP1-I177 — the phone number the customer sidebar's "Chat with us" card opens in WhatsApp.
+   *
+   * Any human format is accepted (`+971 293 4734 34`, `00971…`, digits): `toWhatsAppNumber`
+   * reduces it to the digits `wa.me` wants. Omit it and the shared support number below is
+   * used, which is the same one the (currently commented-out) Toll Free row dials — a portal
+   * that needs a different one passes it rather than editing this file.
+   */
+  supportWhatsAppNumber?: string;
 }
+
+/**
+ * The product's support line, as `common:sidebar.tollFree` states it: `Toll Free
+ * +971 293 4734 34`. Kept as digits here because `wa.me` takes no `+`, spaces or dashes —
+ * and NOT read out of the i18n bundle, which holds a translated *sentence* wrapped around
+ * the number, not the number itself.
+ */
+const DEFAULT_SUPPORT_WHATSAPP = '971293473434';
+
+/**
+ * `wa.me` accepts the full international number and nothing else — no `+`, no separators,
+ * no leading `00`. Anything that reduces to fewer than 8 digits is not a number we can
+ * dial, and yields `null` so the caller renders the card unlinked rather than sending the
+ * user to a WhatsApp error page.
+ */
+const toWhatsAppNumber = (raw?: string): string | null => {
+  const digits = (raw ?? '').replace(/\D/g, '').replace(/^00/, '');
+  return digits.length >= 8 ? digits : null;
+};
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   isMobile = false,
   menuItems: propsMenuItems,
   onLogout: handleLogout,
-  userType
+  userType,
+  showLanguageSwitcher = true,
+  supportWhatsAppNumber
 }) => {
   const { t, i18n } = useTranslation('common');
   const location = useLocation();
   const isRTL = i18n.language === 'ar';
+
+  // KP1-I177: the card and its collapsed twin advertised a click (`cursor-pointer`) and had
+  // no handler and no href — clicking either did nothing at all. This is the target.
+  const whatsAppNumber = toWhatsAppNumber(supportWhatsAppNumber ?? DEFAULT_SUPPORT_WHATSAPP);
+  const whatsAppUrl = whatsAppNumber ? `https://wa.me/${whatsAppNumber}` : undefined;
 
   const {
     isCollapsed,
@@ -96,12 +138,13 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       path: '/dashboard',
       label: t('sidebar.dashboard'),
       icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path d="M8.4 3H4.6C4.03995 3 3.75992 3 3.54601 3.10899C3.35785 3.20487 3.20487 3.35785 3.10899 3.54601C3 3.75992 3 4.03995 3 4.6V8.4C3 8.96005 3 9.24008 3.10899 9.45399C3.20487 9.64215 3.35785 9.79513 3.54601 9.89101C3.75992 10 4.03995 10 4.6 10H8.4C8.96005 10 9.24008 10 9.45399 9.89101C9.64215 9.79513 9.79513 9.64215 9.89101 9.45399C10 9.24008 10 8.96005 10 8.4V4.6C10 4.03995 10 3.75992 9.89101 3.54601C9.79513 3.35785 9.64215 3.20487 9.45399 3.10899C9.24008 3 8.96005 3 8.4 3Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M19.4 3H15.6C15.0399 3 14.7599 3 14.546 3.10899C14.3578 3.20487 14.2049 3.35785 14.109 3.54601C14 3.75992 14 4.03995 14 4.6V8.4C14 8.96005 14 9.24008 14.109 9.45399C14.2049 9.64215 14.3578 9.79513 14.546 9.89101C14.7599 10 15.0399 10 15.6 10H19.4C19.9601 10 20.2401 10 20.454 9.89101C20.6422 9.79513 20.7951 9.64215 20.891 9.45399C21 9.24008 21 8.96005 21 8.4V4.6C21 4.03995 21 3.75992 20.891 3.54601C20.7951 3.35785 20.6422 3.20487 20.454 3.10899C20.2401 3 19.9601 3 19.4 3Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M19.4 14H15.6C15.0399 14 14.7599 14 14.546 14.109C14.3578 14.2049 14.2049 14.3578 14.109 14.546C14 14.7599 14 15.0399 14 15.6V19.4C14 19.9601 14 20.2401 14.109 20.454C14.2049 20.6422 14.3578 20.7951 14.546 20.891C14.7599 21 15.0399 21 15.6 21H19.4C19.9601 21 20.2401 21 20.454 20.891C20.6422 20.7951 20.7951 20.6422 20.891 20.454C21 20.2401 21 19.9601 21 19.4V15.6C21 15.0399 21 14.7599 20.891 14.546C20.7951 14.3578 20.6422 14.2049 20.454 14.109C20.2401 14 19.9601 14 19.4 14Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M8.4 14H4.6C4.03995 14 3.75992 14 3.54601 14.109C3.35785 14.2049 3.20487 14.3578 3.10899 14.546C3 14.7599 3 15.0399 3 15.6V19.4C3 19.9601 3 20.2401 3.10899 20.454C3.20487 20.6422 3.35785 20.7951 3.54601 20.891C3.75992 21 4.03995 21 4.6 21H8.4C8.96005 21 9.24008 21 9.45399 20.891C9.64215 20.7951 9.79513 20.6422 9.89101 20.454C10 20.2401 10 19.9601 10 19.4V15.6C10 15.0399 10 14.7599 9.89101 14.546C9.79513 14.3578 9.64215 14.2049 9.45399 14.109C9.24008 14 8.96005 14 8.4 14Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+        <svg width="22" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8.4 3H4.6C4.03995 3 3.75992 3 3.54601 3.10899C3.35785 3.20487 3.20487 3.35785 3.10899 3.54601C3 3.75992 3 4.03995 3 4.6V8.4C3 8.96005 3 9.24008 3.10899 9.45399C3.20487 9.64215 3.35785 9.79513 3.54601 9.89101C3.75992 10 4.03995 10 4.6 10H8.4C8.96005 10 9.24008 10 9.45399 9.89101C9.64215 9.79513 9.79513 9.64215 9.89101 9.45399C10 9.24008 10 8.96005 10 8.4V4.6C10 4.03995 10 3.75992 9.89101 3.54601C9.79513 3.35785 9.64215 3.20487 9.45399 3.10899C9.24008 3 8.96005 3 8.4 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M19.4 3H15.6C15.0399 3 14.7599 3 14.546 3.10899C14.3578 3.20487 14.2049 3.35785 14.109 3.54601C14 3.75992 14 4.03995 14 4.6V8.4C14 8.96005 14 9.24008 14.109 9.45399C14.2049 9.64215 14.3578 9.79513 14.546 9.89101C14.7599 10 15.0399 10 15.6 10H19.4C19.9601 10 20.2401 10 20.454 9.89101C20.6422 9.79513 20.7951 9.64215 20.891 9.45399C21 9.24008 21 8.96005 21 8.4V4.6C21 4.03995 21 3.75992 20.891 3.54601C20.7951 3.35785 20.6422 3.20487 20.454 3.10899C20.2401 3 19.9601 3 19.4 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M19.4 14H15.6C15.0399 14 14.7599 14 14.546 14.109C14.3578 14.2049 14.2049 14.3578 14.109 14.546C14 14.7599 14 15.0399 14 15.6V19.4C14 19.9601 14 20.2401 14.109 20.454C14.2049 20.6422 14.3578 20.7951 14.546 20.891C14.7599 21 15.0399 21 15.6 21H19.4C19.9601 21 20.2401 21 20.454 20.891C20.6422 20.7951 20.7951 20.6422 20.891 20.454C21 20.2401 21 19.9601 21 19.4V15.6C21 15.0399 21 14.7599 20.891 14.546C20.7951 14.3578 20.6422 14.2049 20.454 14.109C20.2401 14 19.9601 14 19.4 14Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8.4 14H4.6C4.03995 14 3.75992 14 3.54601 14.109C3.35785 14.2049 3.20487 14.3578 3.10899 14.546C3 14.7599 3 15.0399 3 15.6V19.4C3 19.9601 3 20.2401 3.10899 20.454C3.20487 20.6422 3.35785 20.7951 3.54601 20.891C3.75992 21 4.03995 21 4.6 21H8.4C8.96005 21 9.24008 21 9.45399 20.891C9.64215 20.7951 9.79513 20.6422 9.89101 20.454C10 20.2401 10 19.9601 10 19.4V15.6C10 15.0399 10 14.7599 9.89101 14.546C9.79513 14.3578 9.64215 14.2049 9.45399 14.109C9.24008 14 8.96005 14 8.4 14Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
+
       )
     },
     {
@@ -179,12 +222,24 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       actualCollapsed ? "w-[80px]" : "w-[306px]",
       "p-3 md:p-4"
     )}>
-      {/* Desktop Collapse Toggle */}
+      {/*
+        * Desktop Collapse Toggle.
+        *
+        * KP1-I206: in RTL it sits INSIDE the sidebar's edge rather than hanging over the
+        * content. `-left-3` put two thirds of the button outside the panel, on top of the
+        * page — and RTL content starts at that edge, so it landed over the first thing the
+        * reader looks at (a card corner, a table's first column) rather than over margin.
+        * `left-1` keeps the same control in the same place on the same edge, just clear of
+        * the content.
+        *
+        * LTR is deliberately unchanged: the mock draws the button overhanging there, no one
+        * has reported it, and this component is shared with the (LTR-only) admin portal.
+        */}
       <button
         onClick={toggleCollapse}
         className={cn(
           "absolute -right-3 top-[69px] z-50 hidden md:flex h-8 w-8 shadow-sm items-center justify-center rounded-sm bg-primary-light-200 text-primary transition-transform hover:bg-primary-light",
-          isRTL ? "right-auto -left-3 rotate-180" : ""
+          isRTL ? "right-auto left-1 rotate-180" : ""
         )}
         aria-label={actualCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
       >
@@ -194,14 +249,14 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       {/* Logo Section */}
       <div className={cn(
         "flex items-center mb-6 overflow-hidden transition-all duration-300",
-        actualCollapsed ? "justify-center h-16" : "justify-center h-32"
+        actualCollapsed ? "justify-center h-16" : "justify-center h-auto"
       )}>
         <img
           src={khadamatLogo}
           alt="Khadamat"
           className={cn(
             "transition-all duration-300 object-contain",
-            actualCollapsed ? "w-10 h-10" : "max-w-full max-h-full"
+            actualCollapsed ? "w-10 h-10" : "max-w-50 max-h-full"
           )}
         />
       </div>
@@ -229,7 +284,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                   {item.icon}
                 </div>
                 {!actualCollapsed && (
-                  <span className="text-base font-poppins font-normal truncate">
+                  <span className="text-[14px] font-poppins font-normal truncate">
                     {item.label}
                   </span>
                 )}
@@ -257,48 +312,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
      {
       userType === "customer" && (
         <>
-         {/* Feedback item */}
-
-
-      {!actualCollapsed && (
-        <Link
-          key={"feedback"}
-          to={"/feedback"}
-          className={cn(
-            "flex items-center gap-2.5 h-12 px-1.5 rounded-lg bg-primary-base text-white my-1 transition-all duration-200",
-            actualCollapsed ? "justify-center" : "justify-start"
-          )}
-          onClick={() => setMobileOpen(false)}
-        >
-          <div className="flex items-center justify-center w-10 h-10 shrink-0">
-            <MessageSquare size={20} />
-          </div>
-          {!actualCollapsed && (
-            <span className="text-base text-xs font-poppins font-normal truncate">
-              {t('sidebar.feedback')}
-            </span>
-          )}
-        </Link>
-      )
-      }
-      {actualCollapsed && (
-        <TooltipProvider delayDuration={0}>
-          <Tooltip key={"feedback"}>
-            <TooltipTrigger asChild>
-              <Button variant="primary p-0! mt-auto! mb-4! h-12! w-full! rounded-lg! flex items-center justify-center ">
-                <MessageSquare />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side={isRTL ? "left" : "right"}>
-              {t('sidebar.feedback')}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      )}
+        
 
       {/* Toll free */}
 
-      {!actualCollapsed && (
+      {/* {!actualCollapsed && (
         <Link
           key={"tollFree"}
           to={"tel:+971 293 4734 34"}
@@ -332,12 +350,33 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-      )}
+      )} */}
 
 
-      {/* Help/CTA Section - Hidden when collapsed */}
+      {/**
+        * Help/CTA — hidden when collapsed.
+        *
+        * KP1-I177: the WHOLE card is the link now, not a `cursor-pointer` div wrapped around
+        * an inert `<button>`. The card already looked clickable everywhere, so making only
+        * the small glyph work would have left most of its surface still dead. The glyph stays
+        * as the affordance, inside the anchor rather than beside it.
+        *
+        * `target="_blank"` + `rel="noopener noreferrer"`: wa.me is a third-party origin, and
+        * a customer mid-form should not lose the page to it.
+        */}
       {!actualCollapsed && (
-        <div className="mt-auto p-3 rounded-2xl bg-[#016937] flex items-center gap-2 mb-3 transition-all duration-300 overflow-hidden cursor-pointer">
+        <a
+          href={whatsAppUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`${t('sidebar.enquiry')} — ${t('sidebar.enquiryDesc')}`}
+          className={cn(
+            'mt-auto p-2.5 rounded-xl bg-primary flex items-center gap-2 mb-3 transition-all duration-300 overflow-hidden no-underline',
+            // No dialable number configured -> the card still shows, but it no longer claims
+            // to be clickable. Better than an href that opens a WhatsApp error page.
+            whatsAppUrl ? 'cursor-pointer hover:bg-primary/90' : 'cursor-default pointer-events-none'
+          )}
+        >
           <div className=" bg-primary-200 flex items-center justify-center rounded-lg w-10 h-10 shrink-0">
             <img width={38} height={38} src={enquiryAvatar} alt="Enquiry" />
           </div>
@@ -349,20 +388,29 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               {t('sidebar.enquiryDesc')}
             </p>
           </div>
-          <button className="h-8 w-8 rounded-lg bg-transparent border-none flex items-center justify-center hover:bg-white/10 shrink-0">
+          <span className="h-8 w-8 rounded-lg bg-transparent flex items-center justify-center hover:bg-white/10 shrink-0">
             <WhatsAppIcon />
-          </button>
-        </div>
+          </span>
+        </a>
       )}
 
-      {/* Compact CTA for collapsed state */}
+      {/* Compact CTA for collapsed state — same destination as the card above (KP1-I177). */}
       {actualCollapsed && (
         <TooltipProvider delayDuration={0}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button className="mt-auto mb-4 h-12 w-full rounded-lg bg-[#016937] flex items-center justify-center hover:bg-[#01522b] transition-colors">
+              <a
+                href={whatsAppUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={t('sidebar.callOnServiceRequest')}
+                className={cn(
+                  'mt-auto mb-4 h-12 w-full rounded-lg bg-[#016937] flex items-center justify-center hover:bg-[#01522b] transition-colors',
+                  whatsAppUrl ? 'cursor-pointer' : 'cursor-default pointer-events-none'
+                )}
+              >
                 <WhatsAppIcon />
-              </button>
+              </a>
             </TooltipTrigger>
             <TooltipContent side={isRTL ? "left" : "right"}>
               {t('sidebar.callOnServiceRequest')}
@@ -374,7 +422,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       )
      }
 
-      {/* Language Switcher */}
+      {/* Language Switcher — hidden when the host portal is single-language (admin). */}
+      {showLanguageSwitcher && (
       <div className={cn(
         " flex items-center overflow-hidden transition-all duration-200",
         actualCollapsed ? "justify-center" : "justify-between px-1.5"
@@ -387,13 +436,14 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                 <path d="M12.9999 2.0498C12.9999 2.0498 15.9999 5.9998 15.9999 11.9998C15.9999 17.9998 12.9999 21.9498 12.9999 21.9498M10.9999 21.9498C10.9999 21.9498 7.99988 17.9998 7.99988 11.9998C7.99988 5.9998 10.9999 2.0498 10.9999 2.0498M2.62988 15.4998H21.3699M2.62988 8.4998H21.3699" stroke="#016937" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <span className="text-base text-[#016937] font-poppins">{t('sidebar.language')}</span>
+            <span className="text-[14px] text-primary">{t('sidebar.language')}</span>
           </div>
         )}
         <div className={cn(actualCollapsed ? "scale-75 origin-center" : "")}>
           <LanguageSwitcher actualCollapsed={actualCollapsed} />
         </div>
       </div>
+      )}
 
       {/* Logout */}
       <TooltipProvider delayDuration={0}>
@@ -413,7 +463,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                 </svg>
               </div>
               {!actualCollapsed && (
-                <span className="text-base font-poppins font-normal truncate">
+                <span className="text-[14px] font-poppins font-normal truncate">
                   {t('sidebar.logout')}
                 </span>
               )}

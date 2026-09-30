@@ -1,4 +1,7 @@
 import React from 'react';
+// `.required-mark` is owned by the shared form shell; Checkbox.css only adds this
+// component's 2px offset to it (KP1-I82).
+import '../FormField.css';
 import './Checkbox.css';
 
 interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
@@ -33,7 +36,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(({
                     className={`checkbox-input ${size === 'lg' ? 'checkbox-input-lg' : size === 'md' ? 'checkbox-input-md' : 'checkbox-input-sm'}`}
                 />
                 {label && (
-                    <label htmlFor={checkboxId} className={`checkbox-label ${error ? 'label-error' : ''}`}>
+                    <label htmlFor={checkboxId} className={`checkbox-label ${error ? 'checkbox-label-error' : ''}`}>
                         {label}
                         {required && <span className="required-mark">*</span>}
                     </label>

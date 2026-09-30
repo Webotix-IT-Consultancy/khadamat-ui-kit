@@ -14,11 +14,11 @@ import { Download, Eye } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import TablePrimary, { ColumnDefinition } from '../Table/TablePrimary';
 import TableActionMenu from '../Table/TableActionMenu';
+import Button from '../Button/Button';
 
 import { InvoiceData } from '../../services/invoice.service';
 import StatusBadge from '../StatusBadge/StatusBadge';
 import { useTranslation } from 'react-i18next';
-import { ExportType } from '../../utils/exportTable';
 
 export type Order = 'asc' | 'desc';
 
@@ -68,13 +68,22 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
         onPageChange(newPage);
     };
 
-    const handleExport = (type: ExportType) => {
+    /**
+     * Export to Excel.
+     *
+     * **One button, one format.** This used to be `TableActionMenu`'s excel/pdf/csv
+     * dropdown, whose PDF and CSV branches were a `// TODO` — so two of the three
+     * choices silently did nothing. Both portals have since settled on a single
+     * Export to Excel button (Mobilisation set the shape), which is what the toolbar
+     * now renders.
+     */
+    const handleExport = () => {
         if (onExport) {
             onExport();
             return;
         }
 
-        if (type === 'excel') {
+        {
             const dataToExport = invoices.map((inv, index) => ({
                 [t('common:table.slNo')]: (page * rowsPerPage) + index + 1,
                 [t('common:table.invoiceNo')]: inv.invoiceNumber,
@@ -90,7 +99,6 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
             XLSX.utils.book_append_sheet(workbook, worksheet, t('invoice:export.sheetName'));
             XLSX.writeFile(workbook, `${t('invoice:export.filename')}.xlsx`);
         }
-        // TODO: Implement PDF and CSV export if needed
     };
 
     const columns: ColumnDefinition<InvoiceData>[] = [
@@ -148,7 +156,17 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
                     searchQuery={searchQuery}
                     onSearchChange={onSearchChange}
                     onFilterClick={onFilterClick}
-                    onExport={handleExport}
+                    // The excel/pdf/csv dropdown is replaced by the dedicated button —
+                    // the house shape in both portals.
+                    showExport={false}
+                    actionChildren={
+                        /* Icon AFTER the label — the Figma puts it on the trailing
+                           edge, as Filter does beside it. */
+                        <Button onClick={handleExport} variant="primary" size="small">
+                            {t('common:buttons.exportToExcel')}
+                            <Download size={18} />
+                        </Button>
+                    }
                 />
             </Box>
 

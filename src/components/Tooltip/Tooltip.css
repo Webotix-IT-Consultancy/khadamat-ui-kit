@@ -1,0 +1,114 @@
+/*
+ * The hover bubble — one shape, a tone palette, no caller-specific rules.
+ *
+ * Same principle as StatusBadge.css: the CONTENT never appears in this file. A caller picks
+ * a tone; adding a tone is one rule here and one line in the component's type. If a new use
+ * needs a colour that is not in this list, that is a design question, not a styling one.
+ *
+ * Colours are tokens (`hsl(var(--danger))`), so the two portals resolve them through their own
+ * palettes — the admin portal's `body.admin-theme` overrides included.
+ */
+
+.tooltip-bubble {
+  z-index: 1400;
+  max-width: 17.5rem;
+  /* Both measured off the design export: text inset ~16px / ~12px, corner ~16px. */
+  padding: 0.75rem 1rem;
+  border-radius: 16px;
+  font-family: Poppins, -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+  text-align: start;
+  /* Long reasons wrap; the caller has already trimmed them to a preview length. */
+  white-space: normal;
+  overflow-wrap: anywhere;
+  box-shadow: 0 6px 18px -6px rgb(0 0 0 / 25%);
+  animation: tooltip-bubble-in 120ms ease-out;
+}
+
+/*
+ * 1400, above MUI's portalled poppers (1300) and the FilterPanel stack (backdrop 998,
+ * panel 999). A tooltip is the most transient thing on screen and always belongs on top —
+ * the shadcn primitive's z-50 puts it UNDER a MUI date picker, which is what this fixes.
+ */
+
+.tooltip-arrow {
+  /* Radix sizes the arrow through width/height props; only the fill belongs here. */
+  filter: drop-shadow(0 1px 0 rgb(0 0 0 / 4%));
+}
+
+/* ── Tones ───────────────────────────────────────────────────────────────── */
+
+/*
+ * The default: the dark, quiet bubble for an ordinary hint.
+ */
+.tooltip-neutral {
+  background: hsl(var(--foreground));
+  color: hsl(var(--white, 0 0% 100%));
+}
+
+.tooltip-neutral .tooltip-arrow {
+  fill: hsl(var(--foreground));
+}
+
+/*
+ * Danger — the pink bubble the dispatch boards use for a driver's rejection
+ * (`Tooltip-popover.png` in the admin portal's skip-loader reference images).
+ *
+ * **Both values are SAMPLED from that export**, the way `status-badge-success` takes its
+ * `#049351` from the Enquiry one:
+ *
+ *  - text `#ff3232` IS `hsl(var(--danger))` (0 100% 60%) exactly, so it stays a token and
+ *    follows the palette;
+ *  - the fill is `#ffe6e6` — hsl(0 100% 95%), one step DEEPER than `--danger-light`
+ *    (#ffebeb, 96%). The literal is deliberate, and this note is why: swapping it for the
+ *    token is the obvious tidy-up and it lightens the bubble away from the design.
+ *
+ * (The chip below it is deeper still in the mock — #fdd3d0 against StatusBadge's own
+ * `--danger-light`. That is a StatusBadge question, not a tooltip one, and changing it would
+ * move every danger chip in both portals.)
+ */
+.tooltip-danger {
+  background: #ffe6e6;
+  color: hsl(var(--danger));
+}
+
+.tooltip-danger .tooltip-arrow {
+  fill: #ffe6e6;
+}
+
+/* ── The dimmed second line ──────────────────────────────────────────────── */
+
+/*
+ * `hint` — what pressing the trigger does. Dimmed rather than a different colour, so it
+ * recedes in every tone without needing a rule per tone.
+ */
+.tooltip-hint {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 12px;
+  font-weight: 400;
+  opacity: 0.72;
+}
+
+/*
+ * Own keyframes rather than the `animate-in` utilities: those come from tailwindcss-animate,
+ * which is a PORTAL-level plugin. A shared component cannot assume both portals load it.
+ */
+@keyframes tooltip-bubble-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tooltip-bubble {
+    animation: none;
+  }
+}
