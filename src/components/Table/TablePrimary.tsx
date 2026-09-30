@@ -124,6 +124,20 @@ interface TablePrimaryProps<T> {
      */
     stickyLastColumn?: boolean;
     /**
+     * Pins the FIRST column to the leading edge while the table scrolls horizontally —
+     * the mirror of `stickyLastColumn`, and subject to the same test: it is the column's
+     * JOB that decides, not the module.
+     *
+     * It exists for the `selection` tick column. A selectable list is a list with a bulk
+     * action, which means the scheduler ticks rows, scrolls right to read a column they are
+     * deciding on, and has to scroll back to tick the next one — the same defect KP1-I50
+     * fixed at the other edge, where the row actions were.
+     *
+     * **Do not set it on a table whose first column is data.** A pinned SL No. or Account
+     * Name floats over the row on scroll and buys nothing; only a CONTROL earns the edge.
+     */
+    stickyFirstColumn?: boolean;
+    /**
      * A leading checkbox column — opt-in, and absent unless this prop is passed.
      *
      * Off by default because a tick column is only meaningful where the screen has a BULK
@@ -248,6 +262,7 @@ const TablePrimary = <T extends Record<string, any>>({
     rowKey,
     emptyPlaceholder = '-',
     stickyLastColumn = false,
+    stickyFirstColumn = false,
     emptyMessage,
     selection,
 }: TablePrimaryProps<T>) => {
@@ -298,7 +313,9 @@ const TablePrimary = <T extends Record<string, any>>({
             <TableContainer component={Paper} className="table-primary-wrapper">
                 <Table
                     stickyHeader
-                    className={`transaction-table${stickyLastColumn ? ' table-primary-sticky-last' : ''}`}
+                    className={`transaction-table${stickyLastColumn ? ' table-primary-sticky-last' : ''}${
+                        stickyFirstColumn ? ' table-primary-sticky-first' : ''
+                    }`}
                 >
                     <TableHead className="table-primary-head">
                         <TableRow>

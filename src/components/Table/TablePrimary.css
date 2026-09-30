@@ -213,6 +213,55 @@
     background-color: hsl(var(--grey-100));
 }
 
+/*
+ * The pinned LEADING column — opt-in via `stickyFirstColumn`, and built for the
+ * `selection` tick column.
+ *
+ * Everything KP1-I50 established at the trailing edge applies here unchanged, in mirror:
+ *
+ * - **`inset-inline-start`, not `left`.** Under `dir="rtl"` the first column is drawn on
+ *   the RIGHT, so a physical `left: 0` would pin it to the far side of the table from
+ *   where it is painted and the ticks would float over the data. `left: 0` stays first as
+ *   the fallback for anything that does not know the logical property; in LTR the two
+ *   agree, and where both are understood the logical one wins by order.
+ * - **The cells need their own background**, because a sticky cell is otherwise
+ *   transparent and the scrolling columns run underneath it.
+ * - **The shadow marks the edge the content scrolls UNDER**, so it points the opposite way
+ *   from the trailing column's and flips with direction.
+ * - **The header outranks the body** where the two sticky axes meet.
+ */
+.table-primary-sticky-first th.table-primary-header-cell:first-child,
+.table-primary-sticky-first td.table-primary-cell:first-child {
+    position: sticky;
+    left: 0;
+    inset-inline-start: 0;
+    background-color: hsl(var(--white));
+    box-shadow: 6px 0 6px -6px rgba(0, 0, 0, 0.18);
+}
+
+[dir='rtl'] .table-primary-sticky-first th.table-primary-header-cell:first-child,
+[dir='rtl'] .table-primary-sticky-first td.table-primary-cell:first-child {
+    box-shadow: -6px 0 6px -6px rgba(0, 0, 0, 0.18);
+}
+
+.table-primary-sticky-first th.table-primary-header-cell:first-child {
+    z-index: 3;
+}
+
+.table-primary-sticky-first td.table-primary-cell:first-child {
+    z-index: 1;
+}
+
+/* The row hover is painted on the ROW, which a sticky cell does not inherit. */
+.table-primary-sticky-first .table-primary-row:hover td.table-primary-cell:first-child {
+    background-color: hsl(var(--grey-100));
+}
+
+/*
+ * The empty-state cell spans the row and is deliberately NOT a `.table-primary-cell`, so
+ * neither pin catches it — see the note on `.table-primary-empty-cell`.
+ */
+
 /* Pagination Styling */
 .table-primary-pagination-container {
     display: flex;
