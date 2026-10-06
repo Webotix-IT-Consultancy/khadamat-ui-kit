@@ -153,20 +153,38 @@ const AutocompleteBase = styled(Autocomplete)({
 });
 
 /**
- * KP1-I57: an Autocomplete's option list is portaled to <body> and positioned against
- * the viewport, so nothing about this panel's own layout stopped it from opening
- * straight over the Clear/Apply bar that KP1-I75 pinned to the bottom.
+ * KP1-I57, re-fixed by **KP1-I536**: an Autocomplete's option list is portaled to <body>,
+ * so nothing about this panel's own layout stops it opening straight over the Clear/Apply
+ * bar that KP1-I75 pinned to the bottom.
  *
- * Two constraints make that impossible, and they belong on the base component rather
- * than on each call site so any dropdown added here later inherits them:
- *  - `preventOverflow` on the alt (vertical) axis, whose default boundary is the
- *    reference's clipping parents — i.e. `.filter-panel-content`, the scrolling field
- *    area whose bottom edge is exactly where the action bar starts. The list is kept
- *    inside it instead of running past it.
- *  - a height cap, so a long list still fits ABOVE the field when `flip` sends it
- *    there rather than being clamped on top of its own input.
+ * Three constraints make that impossible, and they belong on the base component rather than
+ * on each call site so any dropdown added here later inherits them:
+ *
+ *  - **an explicit `boundary`** — the scrolling field area, passed down through
+ *    `OptionListBoundary`. This is the part KP1-I57 got wrong and why the ticket came back:
+ *    it relied on Popper's DEFAULT boundary, `'clippingParents'`, which resolves against the
+ *    reference's scroll ancestors **and the viewport**, and in practice the viewport is what
+ *    won. Measured on the Skip Loader panel before this change: the list opened `bottom`,
+ *    ran 69px past the field area and sat 47px over the action bar, while still fitting
+ *    inside the window — so `flip` saw no overflow to correct and left it there.
+ *  - **`tether: false`**, so `preventOverflow` may detach the list from its field rather
+ *    than letting it hang out of the boundary to stay attached (tethering is Popper's
+ *    default and is exactly what keeps an overflowing list glued where it does not fit).
+ *  - **a height cap**, so a long list still fits ABOVE the field when `flip` sends it there
+ *    rather than being clamped on top of its own input.
  */
 const OPTION_LIST_MAX_HEIGHT = 176; // ~4.5 rows; short enough to fit either side of a field
+
+/**
+ * The element every option list must stay inside — `.filter-panel-content`, the scrolling
+ * field area whose bottom edge is exactly where the action bar begins.
+ *
+ * A context rather than a prop because `StyledAutocomplete` has thirteen call sites in this
+ * file and a boundary that one of them could forget to pass is a boundary that will be
+ * forgotten. `null` falls back to Popper's own default, so the component still renders
+ * sensibly outside the panel.
+ */
+const OptionListBoundary = React.createContext<HTMLElement | null>(null);
 
 /**
  * A component, not a string: `StyledAutocomplete` is defined at module scope where
@@ -178,7 +196,10 @@ const NoMatchesText: React.FC = () => {
   return <>{t('common:emptyStates.noMatches', 'No matches found')}</>;
 };
 
-const StyledAutocomplete: React.FC<any> = (props) => (
+const StyledAutocomplete: React.FC<any> = (props) => {
+  const boundary = React.useContext(OptionListBoundary);
+
+  return (
   <AutocompleteBase
     /**
      * KP1-I91: "No matches found" rather than MUI's bare "No options", for every dropdown
@@ -191,18 +212,38 @@ const StyledAutocomplete: React.FC<any> = (props) => (
      * render as raw text (KP1-I56).
      */
     noOptionsText={props.noOptionsText ?? <NoMatchesText />}
+    {...props}
+    /*
+     * AFTER `{...props}`, deliberately: these two constraints are the panel's, not a
+     * caller's suggestion, and spreading props last silently dropped them for any call site
+     * that passed its own `slotProps`. A caller with a genuine need merges into
+     * `props.slotProps`, which is read here rather than overwritten.
+     */
     slotProps={{
-      listbox: { sx: { maxHeight: `${OPTION_LIST_MAX_HEIGHT}px` } },
+      ...(props.slotProps ?? {}),
+      listbox: {
+        ...(props.slotProps?.listbox ?? {}),
+        sx: { maxHeight: `${OPTION_LIST_MAX_HEIGHT}px`, ...(props.slotProps?.listbox?.sx ?? {}) },
+      },
       popper: {
+        ...(props.slotProps?.popper ?? {}),
         modifiers: [
-          { name: 'flip', enabled: true, options: { padding: 8 } },
-          { name: 'preventOverflow', enabled: true, options: { padding: 8, altAxis: true } },
+          {
+            name: 'flip',
+            enabled: true,
+            options: { padding: 8, ...(boundary ? { boundary } : {}) },
+          },
+          {
+            name: 'preventOverflow',
+            enabled: true,
+            options: { padding: 8, altAxis: true, tether: false, ...(boundary ? { boundary } : {}) },
+          },
         ],
       },
     }}
-    {...props}
   />
-);
+  );
+};
 
 /** Every field empty — an empty string means "All" for a given filter. */
 const EMPTY_FILTERS: FilterValues = {
@@ -235,6 +276,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const { t } = useTranslation(['transactions', 'invoice', 'common', 'adminEnquiries']);
 
   const [filters, setFilters] = useState<FilterValues>({ ...EMPTY_FILTERS, ...initialValues });
+  /** The scrolling field area, published to every option list as its boundary (KP1-I536). */
+  const [fieldAreaEl, setFieldAreaEl] = useState<HTMLDivElement | null>(null);
 
   /**
    * KP1-I77: the panel's pickers are the pair a tester is most likely to have open at
@@ -459,7 +502,14 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           <h3>{t('transactions:filters.title')}</h3>
         </div>
 
-        <div className="filter-panel-content">
+        {/*
+          * KP1-I536 — the field area IS the boundary for every option list below, so a
+          * dropdown can never open over the Clear / Apply bar. A callback ref rather than
+          * `useRef`, because the context value has to change once the node exists and
+          * `ref.current` is still null on the render that reads it.
+          */}
+        <OptionListBoundary.Provider value={fieldAreaEl}>
+        <div className="filter-panel-content" ref={setFieldAreaEl}>
           {/*
             * KP1-I65: the range can only be built forwards. `To` cannot go before a chosen
             * `From`, and `From` cannot go past a chosen `To` — the second half matters
@@ -863,6 +913,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
             </>
           )}
         </div>
+        </OptionListBoundary.Provider>
 
         <div className="filter-panel-actions">
           <Button variant="outline-primary" className="clear-button" onClick={handleClear}>{t('common:buttons.clear')}</Button>
