@@ -31,6 +31,24 @@ export interface MenuItem {
   path: string;
   label: string;
   icon: React.ReactNode;
+  /**
+   * A section heading rendered ABOVE this item — "Compactable", "On Call Jobs", "Skips",
+   * "Documents".
+   *
+   * The design has grouped the operations nav under headings since Phase 2, and every portal
+   * that wanted one had to leave a comment saying it could not have it ("the shared ui-kit
+   * `MenuItem` has no section-heading support, and adding one is a ui-kit change"). This is
+   * that change.
+   *
+   * It belongs to the ITEM rather than being a separate array entry so the menu stays one flat
+   * list: every existing caller keeps working untouched, `menuItems.filter(...)` for RBAC still
+   * works, and a heading can never be left behind pointing at a group whose items were all
+   * filtered out — it is drawn by the first item that survives.
+   *
+   * Hidden while the rail is collapsed, where there is no room for it and the items are
+   * icon-only.
+   */
+  section?: string;
 }
 
 interface DashboardSidebarProps {
@@ -264,8 +282,15 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       {/* Navigation */}
       <nav className="flex-1 flex flex-col gap-1.5 overflow-y-auto no-scrollbar">
         <TooltipProvider delayDuration={0}>
-          {menuItems.map((item) => {
+          {menuItems.map((item, index) => {
             const isActive = location.pathname === item.path;
+            /*
+             * The heading is drawn by the first item of each run, so a group whose earlier
+             * items were filtered out (RBAC) still gets its heading from whichever item
+             * survived, and a group filtered away entirely leaves none behind.
+             */
+            const previousSection = index > 0 ? menuItems[index - 1].section : undefined;
+            const showSection = Boolean(item.section) && item.section !== previousSection;
 
             const LinkContent = (
               <Link
@@ -292,6 +317,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             );
 
             if (actualCollapsed) {
+              // No heading on the collapsed rail: there is no room for it beside icon-only
+              // items, and the tooltip already names each one.
               return (
                 <Tooltip key={item.path}>
                   <TooltipTrigger asChild>
@@ -304,7 +331,28 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               );
             }
 
-            return LinkContent;
+            if (!showSection) return LinkContent;
+
+            return (
+              <React.Fragment key={`${item.section}-${item.path}`}>
+                {/*
+                  * `text-start` and `ps-*`, never `left`/`pl-` — the customer portal mirrors
+                  * in Arabic and a physical side would strand the heading on the wrong edge.
+                  * `aria-hidden` because the heading is decorative: it labels a run of links
+                  * that already name themselves, and announcing it would double every item.
+                  */}
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "mt-3 mb-0.5 px-2 text-start text-[12px] font-poppins font-medium tracking-wide ",
+                    userType === "admin" ? "text-secondary/60" : "text-primary-base/60"
+                  )}
+                >
+                  {item.section}
+                </span>
+                {LinkContent}
+              </React.Fragment>
+            );
           })}
         </TooltipProvider>
       </nav>
