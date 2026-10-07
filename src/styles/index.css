@@ -280,7 +280,9 @@ body.admin-theme {
 
   --primary: 41 53% 52%;
   --primary-foreground: 0 0% 100%;
-  --primary-200: 41 60% 70%;
+  /* --primary-200: 41 60% 70%; */
+  --primary-200: 42 88% 75%;
+
   --primary-300: 41 50% 60%;
   --primary-dark: 36 57% 15%;
   --primary-light: 37 79% 92%;
