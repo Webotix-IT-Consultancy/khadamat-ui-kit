@@ -84,6 +84,8 @@
     "lengthRange": "يجب أن يكون طول {{field}} بين {{min}} و {{max}} حرفًا."
   },
   "sidebar": {
+    "expandSidebar": "توسيع الشريط الجانبي",
+    "collapseSidebar": "طي الشريط الجانبي",
     "dashboard": "لوحة القيادة",
     "wallet": "المحفظة",
     "transaction": "المعاملات",

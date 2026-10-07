@@ -86,6 +86,8 @@
     "lengthRange": "{{field}} must be between {{min}} and {{max}} characters."
   },
   "sidebar": {
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar",
     "dashboard": "Dashboard",
     "wallet": "Wallet",
     "transaction": "Transaction",
