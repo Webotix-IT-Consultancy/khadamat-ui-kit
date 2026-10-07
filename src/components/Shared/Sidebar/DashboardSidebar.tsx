@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import khadamatLogo from '../../../assets/images/khadamat-logo.png';
 import webotixLogo from '../../../assets/images/webotix-logo-primary.png';
@@ -86,7 +86,33 @@ interface DashboardSidebarProps {
    * that needs a different one passes it rather than editing this file.
    */
   supportWhatsAppNumber?: string;
+  /**
+   * Window width (px) below which the DESKTOP sidebar starts collapsed to its icon rail —
+   * on load, and again whenever the window is narrowed across it. Defaults to 1024, the
+   * customer portal's behaviour; the admin portal passes 1440 because its 12-16 column
+   * lists need the room on a laptop. Never auto-EXPANDS: widening the window leaves the
+   * user's choice alone. Below 768px the sidebar is the mobile drawer and this is moot.
+   */
+  autoCollapseBelow?: number;
 }
+
+/**
+ * Hover-peek timings. The open delay keeps a pointer merely CROSSING the rail on its way to
+ * the page from flashing the panel open; the close delay forgives a pointer that overshoots
+ * the panel's edge by a few pixels.
+ */
+const PEEK_OPEN_DELAY = 150;
+const PEEK_CLOSE_DELAY = 250;
+
+/**
+ * The rail's own tooltips wait longer than the peek, so a HOVER opens the peek and never
+ * flashes a tooltip first. Keyboard focus is unaffected — Radix opens a tooltip on focus
+ * without the delay — so the rail stays labelled for keyboard users, who do not get a peek.
+ */
+const RAIL_TOOLTIP_DELAY = 400;
+
+const isMacPlatform = () =>
+  typeof navigator !== 'undefined' && /Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent);
 
 /**
  * The product's support line, as `common:sidebar.tollFree` states it: `Toll Free
@@ -113,7 +139,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   onLogout: handleLogout,
   userType,
   showLanguageSwitcher = true,
-  supportWhatsAppNumber
+  supportWhatsAppNumber,
+  autoCollapseBelow = 1024
 }) => {
   const { t, i18n } = useTranslation('common');
   const location = useLocation();
@@ -131,25 +158,88 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     setMobileOpen
   } = useSidebarStore();
 
-  const actualCollapsed = isMobile ? false : isCollapsed;
+  /*
+   * Two different questions, kept apart:
+   *  - `railCollapsed`  — how much room the sidebar TAKES in the layout (the user's setting);
+   *  - `actualCollapsed` — how its content RENDERS. While peeking, a collapsed sidebar
+   *    renders full width as an overlay but still takes only the rail's 80px, so the page
+   *    behind it does not reflow.
+   */
+  const railCollapsed = isMobile ? false : isCollapsed;
+  const [peek, setPeek] = useState(false);
+  const actualCollapsed = railCollapsed && !peek;
+
+  const peekTimer = useRef<number | undefined>(undefined);
+  const clearPeekTimer = () => window.clearTimeout(peekTimer.current);
+  const handlePeekEnter = () => {
+    clearPeekTimer();
+    if (!railCollapsed) return;
+    peekTimer.current = window.setTimeout(() => setPeek(true), PEEK_OPEN_DELAY);
+  };
+  const handlePeekLeave = () => {
+    clearPeekTimer();
+    peekTimer.current = window.setTimeout(() => setPeek(false), PEEK_CLOSE_DELAY);
+  };
+  useEffect(() => () => window.clearTimeout(peekTimer.current), []);
+  // Pinning it open (button / Ctrl+B) ends the peek; so does choosing a page from it.
+  useEffect(() => {
+    if (!railCollapsed) setPeek(false);
+  }, [railCollapsed]);
+  useEffect(() => {
+    clearPeekTimer();
+    setPeek(false);
+  }, [location.pathname]);
+  useEffect(() => {
+    if (!peek) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPeek(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [peek]);
+
+  /*
+   * Ctrl+B (Cmd+B on a Mac) collapses / expands — the editor convention (VS Code, Office).
+   * Registered by the DESKTOP copy only; that copy stays mounted on a phone-width window
+   * (merely hidden), so the width check stops it toggling a state nobody can see.
+   * A rich-text editor owns Ctrl+B as Bold, so a contentEditable target is left alone.
+   */
+  const isMac = isMacPlatform();
+  const shortcutLabel = isMac ? '⌘ B' : 'Ctrl + B';
+  useEffect(() => {
+    if (isMobile) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() !== 'b' || !(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return;
+      if (e.repeat || window.innerWidth < 768) return;
+      if ((e.target as HTMLElement | null)?.isContentEditable) return;
+      e.preventDefault();   // Firefox opens its bookmarks sidebar on Ctrl+B
+      toggleCollapse();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isMobile, toggleCollapse]);
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  // Initial responsive state
+  /*
+   * Start collapsed below `autoCollapseBelow`: on load, and when the window is narrowed
+   * ACROSS that width. Only the crossing collapses — a user who expands the sidebar on a
+   * narrow window keeps it expanded while they resize — and nothing here ever expands it.
+   */
   useEffect(() => {
+    if (isMobile) return;
+    const isNarrow = () => window.innerWidth >= 768 && window.innerWidth < autoCollapseBelow;
+    let wasNarrow = isNarrow();
+    if (wasNarrow) setCollapsed(true);
     const handleResize = () => {
-      if (window.innerWidth >= 1024) { // lg
-        // setCollapsed(false); // User wants expanded by default on lg
-      } else if (window.innerWidth >= 768) { // md
-        setCollapsed(true);
-      }
+      const narrow = isNarrow();
+      if (narrow && !wasNarrow) setCollapsed(true);
+      wasNarrow = narrow;
     };
-
-    handleResize(); // Run on mount
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [setCollapsed]);
+  }, [isMobile, autoCollapseBelow, setCollapsed]);
 
   const handleLogoutClick = () => {
     setShowLogoutConfirm(true);
@@ -306,6 +396,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       <Link
         key={key}
         to={item.path}
+        aria-current={isActive ? 'page' : undefined}
         className={cn(
           "flex items-center gap-2.5 h-12 p-1.5 rounded-lg transition-all duration-200",
           isActive
@@ -367,12 +458,86 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     );
   };
 
+  /*
+   * The nav scrolls with its scrollbar HIDDEN: a bar running down a narrow panel competes
+   * with the items and the group chevrons, and the OS draws it differently on every machine.
+   * Overflow is signalled instead by what the content itself does —
+   *  - an edge FADE at the top and bottom, shown only while there is more in that direction;
+   *  - a small "more below" button over the bottom fade that scrolls the list on;
+   *  - the ACTIVE item is brought into view after navigation, so a page opened from deep in
+   *    Master never leaves its own highlight scrolled out of sight.
+   * Wheel, touch and keyboard (Tab moves focus, the browser scrolls it into view) are unchanged.
+   */
+  const navRef = useRef<HTMLElement>(null);
+  const [navOverflow, setNavOverflow] = useState({ above: false, below: false });
+  const updateNavOverflow = useCallback(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const above = el.scrollTop > 4;
+    const below = el.scrollTop + el.clientHeight < el.scrollHeight - 4;
+    setNavOverflow((prev) => (prev.above === above && prev.below === below ? prev : { above, below }));
+  }, []);
+
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', updateNavOverflow, { passive: true });
+    window.addEventListener('resize', updateNavOverflow);
+    return () => {
+      el.removeEventListener('scroll', updateNavOverflow);
+      window.removeEventListener('resize', updateNavOverflow);
+    };
+  }, [updateNavOverflow]);
+
+  // Content height changes whenever a group opens or closes, RBAC narrows the list, or the
+  // rail collapses — re-measure after every render. The setter bails out when nothing changed,
+  // so this cannot loop.
+  useEffect(() => {
+    updateNavOverflow();
+  });
+
+  // Reveal the active item once per navigation — NOT on every group toggle, or opening Master
+  // while on Customers would yank the list back up to Customer Care.
+  const revealActiveRef = useRef(true);
+  useEffect(() => {
+    revealActiveRef.current = true;
+  }, [location.pathname]);
+  useEffect(() => {
+    if (!revealActiveRef.current) return;
+    const active = navRef.current?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!active) return;   // its group has not opened yet — try again on the next render
+    active.scrollIntoView({ block: 'nearest' });
+    revealActiveRef.current = false;
+  });
+
+  const scrollNavDown = () => {
+    const el = navRef.current;
+    if (!el) return;
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    el.scrollBy({ top: el.clientHeight * 0.6, behavior: reduceMotion ? 'auto' : 'smooth' });
+  };
+
   const sidebarContent = (
+    /*
+     * The OUTER box is the sidebar's slot in the layout and follows the user's setting only;
+     * the INNER panel is what is drawn. They are the same width except during a hover peek,
+     * when the panel widens over the page from an 80px slot — that is what keeps the page
+     * from reflowing each time the pointer passes over the rail.
+     */
+    <div
+      onMouseEnter={handlePeekEnter}
+      onMouseLeave={handlePeekLeave}
+      className={cn(
+        "h-screen relative shrink-0 transition-[width] duration-300 ease-in-out",
+        "md:sticky md:top-0 md:z-50",
+        railCollapsed ? "w-[80px]" : "w-[306px]"
+      )}
+    >
     <div className={cn(
-      "h-screen flex flex-col bg-primary-light-200 transition-all duration-300 ease-in-out relative group/sidebar border-e border-[#f1f0ef]",
-      "md:sticky md:top-0 md:z-50",
+      "absolute inset-y-0 start-0 flex flex-col bg-primary-light-200 transition-all duration-300 ease-in-out group/sidebar border-e border-[#f1f0ef]",
       actualCollapsed ? "w-[80px]" : "w-[306px]",
-      "p-3 md:p-4"
+      "p-3 md:p-4",
+      peek && "shadow-2xl"
     )}>
       {/*
         * Desktop Collapse Toggle.
@@ -387,16 +552,33 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         * LTR is deliberately unchanged: the mock draws the button overhanging there, no one
         * has reported it, and this component is shared with the (LTR-only) admin portal.
         */}
+      <TooltipProvider delayDuration={300}>
+      <Tooltip>
+      <TooltipTrigger asChild>
       <button
         onClick={toggleCollapse}
+        aria-keyshortcuts={isMac ? "Meta+B" : "Control+B"}
         className={cn(
-          "absolute -right-3 top-[69px] z-50 hidden md:flex h-8 w-8 shadow-sm items-center justify-center rounded-sm bg-primary-light-200 text-primary transition-transform hover:bg-primary-light",
+          "absolute -right-3 top-[69px] z-50 hidden md:flex h-8 w-8 shadow-sm items-center justify-center rounded-sm transition-transform",
+          userType === 'admin' ? "bg-primary-light-200 text-primary-600  hover:bg-primary hover:text-primary-foreground" : "bg-primary-light-200 text-primary-base hover:bg-primary hover:text-primary-foreground",
           isRTL ? "right-auto left-1 rotate-180" : ""
         )}
-        aria-label={actualCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        aria-label={railCollapsed ? t('sidebar.expandSidebar') : t('sidebar.collapseSidebar')}
       >
-        {actualCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+        {/* Follows the SETTING, not the peek: on a peeking panel this button pins it open. */}
+        {railCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
       </button>
+      </TooltipTrigger>
+      <TooltipContent side={isRTL ? "left" : "right"}>
+        <span className="flex items-center gap-2">
+          {railCollapsed ? t('sidebar.expandSidebar') : t('sidebar.collapseSidebar')}
+          <kbd dir="ltr" className="rounded border border-primary-foreground/40 px-1.5 py-0.5 font-sans text-[11px] leading-none">
+            {shortcutLabel}
+          </kbd>
+        </span>
+      </TooltipContent>
+      </Tooltip>
+      </TooltipProvider>
 
       {/* Logo Section */}
       <div className={cn(
@@ -414,8 +596,12 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 flex flex-col gap-1.5 overflow-y-auto no-scrollbar">
-        <TooltipProvider delayDuration={0}>
+      <div className="relative flex-1 min-h-0 flex flex-col">
+      <nav
+        ref={navRef}
+        className="flex-1 min-h-0 flex flex-col gap-1.5 overflow-y-auto overscroll-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      >
+        <TooltipProvider delayDuration={RAIL_TOOLTIP_DELAY}>
           {blocks.map((block) => {
             if (!block.group) {
               return block.items.map((item, i) => renderItem(item, block.items, i, `top-${block.key}`));
@@ -465,6 +651,42 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         </TooltipProvider>
       </nav>
 
+        {/* Overflow cues — they replace the hidden scrollbar (see navRef above). Purely
+          * visual: `pointer-events-none` so the items under a fade stay clickable. */}
+        <div
+          aria-hidden="true"
+          className={cn(
+            "pointer-events-none absolute inset-x-0 top-0 h-6 bg-linear-to-b from-primary-light-200 to-transparent transition-opacity duration-200",
+            navOverflow.above ? "opacity-100" : "opacity-0"
+          )}
+        />
+        <div
+          aria-hidden="true"
+          className={cn(
+            "pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-primary-light-200 to-transparent transition-opacity duration-200",
+            navOverflow.below ? "opacity-100" : "opacity-0"
+          )}
+        />
+        {/* Mouse affordance only: keyboard and screen-reader users reach every item directly,
+          * so the button stays out of the tab order and the accessibility tree. */}
+        {navOverflow.below && (
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-hidden="true"
+            onClick={scrollNavDown}
+            className={cn(
+              "absolute bottom-1 left-1/2 -translate-x-1/2 flex h-7 w-7 items-center justify-center rounded-full border shadow-sm cursor-pointer transition-colors",
+              userType === "admin"
+                ? "bg-primary-light-200 border-primary-600 text-primary-600 hover:bg-primary hover:text-primary-foreground hover:border-primary"
+                : "bg-primary-light-200 border-primary  text-primary-base hover:bg-primary hover:text-primary-foreground"
+            )}
+          >
+            <ChevronDown size={16} />
+          </button>
+        )}
+      </div>
+
      {
       userType === "customer" && (
         <>
@@ -494,7 +716,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       )
       }
       {actualCollapsed && (
-        <TooltipProvider delayDuration={0}>
+        <TooltipProvider delayDuration={RAIL_TOOLTIP_DELAY}>
           <Tooltip key={"feedback"}>
             <TooltipTrigger asChild>
               <Button variant="quaternary p-0! mt-auto! mb-4! h-12! w-full! rounded-lg! flex items-center justify-center ">
@@ -552,7 +774,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 
       {/* Compact CTA for collapsed state — same destination as the card above (KP1-I177). */}
       {actualCollapsed && (
-        <TooltipProvider delayDuration={0}>
+        <TooltipProvider delayDuration={RAIL_TOOLTIP_DELAY}>
           <Tooltip>
             <TooltipTrigger asChild>
               <a
@@ -602,7 +824,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       )}
 
       {/* Logout */}
-      <TooltipProvider delayDuration={0}>
+      <TooltipProvider delayDuration={RAIL_TOOLTIP_DELAY}>
         <Tooltip>
           <TooltipTrigger asChild>
             <button
@@ -650,6 +872,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         onConfirm={handleLogout}
         isLoading={isLoggingOut}
       />
+    </div>
     </div>
   );
 
