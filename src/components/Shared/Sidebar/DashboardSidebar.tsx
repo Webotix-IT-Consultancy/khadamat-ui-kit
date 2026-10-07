@@ -13,6 +13,8 @@ import { cn } from '../../../lib/utils';
 import {
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   LogOut,
   Phone,
   MessageSquare,
@@ -31,6 +33,36 @@ export interface MenuItem {
   path: string;
   label: string;
   icon: React.ReactNode;
+  /**
+   * A section heading rendered ABOVE this item — "Compactable", "On Call Jobs", "Skips",
+   * "Documents".
+   *
+   * The design has grouped the operations nav under headings since Phase 2, and every portal
+   * that wanted one had to leave a comment saying it could not have it ("the shared ui-kit
+   * `MenuItem` has no section-heading support, and adding one is a ui-kit change"). This is
+   * that change.
+   *
+   * It belongs to the ITEM rather than being a separate array entry so the menu stays one flat
+   * list: every existing caller keeps working untouched, `menuItems.filter(...)` for RBAC still
+   * works, and a heading can never be left behind pointing at a group whose items were all
+   * filtered out — it is drawn by the first item that survives.
+   *
+   * Hidden while the rail is collapsed, where there is no room for it and the items are
+   * icon-only.
+   */
+  section?: string;
+  /**
+   * The collapsible GROUP this item belongs to — "Scheduler/Operations", "Customer Care",
+   * "Master". Consecutive items sharing a `group` render under one header button that folds
+   * them away; items with no `group` render at the top level exactly as before, so a caller
+   * that never sets it is unaffected.
+   *
+   * Like `section`, it lives on the item so the menu stays one flat list and RBAC filtering
+   * still works with a plain `.filter(...)` — a group whose items were all filtered out draws
+   * no empty header. An item may appear under more than one group (Dashboard); the collapsed
+   * rail shows it once.
+   */
+  group?: string;
 }
 
 interface DashboardSidebarProps {
@@ -215,6 +247,126 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 
   const menuItems = propsMenuItems || defaultMenuItems;
 
+  /*
+   * Group blocks: consecutive items sharing a `group` become one collapsible block; items
+   * with no `group` render exactly as before, so a caller that never sets it (the customer
+   * portal) sees no change. A block also remembers which paths earlier blocks already drew,
+   * so the collapsed rail does not repeat an item listed under two groups (Dashboard).
+   */
+  type Block = { key: number; group?: string; items: MenuItem[]; seenBefore: Set<string> };
+  const blocks: Block[] = [];
+  const seen = new Set<string>();
+  menuItems.forEach((item) => {
+    const last = blocks[blocks.length - 1];
+    if (last && last.group === item.group) {
+      last.items.push(item);
+    } else {
+      if (last) last.items.forEach((prev) => seen.add(prev.path));
+      blocks.push({ key: blocks.length, group: item.group, items: [item], seenBefore: new Set(seen) });
+    }
+  });
+
+  const matchesPath = (path: string) =>
+    location.pathname === path || location.pathname.startsWith(`${path}/`);
+
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  const toggleGroup = (group: string) =>
+    setOpenGroups((prev) => ({ ...prev, [group]: !prev[group] }));
+
+  /*
+   * Open the group holding the current page — on first load and on every navigation, so a
+   * deep link never lands on a page whose nav entry is folded away. Only when NO open group
+   * already shows it: a path listed under two groups (Dashboard) must not drag the other
+   * group open when the user picked it from this one.
+   */
+  const activeGroups = blocks
+    .filter((block) => block.group && block.items.some((item) => matchesPath(item.path)))
+    .map((block) => block.group as string);
+  const activeGroupsKey = activeGroups.join('|');
+  useEffect(() => {
+    if (!activeGroups.length) return;
+    setOpenGroups((prev) =>
+      activeGroups.some((group) => prev[group]) ? prev : { ...prev, [activeGroups[0]]: true }
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, activeGroupsKey]);
+
+  const renderItem = (item: MenuItem, run: MenuItem[], index: number, keyPrefix: string) => {
+    const isActive = location.pathname === item.path;
+    /*
+     * The heading is drawn by the first item of each run, so a group whose earlier
+     * items were filtered out (RBAC) still gets its heading from whichever item
+     * survived, and a group filtered away entirely leaves none behind.
+     */
+    const previousSection = index > 0 ? run[index - 1].section : undefined;
+    const showSection = Boolean(item.section) && item.section !== previousSection;
+    const key = `${keyPrefix}-${item.path}`;
+
+    const LinkContent = (
+      <Link
+        key={key}
+        to={item.path}
+        className={cn(
+          "flex items-center gap-2.5 h-12 p-1.5 rounded-lg transition-all duration-200",
+          isActive
+            ? "bg-primary-base text-white shadow-sm " + cn(userType === "admin" && "bg-secondary")
+            : "text-primary-base " + cn(userType === "admin" ? "text-dark hover:bg-primary/25" : "hover:bg-primary-light"),
+          actualCollapsed ? "justify-center" : "justify-start"
+        )}
+        onClick={() => setMobileOpen(false)}
+      >
+        <div className="flex items-center justify-center w-10 h-10 shrink-0">
+          {item.icon}
+        </div>
+        {!actualCollapsed && (
+          <span className="text-[14px] font-poppins font-normal truncate">
+            {item.label}
+          </span>
+        )}
+      </Link>
+    );
+
+    if (actualCollapsed) {
+      // No heading on the collapsed rail: there is no room for it beside icon-only
+      // items, and the tooltip already names each one.
+      return (
+        <Tooltip key={key}>
+          <TooltipTrigger asChild>
+            {LinkContent}
+          </TooltipTrigger>
+          <TooltipContent side={isRTL ? "left" : "right"}>
+            {item.label}
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+
+    if (!showSection) return LinkContent;
+
+    return (
+      <React.Fragment key={`${key}-section`}>
+        {/*
+          * `text-start` and `ps-*`, never `left`/`pl-` — the customer portal mirrors
+          * in Arabic and a physical side would strand the heading on the wrong edge.
+          * `aria-hidden` because the heading is decorative: it labels a run of links
+          * that already name themselves, and announcing it would double every item.
+          */}
+        <span
+          aria-hidden="true"
+          className={cn(
+            "mt-3 mb-0.5 px-2 text-start font-poppins",
+            userType === "admin"
+              ? "text-[14px] font-normal text-primary-600"
+              : "text-[12px] font-medium tracking-wide text-primary-base/60"
+          )}
+        >
+          {item.section}
+        </span>
+        {LinkContent}
+      </React.Fragment>
+    );
+  };
+
   const sidebarContent = (
     <div className={cn(
       "h-screen flex flex-col bg-primary-light-200 transition-all duration-300 ease-in-out relative group/sidebar border-e border-[#f1f0ef]",
@@ -264,47 +416,51 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       {/* Navigation */}
       <nav className="flex-1 flex flex-col gap-1.5 overflow-y-auto no-scrollbar">
         <TooltipProvider delayDuration={0}>
-          {menuItems.map((item) => {
-            const isActive = location.pathname === item.path;
+          {blocks.map((block) => {
+            if (!block.group) {
+              return block.items.map((item, i) => renderItem(item, block.items, i, `top-${block.key}`));
+            }
 
-            const LinkContent = (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={cn(
-                  "flex items-center gap-2.5 h-12 p-1.5 rounded-lg transition-all duration-200",
-                  isActive
-                    ? "bg-primary-base text-white shadow-sm " + cn(userType === "admin" && "bg-secondary")
-                    : "text-primary-base " + cn(userType === "admin" ? "text-secondary hover:bg-primary/25" : "hover:bg-primary-light"),
-                  actualCollapsed ? "justify-center" : "justify-start"
-                )}
-                onClick={() => setMobileOpen(false)}
-              >
-                <div className="flex items-center justify-center w-10 h-10 shrink-0">
-                  {item.icon}
-                </div>
-                {!actualCollapsed && (
-                  <span className="text-[14px] font-poppins font-normal truncate">
-                    {item.label}
-                  </span>
-                )}
-              </Link>
-            );
-
+            // Collapsed rail: no header (no room beside icon-only items) — the group's items
+            // render flat, minus any path an earlier group already drew, with a thin rule
+            // between groups so the rail still reads as clusters.
             if (actualCollapsed) {
+              const items = block.items.filter((item) => !block.seenBefore.has(item.path));
+              if (!items.length) return null;
               return (
-                <Tooltip key={item.path}>
-                  <TooltipTrigger asChild>
-                    {LinkContent}
-                  </TooltipTrigger>
-                  <TooltipContent side={isRTL ? "left" : "right"}>
-                    {item.label}
-                  </TooltipContent>
-                </Tooltip>
+                <React.Fragment key={`group-${block.key}`}>
+                  <span aria-hidden="true" className="my-1 mx-2 border-t border-primary/40" />
+                  {items.map((item, i) => renderItem(item, items, i, `group-${block.key}`))}
+                </React.Fragment>
               );
             }
 
-            return LinkContent;
+            const isOpen = Boolean(openGroups[block.group]);
+            const panelId = `sidebar-group-${block.key}`;
+            return (
+              <div key={`group-${block.key}`} className="flex flex-col gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(block.group!)}
+                  aria-expanded={isOpen}
+                  aria-controls={panelId}
+                  className={cn(
+                    "mt-1 flex items-center justify-between w-full h-10 px-2 rounded-sm border-b text-start transition-colors duration-200 cursor-pointer",
+                    userType === "admin"
+                      ? "bg-primary-200 border-primary/40 text-foreground hover:bg-primary/40"
+                      : "bg-primary-light border-primary/30 text-primary-base hover:bg-primary-light/80"
+                  )}
+                >
+                  <span className="text-[15px] font-poppins font-medium truncate">{block.group}</span>
+                  {isOpen ? <ChevronUp size={18} className="shrink-0" /> : <ChevronDown size={18} className="shrink-0" />}
+                </button>
+                {isOpen && (
+                  <div id={panelId} role="group" aria-label={block.group} className="flex flex-col gap-1.5">
+                    {block.items.map((item, i) => renderItem(item, block.items, i, `group-${block.key}`))}
+                  </div>
+                )}
+              </div>
+            );
           })}
         </TooltipProvider>
       </nav>
@@ -451,7 +607,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           <TooltipTrigger asChild>
             <button
               className={cn(
-                "flex items-center gap-2.5 h-12 px-1.5 rounded-lg cursor-pointer text-[#016937]  transition-all duration-200 ",
+                "flex items-center gap-2.5 h-12 px-1.5 rounded-lg cursor-pointer text-dark  transition-all duration-200 ",
                 userType === "admin" ? "hover:bg-primary/25" : "hover:bg-primary-light",
                 actualCollapsed ? "justify-center" : "justify-start"
               )}
@@ -459,7 +615,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             >
               <div className="flex items-center justify-center w-10 h-10 shrink-0">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 8L22 12M22 12L18 16M22 12H9M15 4.20404C13.7252 3.43827 12.2452 3 10.6667 3C5.8802 3 2 7.02944 2 12C2 16.9706 5.8802 21 10.6667 21C12.2452 21 13.7252 20.5617 15 19.796" stroke="#016937" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M18 8L22 12M22 12L18 16M22 12H9M15 4.20404C13.7252 3.43827 12.2452 3 10.6667 3C5.8802 3 2 7.02944 2 12C2 16.9706 5.8802 21 10.6667 21C12.2452 21 13.7252 20.5617 15 19.796" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
               {!actualCollapsed && (
