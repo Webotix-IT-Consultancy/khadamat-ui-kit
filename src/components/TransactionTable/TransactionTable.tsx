@@ -39,7 +39,13 @@ interface TransactionTableProps {
   order: Order;
   orderBy: keyof Transaction;
   searchQuery: string;
+  /** Forwarded to TablePrimary: skeleton rows on the first load, dimmed rows on a refetch. It
+   *  was accepted here and never passed on, so the table could not show either. */
   loading?: boolean;
+  /** Forwarded to TablePrimary — the header stays visible while a long list scrolls. */
+  fillViewport?: boolean | string;
+  /** Forwarded to TablePrimary — rows as cards below 768px. */
+  mobileCards?: boolean;
   onPageChange: (newPage: number) => void;
   onRowsPerPageChange: (newRows: number) => void;
   onSortChange: (property: keyof Transaction, order: Order) => void;
@@ -57,6 +63,8 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   orderBy,
   searchQuery,
   loading = false,
+  fillViewport = false,
+  mobileCards = false,
   onPageChange,
   onRowsPerPageChange,
   onSortChange,
@@ -185,6 +193,9 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
         totalCount={totalCount}
         onPageChange={handleMuiPageChange}
         rowKey={(row) => row.id}
+        loading={loading}
+        fillViewport={fillViewport}
+        mobileCards={mobileCards}
       />
     </Box>
   );

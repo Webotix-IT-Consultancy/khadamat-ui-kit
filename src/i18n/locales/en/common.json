@@ -1,6 +1,8 @@
 {
 
   "buttons": {
+    "retry": "Retry",
+    "close": "Close",
     "login": "Login",
     "submit": "Submit",
     "cancel": "Cancel",
@@ -73,7 +75,16 @@
     "yes": "Yes",
     "no": "No"
   },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "message": "This page could not be displayed. Reload to try again, or go back to the dashboard.",
+    "staleTitle": "A new version is available",
+    "staleMessage": "The portal was updated while this page was open. Reload to continue.",
+    "reload": "Reload",
+    "home": "Go to dashboard"
+  },
   "messages": {
+    "loadFailed": "This information could not be loaded. Please try again.",
     "loading": "Loading...",
     "errorGeneric": "Something went wrong. Please try again.",
     "successGeneric": "Login completed successfully",

@@ -15,9 +15,13 @@
   transition: all 0.2s ease;
 }
 
-/* .input-wrapper:focus-within {
-  box-shadow: 0 0 0 3px hsla(var(--primary), 0.1);
-} */
+/* The focused field must be identifiable (WCAG 2.4.7) — `.input-element` sets
+   `outline: none`, so without this a keyboard user cannot tell which input has focus.
+   The old rule was commented out because `hsla(var(--primary), 0.1)` is invalid with
+   space-separated tokens; the slash syntax is the one that resolves. */
+.input-wrapper:focus-within {
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.35);
+}
 
 .input-wrapper-error {
   border-color: hsl(var(--destructive)) !important;

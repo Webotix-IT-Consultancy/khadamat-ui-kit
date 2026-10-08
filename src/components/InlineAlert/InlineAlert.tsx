@@ -90,14 +90,14 @@ const InlineAlert: React.FC<InlineAlertProps> = ({
                     {resolvedIcon}
                 </span>
             )}
-            <div className="inline-alert-body">
+            <div className="inline-alert-body w-full">
                 {title && <span className="inline-alert-title">{title}</span>}
                 {/*
                     `dir="auto"` for the same reason every field carries it (KP1-I200): the admin
                     portal is English-only but its DATA is not, and a server message quoting an
                     Arabic account name would otherwise be laid out against the page's direction.
                 */}
-                <span dir="auto">{children}</span>
+                <span className="w-full" dir="auto">{children}</span>
             </div>
         </div>
     );

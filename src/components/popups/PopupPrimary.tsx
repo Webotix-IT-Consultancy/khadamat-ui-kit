@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, IconButton } from '@mui/material';
 import { X } from 'lucide-react';
 
@@ -18,6 +19,7 @@ const PopupPrimary: React.FC<PopupPrimaryProps> = ({
     children,
     width = 'md',
 }) => {
+    const { t: tc } = useTranslation('common');
     return (
         <Dialog
             open={open}
@@ -38,6 +40,7 @@ const PopupPrimary: React.FC<PopupPrimaryProps> = ({
             <div className="absolute top-4 right-4 z-10">
                 <IconButton
                     onClick={onClose}
+                    aria-label={tc('common:buttons.close')}
                     className="text-gray-500 hover:text-gray-700 transition-colors"
                     size="small"
                 >

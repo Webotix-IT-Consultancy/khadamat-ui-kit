@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, IconButton, Alert } from '@mui/material';
 import { X } from 'lucide-react';
 import Button from '../Button/Button';
@@ -99,6 +100,7 @@ const SubmitStatus: React.FC<SubmitStatusProps> = ({
     onDownloadReceipt,
     hideClose = false,
 }) => {
+    const { t: tc } = useTranslation('common');
     const isSuccess = status === 'success';
     const isWalletType = type === 'wallet';
     const isServiceType = type === 'service';
@@ -124,6 +126,7 @@ const SubmitStatus: React.FC<SubmitStatusProps> = ({
             {!hideClose && (
                 <IconButton
                     onClick={onClose}
+                    aria-label={tc('common:buttons.close')}
                     sx={{ position: 'absolute', right: 16, top: 16, color: '#666', zIndex: 10 }}
                 >
                     <X size={24} />

@@ -488,7 +488,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       <Box className="filter-panel">
       <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={pickerLocale}>
         <div className="filter-panel-header">
-          <button className="close-button" onClick={onClose}>
+          <button className="close-button" onClick={onClose}
+          aria-label={t('common:buttons.close')}>
             <X size={24} />
           </button>
         </div>

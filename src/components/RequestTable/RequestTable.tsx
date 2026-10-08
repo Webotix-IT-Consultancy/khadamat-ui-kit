@@ -24,6 +24,10 @@ interface RequestTableProps {
     orderBy: keyof OnCallRequest;
     searchQuery: string;
     loading?: boolean;
+    /** Forwarded to TablePrimary — the header stays visible while a long list scrolls. */
+    fillViewport?: boolean | string;
+    /** Forwarded to TablePrimary — rows as cards below 768px. */
+    mobileCards?: boolean;
     onPageChange: (newPage: number) => void;
     onRowsPerPageChange: (newRows: number) => void;
     onSortChange: (property: keyof OnCallRequest, order: Order) => void;
@@ -40,7 +44,9 @@ const RequestTable: React.FC<RequestTableProps> = ({
     order,
     orderBy,
     searchQuery,
-    // loading = false,
+    loading = false,
+    fillViewport = false,
+    mobileCards = false,
     onPageChange,
     onRowsPerPageChange,
     onSortChange,
@@ -126,6 +132,11 @@ const RequestTable: React.FC<RequestTableProps> = ({
                 totalCount={totalCount}
                 onPageChange={handleMuiPageChange}
                 rowKey={(row) => row.id || row.requestNumber}
+                /* Forwarded: accepted by this wrapper before and never passed on, so its table
+                   could show neither skeleton rows nor a refetch state. */
+                loading={loading}
+                fillViewport={fillViewport}
+                mobileCards={mobileCards}
             />
         </Box>
     );
