@@ -83,6 +83,17 @@
     "reload": "Reload",
     "home": "Go to dashboard"
   },
+  "documents": {
+    "proforma": "Proforma Invoice",
+    "taxInvoices": "Tax Invoices",
+    "receipts": "Receipts",
+    "viewInvoice": "View {{number}}",
+    "downloadInvoice": "Download {{number}}",
+    "downloadAll": "Download all",
+    "noInvoiceNumber": "Tax Invoice",
+    "popupBlocked": "Your browser blocked the document window, so the PDF was downloaded instead. Allow pop-ups for this site to open it in a tab.",
+    "failed": "The document could not be loaded. Please try again."
+  },
   "messages": {
     "loadFailed": "This information could not be loaded. Please try again.",
     "loading": "Loading...",
