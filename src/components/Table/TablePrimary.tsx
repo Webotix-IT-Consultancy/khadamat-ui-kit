@@ -11,6 +11,7 @@ import {
     Paper,
     Box,
     Pagination,
+    useMediaQuery,
 } from '@mui/material';
 import './TablePrimary.css';
 import './TableControls.css';
@@ -178,7 +179,50 @@ interface TablePrimaryProps<T> {
      * be cleared.
      */
     emptyMessage?: React.ReactNode;
+    /**
+     * The read behind `data` is in flight.
+     *
+     * - **No rows yet** (the first load): skeleton rows in the table's own shape, instead of
+     *   a "No records found" that a not-yet-answered request has no right to claim.
+     * - **Rows on screen** (a refetch — a search, a tab, a page): the table STAYS MOUNTED
+     *   (KP1-I280), its rows dim and a thin bar runs above it, so the page visibly reacts to
+     *   the change instead of looking frozen until the new rows replace the old ones.
+     *
+     * Opt-in: a screen that still renders its own first-load spinner is unaffected.
+     */
+    loading?: boolean;
+    /**
+     * Give the table its own scroll area, capped to the viewport, so the header row STAYS
+     * VISIBLE while a long list is scrolled. `stickyHeader` was always set, but the wrapper
+     * only scrolled sideways — the PAGE scrolled vertically, which a sticky header inside the
+     * table cannot follow, so on a 50-row page the column names were gone after ten rows.
+     *
+     * `true` reserves 260px for what sits around the table (page header, tabs, search row,
+     * pagination); pass a CSS length to reserve a different amount. The pinned first / last
+     * columns keep working — their header cells already outrank both sticky axes.
+     */
+    fillViewport?: boolean | string;
+    /**
+     * Below the `md` breakpoint (768px), render each row as a CARD instead of a table row —
+     * a 12-column table scrolled sideways on a phone is barely usable.
+     *
+     * - `true` builds the card from the columns themselves: the first data column is the
+     *   title, the rest are label / value pairs, and — when `stickyLastColumn` marks the last
+     *   column as the row's actions — those buttons sit at the card's foot. `slNo` is skipped.
+     *   Every `format` is reused, so a status chip or an amount reads the same in both layouts.
+     * - A function renders the card yourself, for a screen that deserves a designed one.
+     *
+     * Pagination, the empty state and `loading` behave identically in both layouts.
+     */
+    mobileCards?: boolean | ((row: T, index: number) => React.ReactNode);
 }
+
+/** Skeleton rows on a first load — enough to read as a table, never a page of them. */
+const SKELETON_ROWS = 6;
+/** What `fillViewport={true}` reserves for the page around the table. */
+const FILL_VIEWPORT_OFFSET = '260px';
+/** Columns that are an ordinal, not data — dropped from an auto-built card. */
+const ORDINAL_KEYS = new Set(['slNo', 'sl', 'serialNo', 'index']);
 
 /**
  * A cell is blank only when there is genuinely nothing to show. A numeric 0 and a
@@ -265,8 +309,106 @@ const TablePrimary = <T extends Record<string, any>>({
     stickyFirstColumn = false,
     emptyMessage,
     selection,
+    loading = false,
+    fillViewport = false,
+    mobileCards = false,
 }: TablePrimaryProps<T>) => {
     const { t } = useTranslation('common');
+
+    const isNarrow = useMediaQuery('(max-width: 767.98px)', { noSsr: true });
+    const asCards = Boolean(mobileCards) && isNarrow;
+    const firstLoad = loading && data.length === 0;
+    const refetching = loading && data.length > 0;
+
+    /** One cell's content, formatted exactly as the table row renders it. */
+    const cellValue = (column: ColumnDefinition<T>, row: T, index: number): React.ReactNode => {
+        const raw = row[column.key];
+        const content = column.format ? column.format(raw, row, index) : raw;
+        return isBlank(content) ? emptyPlaceholder : content;
+    };
+
+    /* The auto-built card: title, label/value pairs, then the row's actions. */
+    const actionColumn = stickyLastColumn ? columns[columns.length - 1] : undefined;
+    const cardColumns = columns.filter(
+        (column) => column !== actionColumn && !ORDINAL_KEYS.has(column.key as string),
+    );
+    const renderCard = (row: T, index: number): React.ReactNode => {
+        if (typeof mobileCards === 'function') return mobileCards(row, index);
+        const [titleColumn, ...detailColumns] = cardColumns;
+        return (
+            <>
+                {titleColumn && (
+                    <div className="table-primary-card-title">{cellValue(titleColumn, row, index)}</div>
+                )}
+                <dl className="table-primary-card-fields">
+                    {detailColumns.map((column) => (
+                        <div key={column.key as string} className="table-primary-card-field">
+                            <dt>{column.label}</dt>
+                            <dd>{cellValue(column, row, index)}</dd>
+                        </div>
+                    ))}
+                </dl>
+                {actionColumn && (
+                    <div className="table-primary-card-actions">{cellValue(actionColumn, row, index)}</div>
+                )}
+            </>
+        );
+    };
+
+    const progressBar = refetching ? (
+        // A thin indeterminate bar ABOVE the table: the refetch is visible without the rows
+        // being replaced by a spinner (KP1-I280 keeps the table mounted).
+        <div className="table-primary-progress" role="progressbar" aria-label={t('messages.loading')} />
+    ) : null;
+
+    // Built here, RETURNED below the remaining hooks — an early return above a hook would
+    // change the hook order the moment the viewport crosses the breakpoint.
+    const cardsView = asCards ? (
+        <Box className="table-primary-container">
+            {progressBar}
+            <ul
+                className={`table-primary-cards${refetching ? ' table-primary-busy' : ''}`}
+                aria-busy={loading || undefined}
+            >
+                {firstLoad ? (
+                    Array.from({ length: 3 }, (_, i) => (
+                        <li key={`skeleton-${i}`} className="table-primary-card" aria-hidden="true">
+                            <span className="table-primary-skeleton table-primary-skeleton-title" />
+                            <span className="table-primary-skeleton" />
+                            <span className="table-primary-skeleton" />
+                        </li>
+                    ))
+                ) : data.length === 0 ? (
+                    <li className="table-primary-card table-primary-card-empty">
+                        {emptyMessage ?? t('table.noRecords')}
+                    </li>
+                ) : (
+                    data.map((row, index) => (
+                        <li key={rowKey(row)} className="table-primary-card">
+                            {renderCard(row, index)}
+                        </li>
+                    ))
+                )}
+            </ul>
+            <Box className="table-primary-pagination-container">
+                <Box className="table-primary-pagination-info text-xs!">
+                    {t('table.paginationInfo', {
+                        count: totalCount,
+                        from: totalCount > 0 ? page * rowsPerPage + 1 : 0,
+                        to: totalCount > 0 ? Math.min((page + 1) * rowsPerPage, totalCount) : 0,
+                    })}
+                </Box>
+                <Pagination
+                    count={Math.ceil(totalCount / rowsPerPage)}
+                    page={page + 1}
+                    onChange={(event, value) => onPageChange(event, value - 1)}
+                    shape="rounded"
+                    size="small"
+                    className="table-primary-numeric-pagination"
+                />
+            </Box>
+        </Box>
+    ) : null;
 
     /**
      * KP1-I93: a column is marked as sorted only once the USER has sorted it.
@@ -308,14 +450,31 @@ const TablePrimary = <T extends Record<string, any>>({
     const allOnPageSelected = data.length > 0 && selectedOnPage === data.length;
     const someOnPageSelected = selectedOnPage > 0;
 
+    if (cardsView) return cardsView;
+
     return (
         <Box className="table-primary-container">
-            <TableContainer component={Paper} className="table-primary-wrapper">
+            {progressBar}
+            <TableContainer
+                component={Paper}
+                className="table-primary-wrapper"
+                style={
+                    fillViewport
+                        ? {
+                              maxHeight: `calc(100vh - ${
+                                  typeof fillViewport === 'string' ? fillViewport : FILL_VIEWPORT_OFFSET
+                              })`,
+                              overflowY: 'auto',
+                          }
+                        : undefined
+                }
+            >
                 <Table
                     stickyHeader
+                    aria-busy={loading || undefined}
                     className={`transaction-table${stickyLastColumn ? ' table-primary-sticky-last' : ''}${
                         stickyFirstColumn ? ' table-primary-sticky-first' : ''
-                    }`}
+                    }${refetching ? ' table-primary-busy' : ''}`}
                 >
                     <TableHead className="table-primary-head">
                         <TableRow>
@@ -379,7 +538,20 @@ const TablePrimary = <T extends Record<string, any>>({
                           * `td.table-primary-cell:last-child`, and this cell spans the whole
                           * row — pinning it would float the message over the table on scroll.
                           */}
-                        {data.length === 0 ? (
+                        {firstLoad ? (
+                            /* Skeleton rows in the table's own column shape — a first load is
+                               "not answered yet", which "No records found" would misstate. */
+                            Array.from({ length: Math.min(rowsPerPage || SKELETON_ROWS, SKELETON_ROWS) }, (_, i) => (
+                                <TableRow key={`skeleton-${i}`} className="table-primary-row" aria-hidden="true">
+                                    {selection && <TableCell padding="checkbox" className="table-primary-cell" />}
+                                    {columns.map((column) => (
+                                        <TableCell key={column.key as string} className="table-primary-cell">
+                                            <span className="table-primary-skeleton" />
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))
+                        ) : data.length === 0 ? (
                             <TableRow className="table-primary-row">
                                 <TableCell
                                     colSpan={columns.length + (selection ? 1 : 0)}

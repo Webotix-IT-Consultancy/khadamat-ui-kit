@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     TextField,
     InputAdornment,
@@ -21,6 +21,14 @@ interface TableActionMenuProps {
     showExport?: boolean;
     actionChildren?: React.ReactNode;
 }
+
+/**
+ * How long typing must pause before the search is sent. Every list hook refetches on each
+ * change of its search term — usually the list PLUS its tab counts, so three requests — and
+ * this box used to report every keystroke: "contract" typed at speed was 24 requests, and a
+ * slow early response could land after a fast later one and show results for "con".
+ */
+const SEARCH_DEBOUNCE_MS = 300;
 
 const TableActionMenu: React.FC<TableActionMenuProps> = ({
     rowsPerPage,
@@ -51,8 +59,48 @@ const TableActionMenu: React.FC<TableActionMenuProps> = ({
         handleSortMenuClose();
     }
 
+    /*
+     * The box keeps its own draft so typing is instant, and reports to the list only once the
+     * user pauses. Enter sends at once, and so does emptying the box — "show everything again"
+     * should not wait. A term changed FROM OUTSIDE (a filter reset, a tab that clears the
+     * search) is adopted into the draft; the list stays the single source of truth.
+     */
+    const [draft, setDraft] = useState(searchQuery ?? '');
+    const lastSent = useRef(searchQuery ?? '');
+    const timer = useRef<number | undefined>(undefined);
+    const onSearchChangeRef = useRef(onSearchChange);
+    onSearchChangeRef.current = onSearchChange;
+
+    useEffect(() => {
+        const external = searchQuery ?? '';
+        if (external !== lastSent.current) {
+            lastSent.current = external;
+            setDraft(external);
+        }
+    }, [searchQuery]);
+
+    useEffect(() => () => window.clearTimeout(timer.current), []);
+
+    const sendSearch = (value: string) => {
+        window.clearTimeout(timer.current);
+        if (value === lastSent.current) return;
+        lastSent.current = value;
+        onSearchChangeRef.current(value);
+    };
+
     const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        onSearchChange(event.target.value);
+        const value = event.target.value;
+        setDraft(value);
+        window.clearTimeout(timer.current);
+        if (!value.trim()) {
+            sendSearch(value);
+            return;
+        }
+        timer.current = window.setTimeout(() => sendSearch(value), SEARCH_DEBOUNCE_MS);
+    };
+
+    const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Enter') sendSearch(draft);
     };
 
     const handleExportClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -88,8 +136,9 @@ const TableActionMenu: React.FC<TableActionMenuProps> = ({
                 variant="outlined"
                 size="small"
                 className="mui-search-field flex-1 min-w-[200px]!"
-                value={searchQuery}
+                value={draft}
                 onChange={handleSearchChange}
+                onKeyDown={handleSearchKeyDown}
                 /* KP1-I200 — the box reads in the direction of what is typed. A list is
                    searched by the same Arabic the rows hold, and MUI renders its own
                    <input>, so `dir` has to be handed down through inputProps. */

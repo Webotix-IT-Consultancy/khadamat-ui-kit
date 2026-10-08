@@ -36,10 +36,10 @@
    focusing a Description box inside the admin portal's gold theme turned it green. The
    1px/8px geometry above is left as-is (a TextArea is always full-width, so it shares no
    row); only the theme leak is corrected here. */
-/* .textarea-wrapper:has(textarea:focus-within) {
-    border-color: hsl(var(--primary));
-    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.1);
-} */
+/* Same focus ring as `.input-wrapper` (WCAG 2.4.7): the textarea itself has `outline: none`. */
+.textarea-wrapper:focus-within {
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.35);
+}
 
 .textarea-wrapper-error {
     border-color: #FF3232;

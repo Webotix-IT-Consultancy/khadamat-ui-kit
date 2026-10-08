@@ -30,6 +30,13 @@
   height: var(--btn-large-height) !important;
 }
 
+/* Keyboard focus must be visible (WCAG 2.4.7). `:focus-visible`, so a MOUSE click draws no
+   ring; `--ring` is themed (green in the customer portal, gold under `body.admin-theme`). */
+.btn:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -172,6 +179,45 @@
 }
 
 .btn-outline-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Outline Danger */
+
+.btn-outline-danger {
+  background: transparent;
+  border: 2px solid hsl(var(--danger));
+  color: hsl(var(--danger));
+}
+
+.btn-outline-danger:hover:not(:disabled) {
+  color: hsl(var(--danger-foreground));
+  background: hsl(var(--danger));
+  transform: translateY(-1px);  
+  box-shadow: 0 4px 12px hsla(var(--danger), 0.2);
+}
+
+.btn-outline-danger:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+
+/* Outline Danger */
+
+.btn-outline-dark {
+  background: transparent;
+  border: 2px solid hsl(var(--black));
+  color: hsl(var(--black));
+}
+
+.btn-outline-dark:hover:not(:disabled) {
+  color: hsl(var(--white));
+  background: hsl(var(--black));
+  transform: translateY(-1px);  
+  box-shadow: 0 4px 12px hsla(var(--black), 0.2);
+}
+
+.btn-outline-dark:active:not(:disabled) {
   transform: translateY(0);
 }
 

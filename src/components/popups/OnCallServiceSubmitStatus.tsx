@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, IconButton } from '@mui/material';
 import { X, CheckCircle } from 'lucide-react';
 import Button from '../Button/Button';
@@ -25,6 +26,7 @@ const OnCallServiceSubmitStatus: React.FC<OnCallServiceSubmitStatusProps> = ({
     }),
     userEmail = '',
 }) => {
+    const { t: tc } = useTranslation('common');
     return (
         <Dialog
             open={open}
@@ -45,6 +47,7 @@ const OnCallServiceSubmitStatus: React.FC<OnCallServiceSubmitStatusProps> = ({
         >
             <IconButton
                 onClick={onClose}
+                aria-label={tc('common:buttons.close')}
                 sx={{ position: 'absolute', right: 16, top: 16, color: '#666', zIndex: 10 }}
             >
                 <X size={24} />

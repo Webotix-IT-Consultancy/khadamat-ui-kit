@@ -38,6 +38,7 @@ const LogoutConfirmation: React.FC<LogoutConfirmationProps> = ({
         >
             <IconButton
                 onClick={onClose}
+                aria-label={t('common:buttons.close')}
                 sx={{ position: 'absolute', right: 16, top: 16, color: '#666', zIndex: 10 }}
             >
                 <X size={24} />

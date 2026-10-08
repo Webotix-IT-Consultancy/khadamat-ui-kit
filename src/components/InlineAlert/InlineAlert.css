@@ -9,6 +9,7 @@
  */
 .inline-alert {
     display: flex;
+    align-items: center;
     /* align-items: flex-start; */
     /* `gap` is direction-agnostic, so the icon leads the text in LTR and trails it in the
        customer portal's Arabic with no logical-property juggling. */
