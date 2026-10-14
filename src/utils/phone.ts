@@ -111,3 +111,31 @@ export const isValidMobile = (value?: string): boolean => {
     const type = parsed.getType();
     return type === 'MOBILE' || type === 'FIXED_LINE_OR_MOBILE' || type === undefined;
 };
+
+/**
+ * Valid TELEPHONE No. — a landline OR a mobile (KP1-I617). Empty passes.
+ *
+ * `isValidPhone` alone is not enough for a UAE number: libphonenumber's AE fixed-line pattern
+ * requires the digit after the area code to be 2-8, so ordinary landlines such as
+ * `04 1234567`, `02 1xxxxxx` or `06 1xxxxxx` were refused — including `UAE_LANDLINE_EXAMPLE`
+ * above, the very placeholder the field shows. TDRA's own plan is simpler, and is what the
+ * ticket specifies:
+ *
+ *   mobile    05X XXXXXXX  — 9 digits after +971
+ *   landline  0Y XXXXXXX   — 8 digits after +971, Y = 2, 3, 4, 6, 7 or 9
+ *
+ * So a UAE number passes on EITHER that plan or libphonenumber (which keeps everything it
+ * already accepted, e.g. the 053 mobile range and 800 numbers); any other country is judged
+ * by libphonenumber exactly as before.
+ *
+ * For Telephone No. fields only. Mobile / WhatsApp fields keep `isValidMobile`.
+ */
+export const isValidTelephone = (value?: string): boolean => {
+    if (!value || !value.trim()) return true;
+    const parsed = parse(value);
+    if (parsed?.isValid()) return true;
+    const isUae = parsed ? parsed.countryCallingCode === '971' : isUaeNumber(value);
+    if (!isUae) return false;
+    const national = parsed ? String(parsed.nationalNumber) : nationalPart(value);
+    return UAE_LANDLINE.test(national) || UAE_MOBILE.test(national);
+};

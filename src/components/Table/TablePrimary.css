@@ -99,6 +99,18 @@
     font-weight: inherit;
 }
 
+/*
+ * The label of a column WITHOUT a sort control — SL No., Action. Same font as the sort label
+ * above, which is the reference size: before this the bare text inherited the header cell's
+ * responsive Tailwind size (text-xs / sm:text-sm / lg:text-base = 16px), so every unsortable
+ * header in both portals read larger than the sortable ones beside it.
+ */
+.table-primary-header-label {
+    color: hsl(var(--black)) !important;
+    font-size: 13px !important;
+    font-weight: inherit;
+}
+
 .table-primary-sort-label:hover {
     color: hsl(var(--primary)) !important;
 }
