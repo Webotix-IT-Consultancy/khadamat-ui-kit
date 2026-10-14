@@ -24,7 +24,10 @@ export interface InvoiceSummaryPanelProps {
      * that formatted them would have to know which portal it is in.
      */
     formatDate: (value?: string) => string;
-    /** The document being fetched — an invoice id, or `'pack'` — so only that row spins. */
+    /**
+     * The fetch in flight — `invoiceActionKey(invoice, 'view' | 'download')`, or `'pack'` — so
+     * only the button that was pressed spins (KP1-I610).
+     */
     busyKey?: string | null;
     onViewInvoice: (invoice: DocumentInvoice) => void;
     onDownloadInvoice: (invoice: DocumentInvoice) => void;
@@ -43,6 +46,16 @@ export const hasInvoiceLedger = (summary?: InvoiceSummary, receipts?: ReceiptLin
 /** The key a row spins on — the invoice id, else its number. */
 export const invoiceKey = (invoice: DocumentInvoice): string =>
     invoice.invoiceId ?? invoice.invoiceNumber ?? '';
+
+/**
+ * The busy key for ONE action on one invoice — `${invoiceKey}:view` / `${invoiceKey}:download`.
+ *
+ * KP1-I610: View and Download shared `invoiceKey`, and the spinner was drawn on the eye
+ * whichever was pressed — so Download spun the View icon and never its own. Callers pass this
+ * to `useDocumentPdf` so each button reports only its own fetch.
+ */
+export const invoiceActionKey = (invoice: DocumentInvoice, action: 'view' | 'download'): string =>
+    `${invoiceKey(invoice)}:${action}`;
 
 /**
  * The **Tax Invoices** a contract or quotation raised — the panel at the bottom of a detail
@@ -104,7 +117,10 @@ const InvoiceSummaryPanel: React.FC<InvoiceSummaryPanelProps> = ({
     const invoiceRows: SummaryRow[] = invoices.map((invoice) => {
         const number = invoice.invoiceNumber ?? t('documents.noInvoiceNumber');
         const key = invoiceKey(invoice);
-        const busy = busyKey === key;
+        const viewing = busyKey === invoiceActionKey(invoice, 'view');
+        const downloading = busyKey === invoiceActionKey(invoice, 'download');
+        /* Both buttons wait while either fetch runs; only the pressed one spins (KP1-I610). */
+        const busy = viewing || downloading;
         const meta = [formatDate(invoice.invoiceDate), invoice.statusName].filter(Boolean).join(' · ');
         return {
             key,
@@ -128,7 +144,7 @@ const InvoiceSummaryPanel: React.FC<InvoiceSummaryPanelProps> = ({
                                 title={t('documents.viewInvoice', { number })}
                                 onClick={() => onViewInvoice(invoice)}
                             >
-                                {busy ? (
+                                {viewing ? (
                                     <Loader2 size={16} className="animate-spin" aria-hidden="true" />
                                 ) : (
                                     <Eye size={16} aria-hidden="true" />
@@ -142,7 +158,11 @@ const InvoiceSummaryPanel: React.FC<InvoiceSummaryPanelProps> = ({
                                 title={t('documents.downloadInvoice', { number })}
                                 onClick={() => onDownloadInvoice(invoice)}
                             >
-                                <Download size={16} aria-hidden="true" />
+                                {downloading ? (
+                                    <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+                                ) : (
+                                    <Download size={16} aria-hidden="true" />
+                                )}
                             </button>
                         </>
                     )}
