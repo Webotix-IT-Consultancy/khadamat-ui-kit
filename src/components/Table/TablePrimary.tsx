@@ -518,7 +518,11 @@ const TablePrimary = <T extends Record<string, any>>({
                                             {column.label}
                                         </TableSortLabel>
                                     ) : (
-                                        column.label
+                                        /* A header with no sort control carries the SAME type as one
+                                           with — see .table-primary-header-label. Bare text inherited
+                                           the cell's responsive Tailwind size (16px on lg) while a
+                                           sortable one is 13px, so SL No. and Action read larger. */
+                                        <span className="table-primary-header-label">{column.label}</span>
                                     )}
                                 </TableCell>
                             ))}
