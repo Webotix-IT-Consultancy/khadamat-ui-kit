@@ -21,6 +21,9 @@ interface MUIDatePickerProps {
     disabled?: boolean;
     required?: boolean;
     minDate?: Dayjs;
+    /** The latest selectable day — later days are greyed out. The mirror of `minDate`; the
+        schema still owns the typed half of the rule (a keyboard can enter any date). */
+    maxDate?: Dayjs;
     helperText?: string;
 }
 
@@ -32,6 +35,7 @@ const MUIDatePicker: React.FC<MUIDatePickerProps> = ({
     disabled = false,
     required = false,
     minDate,
+    maxDate,
     helperText
 }) => {
     // KP1-I77: one picker popup on screen at a time — see the hook for why MUI's own
@@ -80,6 +84,7 @@ const MUIDatePicker: React.FC<MUIDatePickerProps> = ({
                     reduceAnimations
                     disabled={disabled}
                     minDate={minDate}
+                    maxDate={maxDate}
                     slots={{
                         // KP1-I109: was the literal #016937 — `:root --primary`, i.e. the
                         // CUSTOMER portal's green — so this icon stayed green inside the
