@@ -410,7 +410,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           {item.icon}
         </div>
         {!actualCollapsed && (
-          <span className="text-[14px] font-poppins font-normal truncate">
+          <span className="text-[14px] font-poppins font-normal ">
             {item.label}
           </span>
         )}
