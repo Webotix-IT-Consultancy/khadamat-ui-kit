@@ -512,7 +512,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
                           })}
                       </div>
                   )
-                : Boolean(value) && (
+                : Boolean(value || fileName) && (
                       <div className="mt-2 flex flex-wrap gap-2">
                           {/* The same chip the view screens render, so an uploaded document
                               looks and behaves identically whether you are reading the record
