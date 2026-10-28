@@ -41,6 +41,10 @@
   background: hsl(var(--tertiary));
   color: hsl(var(--white));
 }
+.status-badge-yellow {
+  background: hsl(var(--yellow));
+  color: hsl(var(--white));
+}
 
 .status-badge-danger {
   background: hsl(var(--danger));

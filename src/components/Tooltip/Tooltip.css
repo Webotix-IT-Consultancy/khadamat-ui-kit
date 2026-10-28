@@ -70,13 +70,24 @@
  * move every danger chip in both portals.)
  */
 .tooltip-danger {
-  background: #ffe6e6;
+  background: hsl(var(--danger-light));
   color: hsl(var(--danger));
 }
 
 .tooltip-danger .tooltip-arrow {
-  fill: #ffe6e6;
+  fill: hsl(var(--danger-light));
 }
+
+.tooltip-warning {
+  background: hsl(var(--tertiary-light));
+  color: hsl(var(--tertiary-300-foreground));
+}
+
+.tooltip-warning .tooltip-arrow {
+  fill: hsl(var(--tertiary-light));
+}
+
+
 
 /* ── The dimmed second line ──────────────────────────────────────────────── */
 
