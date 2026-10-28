@@ -24,7 +24,7 @@ type LifecycleStatus =
 export type BadgeStatus =
   | 'in-progress' | 'scheduled' | 'completed' | 'paid' | 'pending' | 'failed'
   | 'orange' | 'primary' | 'success' | 'active' | 'secured' | 'lost'
-  | 'overdue' | 'open' | 'neutral'
+  | 'overdue' | 'open' | 'neutral' | 'yellow'
   | LifecycleStatus;
 
 /**
@@ -76,6 +76,9 @@ const STATUS_TONE: Record<BadgeStatus, Tone> = {
   'pending': 'warning',
   'scheduled': 'warning-soft',
   'awaiting-payment': 'warning-soft',
+
+  //yellow
+  'yellow': 'yellow',
 
   // Red — failed, refused or late.
   'failed': 'danger',

@@ -87,10 +87,14 @@
   /* STATIC COLORS */
   --orange-light: 24 100% 89%;
   --orange: 24 100% 50%;
+  --yellow: 37 91% 55%;
 
   --success: 151 98% 21%;
   --success-light: 137 100% 96%;
   --success-200: 152 95% 47%;
+  --success-300: 152 98% 42% ;
+;
+
 
   --h2: 39px;
   --h4: 27px;
@@ -124,6 +128,9 @@
   --primary-dark: 156 100% 6%;
   --primary-light: 138 100% 88%;
   --primary-light-200: 135 100% 98%;
+  --primary-light-300:42 77% 67%;
+;
+
 
 
 
@@ -150,6 +157,7 @@
   /* light */
   --tertiary-400: 42 40% 41%;
   /* dark */
+  --tertiary-800: 42deg 39.86% 33.54%;
 
   --tertiary-100-foreground: 0 0% 0%;
   /* for light bg */
