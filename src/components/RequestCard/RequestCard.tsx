@@ -1,5 +1,5 @@
 import React from 'react';
-import StatusBadge from '../StatusBadge/StatusBadge';
+import StatusBadge, { type BadgeStatus } from '../StatusBadge/StatusBadge';
 import './RequestCard.css';
 import { cn } from '../../lib/utils';
 
@@ -7,14 +7,21 @@ interface RequestCardProps {
   requestNumber: string;
   title: string;
   timestamp: string;
-  status: 'in-progress' | 'scheduled' | 'completed';
+  /** Any badge tone; `in-progress` additionally draws the card in its active style. */
+  status: BadgeStatus;
+  /**
+   * The chip's text, already translated by the caller. Without it the chip prints the raw
+   * status key (`in-progress`), which is English on an Arabic screen.
+   */
+  statusLabel?: string;
 }
 
 const RequestCard: React.FC<RequestCardProps> = ({
   requestNumber,
   title,
   timestamp,
-  status
+  status,
+  statusLabel
 }) => {
   const badgeBgUtility = status === 'in-progress' ? 'bg-primary-200' : 'bg-grey-100';
   const isActive = status === 'in-progress';
@@ -26,7 +33,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
       "max-sm:gap-2 max-sm:p-1"
     )}>
       <div className={cn(
-        "request-badge flex flex-col items-center justify-center w-12 h-10 sm:w-16 sm:h-14 rounded-lg text-black font-semibold text-[11px] sm:text-[13px] shrink-0 transition-colors",
+        "request-badge flex flex-col items-center justify-center w-12 h-10 sm:w-16 sm:h-14 rounded-lg text-black font-semibold text-[11px] sm:text-[13px] text-center break-all leading-tight px-1 shrink-0 transition-colors",
         badgeBgUtility
       )}>
         {requestNumber}
@@ -45,7 +52,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
       </div>
 
       <div className="shrink-0 scale-90 sm:scale-100">
-        <StatusBadge status={status} label={status} />
+        <StatusBadge status={status} label={statusLabel ?? status} />
       </div>
     </div>
   );

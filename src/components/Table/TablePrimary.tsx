@@ -5,6 +5,7 @@ import {
     TableBody,
     TableCell,
     TableContainer,
+    TableFooter,
     TableHead,
     TableRow,
     TableSortLabel,
@@ -105,14 +106,39 @@ const showTooltipIfClipped = (event: React.MouseEvent<HTMLElement>) => {
 interface TablePrimaryProps<T> {
     columns: ColumnDefinition<T>[];
     data: T[];
-    order: 'asc' | 'desc';
-    orderBy: keyof T;
-    onSort: (property: keyof T) => void;
-    page: number;
-    rowsPerPage: number;
-    totalCount: number;
-    onPageChange: (event: unknown, newPage: number) => void;
+    /*
+     * Sort and paging are OPTIONAL so a fixed summary table — a handful of rows with no
+     * paging and no sort (the Finance Dashboard's revenue split) — does not have to pass
+     * no-op handlers. Every list screen still passes all of them; the defaults below only
+     * apply when a caller has nothing to paginate or sort. Pair that use with
+     * `hidePagination` and `sortable: false` on its columns.
+     */
+    order?: 'asc' | 'desc';
+    orderBy?: keyof T;
+    onSort?: (property: keyof T) => void;
+    page?: number;
+    /** Defaults to `data.length` — one page holding everything. */
+    rowsPerPage?: number;
+    /** Defaults to `data.length`. */
+    totalCount?: number;
+    onPageChange?: (event: unknown, newPage: number) => void;
     rowKey: (row: T) => string | number;
+    /**
+     * A TOTAL line under the rows, rendered in a `<tfoot>` through the SAME column `format`s as
+     * a data row — so an amount, a percentage or a deduction reads identically in the body and
+     * the total. Shaped like a row because it is one: the caller supplies the summed values
+     * (normally the server's own total, never re-added on the client).
+     *
+     * Drawn even when `data` is empty — a period with no documents still has a zero total, and
+     * the table keeps its shape — but not during a first load, where it would be a claim about
+     * rows that have not arrived. With `mobileCards` it becomes the last card.
+     */
+    footerRow?: T;
+    /**
+     * Omit the pagination line. For a table that is never paged — a fixed set of rows that
+     * is the whole answer — "Showing 1-4 of 4" and a single page button are noise.
+     */
+    hidePagination?: boolean;
     /**
      * Shown instead of an empty cell, so "no value" reads as absent data rather than
      * a rendering bug (KP1-I48). Pass `''` to keep cells blank.
@@ -296,14 +322,16 @@ const readsOwnDirection = (
 const TablePrimary = <T extends Record<string, any>>({
     columns,
     data,
-    order,
+    order = 'asc',
     orderBy,
-    onSort,
-    page,
-    rowsPerPage,
-    totalCount,
-    onPageChange,
+    onSort = () => {},
+    page = 0,
+    rowsPerPage = data.length,
+    totalCount = data.length,
+    onPageChange = () => {},
     rowKey,
+    footerRow,
+    hidePagination = false,
     emptyPlaceholder = '-',
     stickyLastColumn = false,
     stickyFirstColumn = false,
@@ -319,6 +347,10 @@ const TablePrimary = <T extends Record<string, any>>({
     const asCards = Boolean(mobileCards) && isNarrow;
     const firstLoad = loading && data.length === 0;
     const refetching = loading && data.length > 0;
+    /** Never 0, so the page count cannot divide by zero when `rowsPerPage` defaulted to an empty `data`. */
+    const pageSize = Math.max(rowsPerPage, 1);
+    /** The TOTAL line waits for the first response — before it, it would describe no rows. */
+    const showFooter = Boolean(footerRow) && !firstLoad;
 
     /** One cell's content, formatted exactly as the table row renders it. */
     const cellValue = (column: ColumnDefinition<T>, row: T, index: number): React.ReactNode => {
@@ -389,24 +421,31 @@ const TablePrimary = <T extends Record<string, any>>({
                         </li>
                     ))
                 )}
+                {showFooter && (
+                    <li className="table-primary-card table-primary-card-footer">
+                        {renderCard(footerRow as T, data.length)}
+                    </li>
+                )}
             </ul>
-            <Box className="table-primary-pagination-container">
-                <Box className="table-primary-pagination-info text-xs!">
-                    {t('table.paginationInfo', {
-                        count: totalCount,
-                        from: totalCount > 0 ? page * rowsPerPage + 1 : 0,
-                        to: totalCount > 0 ? Math.min((page + 1) * rowsPerPage, totalCount) : 0,
-                    })}
+            {!hidePagination && (
+                <Box className="table-primary-pagination-container">
+                    <Box className="table-primary-pagination-info text-xs!">
+                        {t('table.paginationInfo', {
+                            count: totalCount,
+                            from: totalCount > 0 ? page * pageSize + 1 : 0,
+                            to: totalCount > 0 ? Math.min((page + 1) * pageSize, totalCount) : 0,
+                        })}
+                    </Box>
+                    <Pagination
+                        count={Math.ceil(totalCount / pageSize)}
+                        page={page + 1}
+                        onChange={(event, value) => onPageChange(event, value - 1)}
+                        shape="rounded"
+                        size="small"
+                        className="table-primary-numeric-pagination"
+                    />
                 </Box>
-                <Pagination
-                    count={Math.ceil(totalCount / rowsPerPage)}
-                    page={page + 1}
-                    onChange={(event, value) => onPageChange(event, value - 1)}
-                    shape="rounded"
-                    size="small"
-                    className="table-primary-numeric-pagination"
-                />
-            </Box>
+            )}
         </Box>
     ) : null;
 
@@ -646,31 +685,51 @@ const TablePrimary = <T extends Record<string, any>>({
                             ))
                         )}
                     </TableBody>
+                    {showFooter && (
+                        <TableFooter className="table-primary-footer">
+                            <TableRow className="table-primary-footer-row">
+                                {selection && <TableCell padding="checkbox" className="table-primary-cell" />}
+                                {columns.map((column) => (
+                                    /* `table-primary-cell` so a pinned first / last column stays
+                                       pinned in the total line too — the sticky rules key on it. */
+                                    <TableCell
+                                        key={column.key as string}
+                                        className="table-primary-cell table-primary-footer-cell text-xs! sm:text-sm! lg:text-sm!"
+                                        style={{ maxWidth: column.maxWidth }}
+                                    >
+                                        {cellValue(column, footerRow as T, data.length)}
+                                    </TableCell>
+                                ))}
+                            </TableRow>
+                        </TableFooter>
+                    )}
                 </Table>
             </TableContainer>
 
-            <Box className="table-primary-pagination-container">
-                <Box className="table-primary-pagination-info text-xs! sm:text-sm! lg:text-base!">
-                    {totalCount > 0 ? (
-                        <>
-                            {t('table.paginationInfo', {
-                                count: totalCount,
-                                from: page * rowsPerPage + 1,
-                                to: Math.min((page + 1) * rowsPerPage, totalCount)
-                            })}
-                        </>
-                    ) : (
-                        t('table.paginationInfo', { count: 0, from: 0, to: 0 })
-                    )}
+            {!hidePagination && (
+                <Box className="table-primary-pagination-container">
+                    <Box className="table-primary-pagination-info text-xs! sm:text-sm! lg:text-base!">
+                        {totalCount > 0 ? (
+                            <>
+                                {t('table.paginationInfo', {
+                                    count: totalCount,
+                                    from: page * pageSize + 1,
+                                    to: Math.min((page + 1) * pageSize, totalCount)
+                                })}
+                            </>
+                        ) : (
+                            t('table.paginationInfo', { count: 0, from: 0, to: 0 })
+                        )}
+                    </Box>
+                    <Pagination
+                        count={Math.ceil(totalCount / pageSize)}
+                        page={page + 1}
+                        onChange={(event, value) => onPageChange(event, value - 1)}
+                        shape="rounded"
+                        className="table-primary-numeric-pagination [&_.MuiPaginationItem-root]:text-xs! [&_.MuiPaginationItem-root]:sm:text-sm! [&_.MuiPaginationItem-root]:lg:text-base!"
+                    />
                 </Box>
-                <Pagination
-                    count={Math.ceil(totalCount / rowsPerPage)}
-                    page={page + 1}
-                    onChange={(event, value) => onPageChange(event, value - 1)}
-                    shape="rounded"
-                    className="table-primary-numeric-pagination [&_.MuiPaginationItem-root]:text-xs! [&_.MuiPaginationItem-root]:sm:text-sm! [&_.MuiPaginationItem-root]:lg:text-base!"
-                />
-            </Box>
+            )}
         </Box>
     );
 };

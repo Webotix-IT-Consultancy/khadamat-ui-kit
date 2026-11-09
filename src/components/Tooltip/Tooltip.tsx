@@ -3,7 +3,9 @@ import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import { cn } from '../../lib/utils';
 import './Tooltip.css';
 
-export type TooltipTone = 'neutral' | 'danger';
+/* `warning` — the amber bubble a PENDING reason hangs in (`.tooltip-warning`, Tooltip.css). The
+   rule shipped before the type did, so `tone="warning"` styled correctly and failed `tsc`. */
+export type TooltipTone = 'neutral' | 'danger' | 'warning';
 
 export interface TooltipProps {
     /**

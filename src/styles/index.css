@@ -185,7 +185,8 @@
 
   /* UI */
   --muted: 30 14% 94%;
-  --muted-foreground: 37 12% 78%;
+  --muted-foreground: 37 4% 35%;;
+  /* --muted-foreground: 37 12% 78%; */
   --accent: 137 100% 96%;
   --accent-foreground: 156 98% 21%;
   --destructive: 0 100% 60%;

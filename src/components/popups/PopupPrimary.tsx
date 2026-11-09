@@ -52,7 +52,7 @@ const PopupPrimary: React.FC<PopupPrimaryProps> = ({
             <div className="flex flex-col max-h-[90vh]">
                 {title && (
                     <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-200">
-                        <h2 className="text-xl font-semibold text-dark dark:text-white text-center">
+                        <h2 className="text-xl font-semibold text-dark  text-center">
                             {title}
                         </h2>
                     </div>

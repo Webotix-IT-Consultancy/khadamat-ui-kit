@@ -8,6 +8,12 @@ interface TransactionCardProps {
   date: string;
   amount: number;
   balance: number;
+  /** `out` draws a debit: a minus sign and the destructive colour. Default `in`. */
+  direction?: 'in' | 'out';
+  /** Already-translated currency label. Default `AED`. */
+  currency?: string;
+  /** Already-translated prefix for the running balance. Default `Bal.` */
+  balanceLabel?: string;
 }
 
 const TransactionCard: React.FC<TransactionCardProps> = ({
@@ -15,7 +21,10 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
   title,
   date,
   amount,
-  balance
+  balance,
+  direction = 'in',
+  currency = 'AED',
+  balanceLabel = 'Bal.'
 }) => {
   const getIcon = () => {
     return (
@@ -56,11 +65,14 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
       </div>
 
       <div className="transaction-amounts flex flex-col items-end shrink-0 ml-1 sm:ml-2">
-        <div className="transaction-amount text-[11px] sm:text-base font-semibold text-primary-vibrant whitespace-nowrap">
-          + AED {amount.toFixed(2)}
+        <div className={cn(
+          "transaction-amount text-[11px] sm:text-base font-semibold whitespace-nowrap",
+          direction === 'out' ? 'text-destructive' : 'text-primary-vibrant'
+        )}>
+          {direction === 'out' ? '- ' : '+ '}{currency} {amount.toFixed(2)}
         </div>
         <div className="transaction-balance text-[9px] sm:text-[16px] font-normal text-grey-400 whitespace-nowrap leading-tight">
-          Bal. {balance.toFixed(2)}
+          {balanceLabel} {balance.toFixed(2)}
         </div>
       </div>
     </div>
