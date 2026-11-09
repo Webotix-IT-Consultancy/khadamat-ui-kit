@@ -6,6 +6,11 @@ export interface RadioOption<T extends string = string> {
     value: T;
     label: string;
     disabled?: boolean;
+    /**
+     * Rendered after the label, inside the clickable option — e.g. a count bubble beside a
+     * status filter (admin Customers' Approved / Pending / Rejected). The caller owns its look.
+     */
+    badge?: React.ReactNode;
 }
 
 interface RadioGroupProps<T extends string = string> {
@@ -59,6 +64,7 @@ function RadioGroup<T extends string = string>({
                     />
                     <span className="radio-option-control" aria-hidden="true" />
                     <span className="radio-option-label">{option.label}</span>
+                    {option.badge}
                 </label>
             ))}
         </fieldset>

@@ -41,6 +41,12 @@ export interface FilterFieldConfig {
   /** Column values to offer. Include an "All" entry with value '' if you want one. */
   options: FilterOption[];
   placeholder?: string;
+  /**
+   * Show the field only while this returns true, evaluated against the panel's CURRENT
+   * (unapplied) values — so a field that depends on another appears the moment that other
+   * field is changed, not after Apply. A hidden field is sent as '' on Apply.
+   */
+  visibleWhen?: (values: FilterValues) => boolean;
 }
 
 interface FilterPanelProps {
@@ -361,8 +367,15 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   };
 
   const handleApply = () => {
-    // Clean up filters based on mode if needed, or just send everything
-    onApply(filters);
+    // A field hidden by `visibleWhen` must not carry a value the user can no longer see.
+    const hidden = (fields ?? []).filter((field) => field.visibleWhen && !field.visibleWhen(filters));
+    if (!hidden.length) {
+      onApply(filters);
+      return;
+    }
+    const cleaned = { ...filters };
+    hidden.forEach((field) => { cleaned[field.key] = ''; });
+    onApply(cleaned);
   };
 
   /**
@@ -600,7 +613,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           </div>
 
           {/* Caller-defined dropdowns, driven by the module's own table columns. */}
-          {useCustomFields && fields!.map((field) => (
+          {useCustomFields && fields!.filter((field) => !field.visibleWhen || field.visibleWhen(filters)).map((field) => (
             <div className="filter-group" key={field.key}>
               <label>{field.label}</label>
               <StyledAutocomplete

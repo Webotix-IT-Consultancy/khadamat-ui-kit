@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import StatusBadge from '../StatusBadge/StatusBadge';
+import StatusBadge, { type BadgeStatus } from '../StatusBadge/StatusBadge';
 // import './InvoiceCard.css';
 import { cn } from '../../lib/utils';
 
@@ -9,7 +9,22 @@ interface InvoiceCardProps {
   invoiceNumber: string;
   issueDate: string;
   amount: number;
-  status: 'paid' | 'pending';
+  /** Any badge tone. Drives the chip colour and the icon tile. */
+  status: BadgeStatus;
+  /** The chip's text, already translated. Without it the chip prints the raw status key. */
+  statusLabel?: string;
+  /** Already-translated "Issue Date." caption. */
+  issueDateLabel?: string;
+  /** Already-translated currency label. Default `AED`. */
+  currency?: string;
+  /** Where the card goes on click. Default `/dashboard/invoices/:id`, which the router redirects. */
+  href?: string;
+  /** Show the download button. Default: only when `status` is `paid`. */
+  canDownload?: boolean;
+  /** The download is in flight. */
+  downloading?: boolean;
+  /** Accessible name for the download button. */
+  downloadLabel?: string;
   onDownload?: () => void;
 }
 
@@ -19,6 +34,13 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   issueDate,
   amount,
   status,
+  statusLabel,
+  issueDateLabel = 'Issue Date.',
+  currency = 'AED',
+  href,
+  canDownload,
+  downloading = false,
+  downloadLabel,
   onDownload
 }) => {
   const navigate = useNavigate();
@@ -31,7 +53,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     if ((e.target as HTMLElement).closest('.invoice-download-btn')) {
       return;
     }
-    navigate(`/dashboard/invoices/${id}`);
+    navigate(href ?? `/dashboard/invoices/${id}`);
   };
 
   return (
@@ -57,7 +79,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
             {invoiceNumber}
           </div>
           <div className="invoice-date text-[16px] font-normal text-grey-400 max-sm:text-xs">
-            Issue Date.{issueDate}
+            {issueDateLabel}{issueDate}
           </div>
         </div>
       </div>
@@ -65,16 +87,19 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       <div className="invoice-actions-container flex flex-row items-center justify-between sm:justify-end gap-4 w-full sm:w-auto shrink-0">
         <div className="invoice-amount-section flex flex-col items-satrt sm:items-end gap-1">
           <div className="invoice-amount text-base font-semibold text-black max-sm:text-[14px]">
-            AED {amount.toFixed(2)}
+            {currency} {amount.toFixed(2)}
           </div>
           <div className="scale-90 sm:scale-100 sm:origin-right origin-left">
-            <StatusBadge status={status} label={status} />
+            <StatusBadge status={status} label={statusLabel ?? status} />
           </div>
         </div>
 
-        {status === 'paid' && (
+        {(canDownload ?? status === 'paid') && (
           <button
-            className="invoice-download-btn flex items-center justify-center w-10 h-10 rounded-full bg-[#04bc67] hover:bg-[#039957] transition-colors shrink-0 max-sm:w-9 max-sm:h-9"
+            type="button"
+            aria-label={downloadLabel}
+            disabled={downloading}
+            className="invoice-download-btn flex items-center justify-center w-10 h-10 rounded-full bg-[#04bc67] hover:bg-[#039957] disabled:opacity-60 disabled:cursor-wait transition-colors shrink-0 max-sm:w-9 max-sm:h-9"
             onClick={onDownload}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="max-sm:scale-90">

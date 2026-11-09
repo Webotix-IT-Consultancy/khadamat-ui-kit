@@ -553,3 +553,32 @@ ul.table-primary-busy {
     padding-block-start: 0.625rem;
     border-block-start: 1px solid hsl(var(--grey-100));
 }
+
+/*
+ * The TOTAL line — opt-in via `footerRow`.
+ *
+ * A footer, not a body row, so it is never striped, never hovered and never sorted into the
+ * data. MUI's footer cell defaults to the secondary text colour at 0.75rem, which reads as a
+ * caption; a total is the most important figure in the table, so it takes the body's colour
+ * and weight. The tint and the rule above it are the brand accent at low alpha, so the line
+ * follows each portal's palette (gold in admin, green in customer) without restating either.
+ */
+.table-primary-footer-row .table-primary-footer-cell {
+    color: hsl(var(--foreground)) !important;
+    font-weight: 600;
+    background-color: hsl(var(--primary) / 0.12);
+    border-block-start: 1px solid hsl(var(--primary));
+    border-block-end: none !important;
+}
+
+/* A pinned column keeps the total's tint rather than the body's white. */
+.table-primary-sticky-last .table-primary-footer-row td.table-primary-cell:last-child,
+.table-primary-sticky-first .table-primary-footer-row td.table-primary-cell:first-child {
+    background-color: hsl(var(--primary-light));
+}
+
+.table-primary-card-footer {
+    font-weight: 600;
+    background-color: hsl(var(--primary) / 0.12);
+    border-color: hsl(var(--primary));
+}

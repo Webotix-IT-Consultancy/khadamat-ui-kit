@@ -20,7 +20,7 @@ import { cn } from '../../lib/utils';
  * Corners are `rounded-10`, the shared `--radius-r-10` token used by inputs and buttons
  * — rounded, not a circle.
  */
-export type RowActionVariant = 'default' | 'accent' | 'solid';
+export type RowActionVariant = 'default' | 'accent' | 'solid' | 'approve' | 'reject';
 
 interface RowActionButtonProps {
     /** Accessible name; also the tooltip. Required — these buttons are icon-only. */
@@ -39,6 +39,14 @@ const VARIANT: Record<RowActionVariant, string> = {
     accent: 'bg-primary-light text-primary',
     /** Inverted, for the one destructive action per row (e.g. Cancel Contract). */
     solid: 'bg-foreground text-background',
+    /**
+     * A DECISION pair — Approve / Reject on a row awaiting one (Cancellations, Postpaid
+     * Customers). Approve was the default tint and Reject `solid`, so the two read as
+     * "view-like" and "cancel-like" and every table drew them differently. One pair, tokens
+     * only, so the decision looks the same on every list.
+     */
+    approve: 'bg-primary text-primary-foreground',
+    reject: 'bg-destructive text-destructive-foreground',
 };
 
 const RowActionButton: React.FC<RowActionButtonProps> = ({
