@@ -17,7 +17,7 @@ interface InvoiceCardProps {
   issueDateLabel?: string;
   /** Already-translated currency label. Default `AED`. */
   currency?: string;
-  /** Where the card goes on click. Default `/dashboard/invoices/:id`, which the router redirects. */
+  /** Where the card goes on click. Omit it and the card is not a link (there is no invoice detail screen). */
   href?: string;
   /** Show the download button. Default: only when `status` is `paid`. */
   canDownload?: boolean;
@@ -49,18 +49,20 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   const iconBgUtility = status === 'paid' ? 'bg-primary-100' : 'bg-primary-200';
 
   const handleCardClick = (e: React.MouseEvent) => {
+    if (!href) return;
     // Prevent navigation if clicking download button
     if ((e.target as HTMLElement).closest('.invoice-download-btn')) {
       return;
     }
-    navigate(href ?? `/dashboard/invoices/${id}`);
+    navigate(href);
   };
 
   return (
     <div
-      onClick={handleCardClick}
+      onClick={href ? handleCardClick : undefined}
       className={cn(
-        "invoice-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 self-stretch py-3 border-b border-grey-100 last:border-0 transition-all duration-200 hover:bg-grey-100/30 cursor-pointer",
+        "invoice-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 self-stretch py-3 border-b border-grey-100 last:border-0 transition-all duration-200 hover:bg-grey-100/30",
+        href && "cursor-pointer",
         "max-sm:gap-4 pb-4 sm:pb-3"
       )}>
       <div className="invoice-info flex items-center gap-3 min-w-0 w-full sm:w-auto flex-1">
