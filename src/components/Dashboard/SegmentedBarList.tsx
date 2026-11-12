@@ -35,6 +35,9 @@ interface SegmentedBarListProps {
 /** Shortest a non-zero row is drawn, as a % of the widest, so a tiny figure stays visible. */
 const MIN_ROW_WIDTH = 8;
 
+/** Narrowest a segment is drawn, so its label stays readable; past that the row wraps. */
+const MIN_SEGMENT_WIDTH = '6.5rem';
+
 /**
  * A list of horizontal bars, one per row, each split into labelled segments — what a total is
  * made of (revenue streams per contract type, jobs per status per area…).
@@ -57,23 +60,31 @@ const SegmentedBarList: React.FC<SegmentedBarListProps> = ({ rows, className = '
                         <p className="text-sm font-medium text-foreground">{row.label}</p>
 
                         <div className="min-w-0">
-                            <div className="flex gap-3" style={{ width: `${width}%` }}>
+                            {/* Wraps, so a segment too small for its share never clips its label —
+                                the name is the point of the segment; the proportion is approximate
+                                at the low end anyway. */}
+                            <div
+                                className="flex flex-wrap gap-3"
+                                style={{ width: `${width}%`, minWidth: width > 0 ? `min(100%, ${MIN_SEGMENT_WIDTH})` : undefined }}
+                            >
                                 {row.segments.map((segment) => (
                                     <div
                                         key={segment.key}
-                                        className="min-w-0 rounded-lg px-3 py-2 text-white"
+                                        className="rounded-lg px-3 py-2 text-white"
                                         style={{
                                             flexGrow: Math.max(segment.value, 0) || 0.0001,
                                             flexBasis: 0,
+                                            minWidth: MIN_SEGMENT_WIDTH,
                                             backgroundColor: segment.color,
                                         }}
+                                        title={typeof segment.label === 'string' ? segment.label : undefined}
                                     >
-                                        <p className="truncate text-xs font-medium">{segment.label}</p>
+                                        <p className="break-words text-xs font-medium leading-tight">{segment.label}</p>
                                         {segment.valueLabel != null && <p className="text-[11px] opacity-90">{segment.valueLabel}</p>}
                                     </div>
                                 ))}
                             </div>
-                            {row.caption && <p className="mt-1 text-xs text-foreground/50">{row.caption}</p>}
+                            {row.caption && <p className="mt-1 text-xs text-grey-600">{row.caption}</p>}
                         </div>
 
                         <p className="text-sm font-semibold text-foreground md:text-end">{row.totalLabel}</p>
