@@ -742,7 +742,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         * `target="_blank"` + `rel="noopener noreferrer"`: wa.me is a third-party origin, and
         * a customer mid-form should not lose the page to it.
         */}
-      {!actualCollapsed && (
+      {/* {!actualCollapsed && (
         <a
           href={whatsAppUrl}
           target="_blank"
@@ -770,10 +770,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             <WhatsAppIcon />
           </span>
         </a>
-      )}
+      )} */}
 
       {/* Compact CTA for collapsed state — same destination as the card above (KP1-I177). */}
-      {actualCollapsed && (
+      {/* {actualCollapsed && (
         <TooltipProvider delayDuration={RAIL_TOOLTIP_DELAY}>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -795,7 +795,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-      )}
+      )} */}
       </>
       )
      }
