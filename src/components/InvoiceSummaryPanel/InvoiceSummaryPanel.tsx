@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Download, Eye, Loader2 } from 'lucide-react';
+import { Download, Eye, Loader2, Printer } from 'lucide-react';
 import { formatAed } from '../../utils/money';
 import type { DocumentInvoice, InvoiceSummary } from '../../utils/invoiceSummary';
 import SummaryPanel, { type SummaryRow } from '../SummaryPanel/SummaryPanel';
@@ -31,6 +31,12 @@ export interface InvoiceSummaryPanelProps {
     busyKey?: string | null;
     onViewInvoice: (invoice: DocumentInvoice) => void;
     onDownloadInvoice: (invoice: DocumentInvoice) => void;
+    /**
+     * Print the invoice's PDF (the portal's `useDocumentPdf().print`). Optional: without it the
+     * row shows View and Download only, as before. Its busy key is
+     * `invoiceActionKey(invoice, 'print')`.
+     */
+    onPrintInvoice?: (invoice: DocumentInvoice) => void;
     /** The whole pack (`summary.documentUrl`); offered when there is more than one invoice. */
     onDownloadAll?: () => void;
     /** A receipt row's click, when the receipt carries a file. */
@@ -54,7 +60,7 @@ export const invoiceKey = (invoice: DocumentInvoice): string =>
  * whichever was pressed — so Download spun the View icon and never its own. Callers pass this
  * to `useDocumentPdf` so each button reports only its own fetch.
  */
-export const invoiceActionKey = (invoice: DocumentInvoice, action: 'view' | 'download'): string =>
+export const invoiceActionKey = (invoice: DocumentInvoice, action: 'view' | 'download' | 'print'): string =>
     `${invoiceKey(invoice)}:${action}`;
 
 /**
@@ -70,7 +76,8 @@ export const invoiceActionKey = (invoice: DocumentInvoice, action: 'view' | 'dow
  * listing `invoiceSummary.invoices`: two for a General contract (the charges and the
  * attestation, each posting to its own Sales Account), one for a quotation.
  *
- * - **Every row opens its own PDF**, view or download; "Download all" is the contract's pack.
+ * - **Every row opens its own PDF**: view, download, or print when `onPrintInvoice` is given.
+ *   "Download all" is the contract's pack.
  * - **Nothing invented.** No invoices and no receipts = no panel.
  * - **It renders, the caller fetches.** Requests need the portal's own axios instance, so the
  *   actions and `busyKey` come in as props.
@@ -82,6 +89,7 @@ const InvoiceSummaryPanel: React.FC<InvoiceSummaryPanelProps> = ({
     busyKey,
     onViewInvoice,
     onDownloadInvoice,
+    onPrintInvoice,
     onDownloadAll,
     onOpenReceipt,
     userType = 'admin',
@@ -119,8 +127,9 @@ const InvoiceSummaryPanel: React.FC<InvoiceSummaryPanelProps> = ({
         const key = invoiceKey(invoice);
         const viewing = busyKey === invoiceActionKey(invoice, 'view');
         const downloading = busyKey === invoiceActionKey(invoice, 'download');
-        /* Both buttons wait while either fetch runs; only the pressed one spins (KP1-I610). */
-        const busy = viewing || downloading;
+        const printing = busyKey === invoiceActionKey(invoice, 'print');
+        /* Every button waits while any fetch runs; only the pressed one spins (KP1-I610). */
+        const busy = viewing || downloading || printing;
         const meta = [formatDate(invoice.invoiceDate), invoice.statusName].filter(Boolean).join(' · ');
         return {
             key,
@@ -164,6 +173,22 @@ const InvoiceSummaryPanel: React.FC<InvoiceSummaryPanelProps> = ({
                                     <Download size={16} aria-hidden="true" />
                                 )}
                             </button>
+                            {onPrintInvoice && (
+                                <button
+                                    type="button"
+                                    className={iconButton}
+                                    disabled={busy}
+                                    aria-label={t('documents.printInvoice', { number })}
+                                    title={t('documents.printInvoice', { number })}
+                                    onClick={() => onPrintInvoice(invoice)}
+                                >
+                                    {printing ? (
+                                        <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+                                    ) : (
+                                        <Printer size={16} aria-hidden="true" />
+                                    )}
+                                </button>
+                            )}
                         </>
                     )}
                 </span>

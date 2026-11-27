@@ -21,7 +21,10 @@
     "filter": "تصفية",
     "clear": "مسح",
     "apply": "تطبيق",
-    "exportToExcel": "تصدير إلى إكسل"
+    "exportToExcel": "تصدير إلى إكسل",
+    "view": "عرض",
+    "download": "تنزيل",
+    "remove": "إزالة"
   },
   "tabs": {
     "all": "الكل",
@@ -87,6 +90,7 @@
     "receipts": "الإيصالات",
     "viewInvoice": "عرض {{number}}",
     "downloadInvoice": "تنزيل {{number}}",
+    "printInvoice": "طباعة {{number}}",
     "downloadAll": "تنزيل الكل",
     "noInvoiceNumber": "فاتورة ضريبية",
     "popupBlocked": "منع المتصفح نافذة المستند، لذلك تم تنزيل ملف PDF بدلاً من ذلك. اسمح بالنوافذ المنبثقة لهذا الموقع لفتحه في علامة تبويب.",
@@ -143,7 +147,62 @@
       "format": "صيغة الملف غير مدعومة",
       "tooLarge": "يجب أن يكون حجم الملف أقل من {{max}} ميغابايت"
     }
+  },
+  "notifications": {
+    "title": "الإشعارات",
+    "drawerTitle": "الإشعارات",
+    "count_zero": "{{count}} إشعار",
+    "count_one": "إشعار واحد",
+    "count_two": "إشعاران",
+    "count_few": "{{count}} إشعارات",
+    "count_many": "{{count}} إشعارًا",
+    "count_other": "{{count}} إشعار",
+    "tabs": {
+      "all": "الكل",
+      "unread": "غير مقروءة",
+      "read": "مقروءة"
+    },
+    "groups": {
+      "today": "اليوم",
+      "yesterday": "أمس",
+      "unknown": "سابقًا"
+    },
+    "tone": {
+      "success": "نجاح",
+      "action": "إجراء مطلوب",
+      "alert": "تنبيه",
+      "warning": "تحذير",
+      "reminder": "تذكير",
+      "info": "معلومة"
+    },
+    "unread": "غير مقروء",
+    "markAllRead": "تحديد الكل كمقروء",
+    "viewAll": "عرض جميع الإشعارات",
+    "loadMore": "تحميل المزيد",
+    "empty": "لا توجد إشعارات بعد.",
+    "emptyUnread": "لا توجد إشعارات غير مقروءة.",
+    "emptyRead": "لا توجد إشعارات مقروءة.",
+    "emptySearch": "لا توجد إشعارات مطابقة لبحثك.",
+    "searchPlaceholder": "ابحث في الإشعارات",
+    "justNow": "الآن",
+    "markedAllRead_zero": "لم يتم تحديد أي إشعار كمقروء.",
+    "markedAllRead_one": "تم تحديد إشعار واحد كمقروء.",
+    "markedAllRead_two": "تم تحديد إشعارين كمقروءين.",
+    "markedAllRead_few": "تم تحديد {{count}} إشعارات كمقروءة.",
+    "markedAllRead_many": "تم تحديد {{count}} إشعارًا كمقروءًا.",
+    "markedAllRead_other": "تم تحديد {{count}} إشعار كمقروء.",
+    "markReadFailed": "تعذر تحديد الإشعار كمقروء.",
+    "markAllFailed": "تعذر تحديد الإشعارات كمقروءة."
+  },
+  "a11y": {
+    "uploadedFile": "ملف مرفوع",
+    "uploadFile": "رفع ملف",
+    "showPassword": "إظهار كلمة المرور",
+    "hidePassword": "إخفاء كلمة المرور",
+    "dismiss": "إغلاق",
+    "viewNotifications": "عرض الإشعارات",
+    "oneTimeCode": "رمز التحقق لمرة واحدة",
+    "otpDigit": "{{label}} الرقم {{index}}",
+    "userAvatar": "صورة المستخدم"
   }
 }
-
-

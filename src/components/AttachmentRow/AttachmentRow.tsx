@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Download, Eye, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface AttachmentRowProps {
@@ -38,14 +39,23 @@ const AttachmentRow: React.FC<AttachmentRowProps> = ({
     onView,
     onDownload,
     uploader,
-    downloadLabel = 'Download',
-    viewLabel = 'View',
+    downloadLabel: downloadLabelProp,
+    viewLabel: viewLabelProp,
     hideStatusIcon = false,
     alwaysShowActions = false,
     rowClassName,
     actionClassName,
     className = '',
 }) => {
+    const { t: tc } = useTranslation('common');
+    /*
+     * The defaults are the SHARED `common` strings, resolved here, not English literals: they
+     * are the button's hover tooltip (`title`) and its accessible name, and a literal 'View'
+     * showed English on every Arabic screen whose caller passed no label. A caller's own
+     * label still wins.
+     */
+    const viewLabel = viewLabelProp ?? tc('common:buttons.view');
+    const downloadLabel = downloadLabelProp ?? tc('common:buttons.download');
     const showActions = present || alwaysShowActions;
     const actionBase = 'flex items-center justify-center rounded-lg p-2 transition-colors';
     const actionColours = actionClassName ?? 'text-gray-600 hover:bg-black/5 hover:text-black';

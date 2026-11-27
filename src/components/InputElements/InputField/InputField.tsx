@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import '../FormField.css';
 import './InputField.css';
 import ValidationMessage from '../../ValidationMessage/ValidationMessage';
@@ -18,6 +19,7 @@ const InputField = React.forwardRef(({
   error,
   ...props
 }: any, ref: any) => {
+  const { t: tc } = useTranslation('common');
   const [showPassword, setShowPassword] = useState(false);
   const inputType = showPasswordToggle && showPassword ? 'text' : type;
 
@@ -118,7 +120,7 @@ const InputField = React.forwardRef(({
             type="button"
             className="password-toggle"
             onClick={() => setShowPassword(!showPassword)}
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            aria-label={showPassword ? tc('common:a11y.hidePassword') : tc('common:a11y.showPassword')}
             aria-pressed={showPassword}
           >
             {renderEyeIcon(showPassword, error, 20)}

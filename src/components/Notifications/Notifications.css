@@ -1,0 +1,318 @@
+/*
+ * The bell notification list — item, feed and the drawer that holds one. Plain CSS on design
+ * tokens, co-located, because a portal stylesheet cannot reach a shared component.
+ *
+ * The TONE colours — one per notification type in the matrix — are drawn only from tokens
+ * `body.admin-theme` does NOT override (`--success*`, `--orange*`, `--destructive`,
+ * `--danger-light`, `--warning-banner-*`, `--info-blue*`, `--foreground`, `--grey-100`) — the
+ * same choice `InlineAlert` makes, so a type looks identical in both portals. **Never use
+ * `--primary*` or `--border` for a tone**: Action Required once sat on `--primary-light-200`
+ * and read gold in admin and near-white in customer. Each type has its OWN colour (Warning and
+ * Reminder once shared one), and the tone caption takes the icon's colour. Only the unread
+ * tint and the actions follow the portal's brand (`--primary*`).
+ *
+ * Every horizontal offset is LOGICAL (`inset-inline-*`, `margin-inline-*`, `text-align: end`)
+ * because the customer portal mirrors in Arabic.
+ */
+
+/* --- item ----------------------------------------------------------------------------- */
+
+.notification-item {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.875rem;
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.75rem;
+    background: hsl(var(--white, 0 0% 100%));
+    text-align: start;
+    color: hsl(var(--foreground));
+    font: inherit;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+button.notification-item {
+    cursor: pointer;
+}
+
+button.notification-item:hover {
+    background-color: hsl(var(--primary-light) / 0.45);
+}
+
+button.notification-item:focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+}
+
+.notification-item-unread {
+    background-color: hsl(var(--primary-light) / 0.7);
+    border-color: hsl(var(--primary) / 0.25);
+}
+
+.notification-item-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.625rem;
+    line-height: 0;
+    color: hsl(var(--notification-tone-fg));
+    background-color: hsl(var(--notification-tone-bg));
+}
+
+/* One rule per type: `fg` colours the icon AND the tone caption, `bg` tints the icon tile. */
+.notification-item {
+    /* Information is the default, so an unknown tone still renders sensibly. */
+    --notification-tone-fg: var(--foreground);
+    --notification-tone-bg: var(--grey-100);
+}
+
+.notification-tone-success {
+    --notification-tone-fg: var(--success);
+    --notification-tone-bg: var(--success-light);
+}
+
+.notification-tone-action {
+    --notification-tone-fg: var(--orange-600);
+    --notification-tone-bg: var(--orange-light);
+}
+
+.notification-tone-alert {
+    --notification-tone-fg: var(--destructive);
+    --notification-tone-bg: var(--danger-light);
+}
+
+.notification-tone-warning {
+    --notification-tone-fg: var(--warning-banner-text);
+    --notification-tone-bg: var(--warning-banner-bg);
+}
+
+.notification-tone-reminder {
+    --notification-tone-fg: var(--info-blue);
+    --notification-tone-bg: var(--info-blue-light);
+}
+
+.notification-tone-info {
+    --notification-tone-fg: var(--foreground);
+    --notification-tone-bg: var(--grey-100);
+}
+
+.notification-item-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.notification-item-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.notification-item-title {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.notification-item-time {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    color: hsl(var(--grey-600));
+    white-space: nowrap;
+}
+
+.notification-item-body {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: hsl(var(--foreground));
+    overflow-wrap: anywhere;
+}
+
+.notification-item-tone {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    /* The type in words takes the type's colour, so caption and icon agree. */
+    color: hsl(var(--notification-tone-fg));
+}
+
+.notification-item-dot {
+    position: absolute;
+    inset-block-start: 1rem;
+    inset-inline-start: 0.375rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background-color: hsl(var(--primary));
+}
+
+/* --- feed ----------------------------------------------------------------------------- */
+
+.notification-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.notification-feed-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.notification-feed-group-label {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+}
+
+.notification-feed-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.notification-feed-empty {
+    padding: 2.5rem 1rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: hsl(var(--grey-600));
+}
+
+.notification-feed-skeleton {
+    height: 4.5rem;
+    border-radius: 0.75rem;
+    background: linear-gradient(90deg, hsl(var(--grey-100)) 25%, hsl(var(--grey-200)) 50%, hsl(var(--grey-100)) 75%);
+    background-size: 200% 100%;
+    animation: notification-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes notification-shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+}
+
+.notification-feed-more {
+    display: flex;
+    justify-content: center;
+    padding-top: 0.5rem;
+}
+
+/* --- drawer --------------------------------------------------------------------------- */
+
+/* Backdrop and drawer are SIBLINGS (the FilterPanel rule, KP1-I205/I77): a click inside the
+   drawer never travels through the backdrop, so nothing needs stopPropagation. */
+.notification-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 998;
+    background: rgb(0 0 0 / 0.3);
+}
+
+.notification-drawer {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-end: 0;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    width: min(420px, 100vw);
+    background: hsl(var(--white, 0 0% 100%));
+    box-shadow: 0 4px 24px 0 rgb(0 0 0 / 0.12);
+}
+
+.notification-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1rem 1rem 0.75rem;
+    border-bottom: 1px solid hsl(var(--grey-200));
+}
+
+.notification-drawer-title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.notification-drawer-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.notification-drawer-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.notification-drawer-footer {
+    padding: 0.75rem 1rem 1rem;
+    border-top: 1px solid hsl(var(--grey-200));
+}
+
+.notification-link-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    background: transparent;
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: hsl(var(--primary-dark, var(--primary)));
+    cursor: pointer;
+}
+
+.notification-link-button:hover:not(:disabled) {
+    background-color: hsl(var(--primary-light));
+}
+
+.notification-link-button:disabled {
+    color: hsl(var(--grey-400));
+    cursor: default;
+}
+
+.notification-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: none;
+    border-radius: 0.625rem;
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    cursor: pointer;
+}
+
+.notification-icon-button:focus-visible,
+.notification-link-button:focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+}
+
+/* The "View all" arrow points the reading direction. */
+[dir='rtl'] .notification-flip-rtl {
+    transform: scaleX(-1);
+}

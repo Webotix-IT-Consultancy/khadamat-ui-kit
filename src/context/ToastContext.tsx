@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { AlertTriangle, CheckCircle2, Info, X, XCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Toast {
     id: number;
@@ -47,6 +48,7 @@ const TOAST_STYLES: Record<Toast['type'], { box: string; icon: React.ElementType
 };
 
 export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    const { t: tc } = useTranslation('common');
     const [toasts, setToasts] = useState<Toast[]>([]);
     const [nextId, setNextId] = useState(1);
 
@@ -85,7 +87,7 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                             <button
                                 type="button"
                                 onClick={() => removeToast(toast.id)}
-                                aria-label="Dismiss"
+                                aria-label={tc('common:a11y.dismiss')}
                                 className="shrink-0 rounded-lg p-1 opacity-60 transition-opacity hover:opacity-100"
                             >
                                 <X size={16} />

@@ -1,4 +1,5 @@
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import './OtpInput.css';
 
 /**
@@ -49,8 +50,10 @@ const OtpInput = forwardRef<OtpInputHandle, OtpInputProps>(({
     autoFocus = true,
     onComplete,
     className = '',
-    'aria-label': ariaLabel = 'One-time code',
+    'aria-label': ariaLabelProp,
 }, ref) => {
+    const { t: tc } = useTranslation('common');
+    const ariaLabel = ariaLabelProp ?? tc('common:a11y.oneTimeCode');
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
     useImperativeHandle(ref, () => ({
@@ -142,7 +145,7 @@ const OtpInput = forwardRef<OtpInputHandle, OtpInputProps>(({
                     disabled={disabled}
                     readOnly={readOnly}
                     autoFocus={autoFocus && index === 0}
-                    aria-label={`${ariaLabel} digit ${index + 1}`}
+                    aria-label={tc('common:a11y.otpDigit', { label: ariaLabel, index: index + 1 })}
                 />
             ))}
         </div>

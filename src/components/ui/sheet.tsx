@@ -153,7 +153,10 @@ const SheetContent = React.forwardRef<
                 {...props}
             >
                 {children}
-                <SheetPrimitive.Close className="absolute right-4 top-4 btn btn-primary data-[state=open]:bg-secondary">
+                {/* Logical `end-4`, not `right-4`: the customer portal mirrors in Arabic, and a physical
+                    offset left the X on the right edge under dir="rtl". In LTR (all of admin)
+                    `end` IS `right`, so nothing moves there. */}
+                <SheetPrimitive.Close className="absolute end-4 top-4 btn btn-primary data-[state=open]:bg-secondary">
                     <X className="w-5 h-5" />
                     <span className="sr-only">Close</span>
                 </SheetPrimitive.Close>

@@ -87,6 +87,13 @@
   /* STATIC COLORS */
   --orange-light: 24 100% 89%;
   --orange: 24 100% 50%;
+  /* Darker orange for an icon / text ON --orange-light: plain --orange there is ~2.4:1,
+     under the 3:1 WCAG asks of an icon. Used by the notification "Action Required" tone. */
+  --orange-600: 24 100% 38%;
+  /* Notification "Reminder" tone. Root-only, never in body.admin-theme, so both portals
+     draw it identically (severity must not follow the brand). */
+  --info-blue: 218 76% 47%;
+  --info-blue-light: 218 90% 95%;
   --yellow: 37 91% 55%;
 
   --success: 151 98% 21%;
