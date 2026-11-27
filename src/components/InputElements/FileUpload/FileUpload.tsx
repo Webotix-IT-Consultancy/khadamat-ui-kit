@@ -440,7 +440,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
                     multiple={multiple}
                     className="hidden"
                     onChange={handleInputChange}
-                    aria-label={label || 'Upload file'}
+                    aria-label={label || t('common:a11y.uploadFile')}
                 />
                 {/*
                   * The dropzone now ALWAYS shows its prompt — the picked files no longer

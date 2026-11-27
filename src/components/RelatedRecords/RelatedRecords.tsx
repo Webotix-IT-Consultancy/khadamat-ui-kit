@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronRight, Download, Eye, Loader2 } from 'lucide-react';
+import { ChevronRight, Download, Eye, Loader2, Printer } from 'lucide-react';
 import CollapsibleSection from '../CollapsibleSection/CollapsibleSection';
 
 /** One linked document — a contract, quotation or invoice raised for an account. */
@@ -30,6 +30,9 @@ export interface RelatedDocumentActions {
     onDownload: () => void;
     viewing?: boolean;
     downloading?: boolean;
+    /** Optional Print of the same document; without it the row shows View and Download only. */
+    onPrint?: () => void;
+    printing?: boolean;
 }
 
 export interface RelatedRecordSection {
@@ -53,9 +56,10 @@ const iconButton =
 
 const DocumentButtons: React.FC<{ reference: string; actions: RelatedDocumentActions }> = ({ reference, actions }) => {
     const { t } = useTranslation('common');
-    const busy = Boolean(actions.viewing || actions.downloading);
+    const busy = Boolean(actions.viewing || actions.downloading || actions.printing);
     const viewLabel = t('documents.viewInvoice', { number: reference });
     const downloadLabel = t('documents.downloadInvoice', { number: reference });
+    const printLabel = t('documents.printInvoice', { number: reference });
     return (
         <span className="flex items-center gap-2">
             <button type="button" className={iconButton} disabled={busy} aria-label={viewLabel} title={viewLabel} onClick={actions.onView}>
@@ -64,6 +68,11 @@ const DocumentButtons: React.FC<{ reference: string; actions: RelatedDocumentAct
             <button type="button" className={iconButton} disabled={busy} aria-label={downloadLabel} title={downloadLabel} onClick={actions.onDownload}>
                 {actions.downloading ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Download size={16} aria-hidden="true" />}
             </button>
+            {actions.onPrint && (
+                <button type="button" className={iconButton} disabled={busy} aria-label={printLabel} title={printLabel} onClick={actions.onPrint}>
+                    {actions.printing ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Printer size={16} aria-hidden="true" />}
+                </button>
+            )}
         </span>
     );
 };

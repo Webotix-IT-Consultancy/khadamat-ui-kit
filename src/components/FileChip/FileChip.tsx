@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Download, Eye, FileText, Trash2 } from 'lucide-react';
 
 interface FileChipProps {
@@ -40,12 +41,22 @@ const FileChip: React.FC<FileChipProps> = ({
     onDownload,
     onRemove,
     busy = false,
-    viewLabel = 'View',
-    downloadLabel = 'Download',
-    removeLabel = 'Remove',
+    viewLabel: viewLabelProp,
+    downloadLabel: downloadLabelProp,
+    removeLabel: removeLabelProp,
     className = '',
 }) => {
-    const name = fileName || 'Uploaded file';
+    const { t: tc } = useTranslation('common');
+    /*
+     * The defaults are the SHARED `common` strings, resolved here, not English literals: they
+     * are the button's hover tooltip (`title`) and its accessible name, and a literal 'View'
+     * showed English on every Arabic screen whose caller passed no label. A caller's own
+     * label still wins.
+     */
+    const viewLabel = viewLabelProp ?? tc('common:buttons.view');
+    const downloadLabel = downloadLabelProp ?? tc('common:buttons.download');
+    const removeLabel = removeLabelProp ?? tc('common:buttons.remove');
+    const name = fileName || tc('common:a11y.uploadedFile');
     const tile =
         'flex h-10 w-10 shrink-0 items-center justify-center rounded-10 bg-primary-200 text-black transition-colors';
     const actionTile = `${tile} hover:bg-primary hover:text-white disabled:opacity-40 disabled:cursor-not-allowed`;

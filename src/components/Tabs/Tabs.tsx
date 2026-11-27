@@ -6,6 +6,15 @@ export interface TabItem {
     label: string;
     count?: number;
     badgeClassName?: string;
+    /**
+     * Drawn greyed and NOT selectable — `onTabChange` is never called for it. The tab stays in
+     * the row (and keeps its count) so the user can see the slice exists; it is simply not
+     * theirs to open. `aria-disabled` rather than the native `disabled`, so the hover reason
+     * below still shows — a natively disabled button fires no hover of its own.
+     */
+    disabled?: boolean;
+    /** Why it is disabled — the hover tooltip. */
+    disabledReason?: string;
 }
 
 /**
@@ -81,9 +90,14 @@ const Tabs: React.FC<TabsProps> = ({
                             key={tab.id}
                             type="button"
                             aria-pressed={isActive}
-                            onClick={() => onTabChange(tab.id)}
+                            aria-disabled={tab.disabled || undefined}
+                            title={tab.disabled ? tab.disabledReason : undefined}
+                            onClick={() => {
+                                if (!tab.disabled) onTabChange(tab.id);
+                            }}
                             className={cn(
-                                "flex items-center gap-2 transition-colors cursor-pointer",
+                                "flex items-center gap-2 transition-colors",
+                                tab.disabled ? "cursor-not-allowed opacity-50 pointer-events-auto" : "cursor-pointer",
                                 isPill
                                     ? cn(
                                         "rounded-xl border-2 border-primary px-2 py-1.5 text-sm font-medium",

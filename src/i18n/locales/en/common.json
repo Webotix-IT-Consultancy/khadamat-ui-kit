@@ -1,5 +1,4 @@
 {
-
   "buttons": {
     "retry": "Retry",
     "close": "Close",
@@ -22,7 +21,10 @@
     "filter": "Filter",
     "clear": "Clear",
     "apply": "Apply",
-    "exportToExcel": "Export to Excel"
+    "exportToExcel": "Export to Excel",
+    "view": "View",
+    "download": "Download",
+    "remove": "Remove"
   },
   "tabs": {
     "all": "All",
@@ -89,6 +91,7 @@
     "receipts": "Receipts",
     "viewInvoice": "View {{number}}",
     "downloadInvoice": "Download {{number}}",
+    "printInvoice": "Print {{number}}",
     "downloadAll": "Download all",
     "noInvoiceNumber": "Tax Invoice",
     "popupBlocked": "Your browser blocked the document window, so the PDF was downloaded instead. Allow pop-ups for this site to open it in a tab.",
@@ -146,6 +149,54 @@
       "format": "Unsupported file format",
       "tooLarge": "File size must be less than {{max}} MB"
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "drawerTitle": "Notification",
+    "count_one": "{{count}} Notification",
+    "count_other": "{{count}} Notifications",
+    "tabs": {
+      "all": "All",
+      "unread": "Unread",
+      "read": "Read"
+    },
+    "groups": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "unknown": "Earlier"
+    },
+    "tone": {
+      "success": "Success",
+      "action": "Action Required",
+      "alert": "Alert",
+      "warning": "Warning",
+      "reminder": "Reminder",
+      "info": "Information"
+    },
+    "unread": "Unread",
+    "markAllRead": "Mark all as read",
+    "viewAll": "View all notifications",
+    "loadMore": "Load more",
+    "empty": "No notifications yet.",
+    "emptyUnread": "You are all caught up.",
+    "emptyRead": "No read notifications.",
+    "emptySearch": "No notifications match your search.",
+    "searchPlaceholder": "Search notifications",
+    "justNow": "Just now",
+    "markedAllRead_one": "{{count}} notification marked as read.",
+    "markedAllRead_other": "{{count}} notifications marked as read.",
+    "markReadFailed": "Could not mark the notification as read.",
+    "markAllFailed": "Could not mark the notifications as read."
+  },
+  "a11y": {
+    "uploadedFile": "Uploaded file",
+    "uploadFile": "Upload file",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "dismiss": "Dismiss",
+    "viewNotifications": "View notifications",
+    "oneTimeCode": "One-time code",
+    "otpDigit": "{{label}} digit {{index}}",
+    "userAvatar": "User avatar"
   }
 }
-
